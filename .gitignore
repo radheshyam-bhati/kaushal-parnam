@@ -24,3 +24,6 @@ yarn-debug.log*
 
 # Target
 target/
+
+# SIH26135 documentation - exclude from source code push
+docs/
