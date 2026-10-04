@@ -1,0 +1,26 @@
+# Django stuff:
+*.pyc
+*.pyc3
+__pycache__
+*.pyc.cache
+.db.sqlite3
+*.db.sqlite3-journal
+
+# Environment variables:
+.env
+.env.local
+.env.production
+
+# Media and static (these should be in .gitignore or tracked separately):
+media/
+static/
+
+# Moleculer
+npm-debug.log*
+yarn-debug.log*
+
+# Offset log file for node OS
+.offset.log
+
+# Target
+target/
