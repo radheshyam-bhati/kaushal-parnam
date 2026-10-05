@@ -29,7 +29,24 @@ _TESTING = 'test' in sys.argv
 # ---------------------------------------------------------------------------
 SECRET_KEY = env("SECRET_KEY", "django-insecure-dev-key-do-not-use-in-production")
 DEBUG = env_bool("DEBUG", True)
-ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1,[::1],testserver")
+
+# Automatic Host & Origin detection for local dev, Render, and Vercel
+RENDER_EXTERNAL_HOSTNAME = env("RENDER_EXTERNAL_HOSTNAME")
+VERCEL_URL = env("VERCEL_URL")
+
+default_allowed = ["localhost", "127.0.0.1", "[::1]", "testserver", ".onrender.com", ".vercel.app"]
+if RENDER_EXTERNAL_HOSTNAME:
+    default_allowed.append(RENDER_EXTERNAL_HOSTNAME)
+if VERCEL_URL:
+    default_allowed.append(VERCEL_URL)
+
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", ",".join(default_allowed))
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+if ".onrender.com" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".onrender.com")
+if ".vercel.app" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".vercel.app")
 
 INTERNAL_UTID_PREFIX = env("INTERNAL_UTID_PREFIX", "KO")
 MIN_GROUP_SIZE = env_int("MIN_GROUP_SIZE", 5)
@@ -210,9 +227,22 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "no-reply@kaushal-parinam.local")
 # fails the CSRF check and the app is unusable. Derived from ALLOWED_HOSTS so the
 # two cannot drift, and overridable for a deployment whose Origin differs from
 # its Host (a CDN or a TLS-terminating proxy).
+def _build_default_csrf_origins(hosts: list[str]) -> list[str]:
+    origins = ["https://*.onrender.com", "https://*.vercel.app"]
+    for host in hosts:
+        if host.startswith("."):
+            origins.append(f"https://*{host}")
+        elif host not in {"localhost", "127.0.0.1", "[::1]", "testserver"}:
+            origins.append(f"https://{host}")
+            origins.append(f"http://{host}")
+        else:
+            origins.append(f"http://{host}")
+            origins.append(f"https://{host}")
+    return list(dict.fromkeys(origins))
+
 CSRF_TRUSTED_ORIGINS = env_list(
     "CSRF_TRUSTED_ORIGINS",
-    ",".join(f"https://{host}" for host in ALLOWED_HOSTS),
+    ",".join(_build_default_csrf_origins(ALLOWED_HOSTS)),
 )
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", not DEBUG)
@@ -221,7 +251,9 @@ SECURE_HSTS_SECONDS = env_int("SECURE_HSTS_SECONDS", 0)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
 SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", False)
 SECURE_PROXY_SSL_HEADER = (
-    ("HTTP_X_FORWARDED_PROTO", "https") if env_bool("USE_X_FORWARDED_PROTO", False) else None
+    ("HTTP_X_FORWARDED_PROTO", "https")
+    if env_bool("USE_X_FORWARDED_PROTO", True)
+    else None
 )
 X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
