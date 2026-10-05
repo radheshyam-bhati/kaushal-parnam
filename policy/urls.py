@@ -14,4 +14,9 @@ urlpatterns = [
     path('policy/data-quality/', views.data_quality, name='data_quality'),
     path('policy/wage-retention/', views.wage_retention, name='wage_retention'),
     path('policy/audit-trail/', views.audit_trail, name='audit_trail'),
+    path('policy/identity/matches/', views.match_queue, name='match_queue'),
+    path(
+        'policy/identity/matches/<int:suggestion_id>/resolve/',
+        views.resolve_match, name='resolve_match',
+    ),
 ]

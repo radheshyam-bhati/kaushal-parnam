@@ -3,7 +3,8 @@
 Four penalties, each traceable to a number the officer can inspect:
 
     missing provenance   outcomes with no evidence record at all
-    inconsistent IDs     trainees with several external scheme IDs and no crosswalk note
+    inconsistent IDs     trainees with no crosswalk row, or an unresolved
+                         near-match suggestion awaiting a human (F-03)
     stale demand         demand snapshots older than the staleness window
     unreached share      share of due follow-ups with no reply
 
@@ -20,6 +21,7 @@ from core.models import (
     Enrolment,
     FollowupJob,
     IdCrosswalk,
+    IdMatchSuggestion,
     OutcomeEvent,
     Provider,
 )
@@ -40,14 +42,25 @@ def _metrics_for(provider: Provider) -> dict:
     with_provenance = outcomes.exclude(evidence_set__isnull=True).distinct().count()
     missing_provenance = total_outcomes - with_provenance
 
-    # "Inconsistent identifiers": a trainee holding two IDs from the same scheme,
-    # or an outcome recorded with no crosswalk entry at all.
-    inconsistent = 0
-    for person_id in people:
-        rows = IdCrosswalk.objects.filter(person_id=person_id)
-        schemes = [row.scheme for row in rows]
-        if len(schemes) != len(set(schemes)):
-            inconsistent += 1
+    # "Inconsistent identifiers" (docs/01-PRD.md §7 S-05). Two cases, both of
+    # which a human has to resolve, so neither is a database invariant:
+    #   * a trainee with no crosswalk row at all, so no external scheme can
+    #     ever be matched back to this UTID;
+    #   * a trainee carrying an unresolved near-match suggestion, i.e. the
+    #     system believes two UTIDs may be one person and has not decided.
+    # Counting duplicate schemes inside one crosswalk cannot work: the
+    # uniq_crosswalk_person_scheme constraint makes that state unreachable.
+    person_ids = list(people)
+    linked = set(IdCrosswalk.objects.filter(
+        person_id__in=person_ids
+    ).values_list('person_id', flat=True))
+    unlinked = len([p for p in person_ids if p not in linked])
+    unresolved = IdMatchSuggestion.objects.filter(
+        person_id__in=person_ids
+    ).exclude(resolution__in=['merged', 'kept_separate']).values_list(
+        'person_id', flat=True
+    ).distinct().count()
+    inconsistent = unlinked + unresolved
 
     stale_window = Definitions.get('FLAG_SETTINGS').get('stale_demand_days', 90)
     stale_rows = sum(

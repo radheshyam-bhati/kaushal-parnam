@@ -1,14 +1,19 @@
 # Kaushal Parinam — Python/Django dependencies
 # Stack fixed by docs/02-TRD.md §1 (Django + HTMX + Chart.js + PostgreSQL).
+#
+# The Django floor is 5.2, not 5.0: 5.0/5.1 are EOL upstream and no longer
+# receive security fixes. The tested version is 6.1 (see README §6).
 
-Django>=5.0,<6.1
-psycopg[binary]>=3.1          # PostgreSQL driver (docs/02-TRD.md §1)
-dj-database-url>=2.1          # DATABASE_URL parsing (docs/02-TRD.md §4)
-django-environ>=0.11          # .env reading
-python-dotenv>=1.0            # .env reading
+Django>=5.2,<7.0
+psycopg[binary]>=3.1          # PostgreSQL 3 driver (docs/02-TRD.md §1)
 django-filter>=24.0           # dashboard filters (docs/06-IMPLEMENTATION-PLAN.md Phase 5)
+numpy>=1.26                   # fair-peer least squares (policy/comparison.py)
 statsmodels>=0.14             # S-02 fair-peer regression only; no ML (docs/02-TRD.md §7)
 pandas>=2.0                   # analytics batch (docs/02-TRD.md §1)
 
+# .env parsing and DATABASE_URL handling are done by core/env.py, which is
+# deliberately dependency-free (docs/02-TRD.md §9). dj-database-url,
+# django-environ and python-dotenv were listed here but never imported; installing
+# them would imply the project needs them, and it does not.
+
 # Production-only (docs/02-TRD.md §8). Install with: pip install -r requirements-prod.txt
-# gunicorn>=22.0

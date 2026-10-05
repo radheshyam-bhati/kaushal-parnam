@@ -17,10 +17,55 @@
       <a class="btn btn-secondary" href="{% url 'policy:definitions' %}">Definitions registry</a>
       <a class="btn btn-secondary" href="{% url 'policy:wage_retention' %}">Wage &amp; retention</a>
       <a class="btn btn-secondary" href="{% url 'policy:audit_trail' %}">Audit trail</a>
+      <a class="btn btn-secondary" href="{% url 'policy:match_queue' %}">Identity near matches</a>
     </div>
   </div>
 
   {% include "partials/grade_filter.html" %}
+  {% include "partials/cohort_filter.html" %}
+
+  {% if filters %}
+    <div class="card" style="margin-bottom:16px">
+      <h3>Cohort composition</h3>
+      <p class="helptext">
+        {{ demographics.total }} trainee(s) match the current filter. The
+        breakdown is what tells you whether a slice is big enough to quote a
+        rate from.
+      </p>
+      <div class="grid grid-3">
+        <div>
+          <h4>Gender</h4>
+          <ul>
+            {% for value, count in demographics.gender %}
+              <li>{{ value }}: {{ count }}</li>
+            {% empty %}
+              <li><em>No data</em></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div>
+          <h4>Age band</h4>
+          <ul>
+            {% for value, count in demographics.age_band %}
+              <li>{{ value }}: {{ count }}</li>
+            {% empty %}
+              <li><em>No data</em></li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div>
+          <h4>Category</h4>
+          <ul>
+            {% for value, count in demographics.category %}
+              <li>{{ value }}: {{ count }}</li>
+            {% empty %}
+              <li><em>No data</em></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 
   <div class="grid grid-2">
     <div class="card">
@@ -33,7 +78,8 @@
         <span class="rate-value">{{ weights.weighted_rate|floatformat:0 }}%</span>
         <span class="rate-context">
           weighted placement
-          (response rate: {{ weights.weighted_response_rate|floatformat:0 }}%)
+          (95% CI {{ weights.weighted_ci_low|floatformat:0 }}–{{ weights.weighted_ci_high|floatformat:0 }}%;
+          response rate: {{ weights.weighted_response_rate|floatformat:0 }}%)
         </span>
       </div>
       <div class="mix">

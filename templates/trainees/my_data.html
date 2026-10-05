@@ -42,10 +42,21 @@
               <td>{% if row.consent %}{{ row.consent.notice_version }}{% else %}—{% endif %}</td>
               <td>
                 {% if row.consent and row.active %}
-                  <form method="post" action="{% url 'trainees:withdraw_consent' row.purpose %}">
-                    {% csrf_token %}
-                    <button class="btn btn-outline btn-sm" type="submit">Withdraw</button>
-                  </form>
+                  {% if otp_sent == 'CONSENT_CHANGE' and otp_pending.purpose == row.purpose %}
+                    <form method="post" action="{% url 'trainees:withdraw_consent' row.purpose %}">
+                      {% csrf_token %}
+                      <input class="otp-input" type="text" name="code" inputmode="numeric"
+                             maxlength="6" autocomplete="one-time-code"
+                             aria-label="6-digit code for withdrawing {{ row.label }}"
+                             placeholder="000000" required>
+                      <button class="btn btn-outline btn-sm" type="submit">Confirm</button>
+                    </form>
+                  {% else %}
+                    <form method="post" action="{% url 'trainees:withdraw_consent' row.purpose %}">
+                      {% csrf_token %}
+                      <button class="btn btn-outline btn-sm" type="submit">Withdraw</button>
+                    </form>
+                  {% endif %}
                 {% endif %}
               </td>
             </tr>
@@ -71,9 +82,23 @@
           {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
         </div>
       {% endfor %}
-      <button class="btn btn-primary" type="submit">Save contact details</button>
+      {% if otp_sent == 'CORRECTION' %}
+        <div class="form-row">
+          <label class="required" for="correction-code">6-digit code sent to your phone</label>
+          <input class="otp-input" type="text" name="code" id="correction-code"
+                 inputmode="numeric" maxlength="6" autocomplete="one-time-code" required>
+          <span class="helptext">
+            In this demo the code is printed in the server console. Confirming a
+            new phone number stops anyone else redirecting your follow-ups.
+          </span>
+        </div>
+      {% endif %}
+      <button class="btn btn-primary" type="submit">
+        {% if otp_sent == 'CORRECTION' %}Confirm and save{% else %}Save contact details{% endif %}
+      </button>
       <p class="helptext">
         Changing your phone type changes which channel your follow-ups use.
+        We confirm this change with a code sent to the number already on file.
       </p>
     </form>
   </div>
@@ -134,8 +159,8 @@
           {% csrf_token %}
           <div class="form-row">
             <label class="required" for="code">6-digit code sent to your phone</label>
-            <input type="text" name="code" id="code" inputmode="numeric" maxlength="6"
-                   autocomplete="one-time-code">
+            <input class="otp-input" type="text" name="code" id="code" inputmode="numeric"
+                   maxlength="6" autocomplete="one-time-code">
             <span class="helptext">In this demo the code is printed in the server console.</span>
           </div>
           <button class="btn btn-danger" type="submit">Confirm erasure</button>

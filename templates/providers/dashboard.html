@@ -20,14 +20,16 @@
   </div>
 
   {% include "partials/grade_filter.html" %}
+  {% include "partials/cohort_filter.html" %}
 
   <div class="grid grid-2">
     <div class="card">
       <h3>Placement rate</h3>
       {% include "dashboard/_rate.html" with rate=rate %}
       <p class="helptext" style="margin-top:12px">
-        Filter: {{ grade_floors|default_if_none:"" }}{{ rate.floor }} —
-        {{ rate.floor }} and above only.
+        Filter: {{ rate.floor }} and above only{% if filters %}, cohort narrowed
+        by {{ filters|length }} dimension(s){% endif %} —
+        {{ people_count }} trainee(s) in view.
       </p>
     </div>
 
@@ -37,7 +39,8 @@
         <span class="rate-value">{{ weights.weighted_rate|floatformat:0 }}%</span>
         <span class="rate-context">
           weighted placement
-          (response rate: {{ weights.weighted_response_rate|floatformat:0 }}%)
+          (95% CI {{ weights.weighted_ci_low|floatformat:0 }}–{{ weights.weighted_ci_high|floatformat:0 }}%;
+          response rate: {{ weights.weighted_response_rate|floatformat:0 }}%)
         </span>
       </div>
       <div class="mix">

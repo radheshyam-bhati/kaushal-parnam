@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Identity near matches{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Identity near matches</h1>
+    <p style="color:var(--text-secondary)">
+      One UTID per person. When two files describe the same human, the system
+      queues the pair for a person to decide and <strong>never merges on its
+      own</strong>. A merge would move enrolments, outcomes, consent and an audit
+      trail between two identities, so it is not something a background scan is
+      allowed to do.
+    </p>
+    <div class="cluster">
+      <span class="badge">{{ open_count }} awaiting review</span>
+      <form method="post" style="margin:0">
+        {% csrf_token %}
+        <button class="btn btn-primary btn-sm" type="submit" name="action" value="scan">
+          Scan for near matches
+        </button>
+      </form>
+    </div>
+    <p class="helptext" style="margin-top:12px">
+      Two signals, both coincidence rather than proof: the same own phone, or the
+      same name and date of birth. Every signal that agrees is listed on the row,
+      so a pair matching on both is visibly stronger than one matching on either.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Awaiting review</h3>
+    {% if rows %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">UTID</th>
+              <th scope="col">Possible same person as</th>
+              <th scope="col">Basis</th>
+              <th scope="col">Why</th>
+              <th scope="col">Queued</th>
+              <th scope="col">Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <th scope="row">{{ row.person_id }}</th>
+                <td>{{ row.candidate_utid }}</td>
+                <td>
+                  <span class="badge">
+                    {{ row.get_basis_display }}
+                  </span>
+                </td>
+                <td>{{ row.detail|default:"—" }}</td>
+                <td>{{ row.reviewed_at|date:"d M Y"|default:"not reviewed" }}</td>
+                <td>
+                  <form method="post"
+                        action="{% url 'policy:resolve_match' row.pk %}"
+                        class="cluster" style="margin:0">
+                    {% csrf_token %}
+                    <select name="resolution" aria-label="Decision for {{ row.person_id }}">
+                      {% for choice in resolutions %}
+                        <option value="{{ choice }}" {% if choice == 'kept_separate' %}selected{% endif %}>
+                          {{ choice|cut:"_"|title }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                    <button class="btn btn-outline btn-sm" type="submit">Record</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="helptext" style="margin-top:12px">
+        "Kept separate" is the safe default: two people really can share a phone
+        or a name. Marking a pair merged records the decision and who made it;
+        moving the records is a deliberate operator action taken afterwards.
+      </p>
+    {% else %}
+      {% include "partials/empty_state.html" with heading="No near matches queued" message="Run a scan to look for two UTIDs describing the same person." %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

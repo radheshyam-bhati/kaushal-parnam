@@ -76,6 +76,7 @@ REASON_GROUPS = [
 SAMPLE_TYPES = [
     ('NON_REPLIER', 'Non-replier sample'),
     ('CLAIMED_JOB', 'Claimed job sample'),
+    ('SELF_EMPLOYMENT', 'Self-employment field-verification sample'),
 ]
 
 #: External schemes linked through the crosswalk (F-03). e-Shram UAN is NOT
@@ -399,7 +400,10 @@ class IdMatchSuggestion(models.Model):
     class MatchBasis(models.TextChoices):
         SAME_PHONE = 'same_phone', 'Same phone number'
         SAME_NAME_DOB = 'same_name_dob', 'Same name and date of birth'
-        SAME_SCHEME_ID = 'same_scheme_id', 'Same external scheme ID'
+        # A third basis, "same external scheme ID", is deliberately absent:
+        # uniq_crosswalk_scheme_programme makes two UTIDs claiming one scheme ID
+        # unrepresentable, so a check on it could never fire. If that constraint
+        # is ever relaxed, add the basis and the check together.
 
     person = models.ForeignKey(
         Person, on_delete=models.CASCADE, related_name='match_suggestions'
@@ -878,6 +882,8 @@ class EvidenceRecord(models.Model):
     KIND_CHOICES = [
         ('DOCUMENT', 'Document seen - salary slip, offer letter, stipend proof'),
         ('RECORD_MATCH', 'Record matched - EPFO / ESIC / DBT stipend'),
+        ('EMPLOYER_CONFIRM', 'Employer confirmed - one-tap link, no login (F-06)'),
+        ('FIELD_VERIFICATION', 'Field or peer verification by an officer (F-12)'),
     ]
 
     outcome = models.ForeignKey(
@@ -887,7 +893,10 @@ class EvidenceRecord(models.Model):
     reviewer = models.CharField(max_length=50, null=True, blank=True)
     result_verified = models.BooleanField(default=False)
     level = models.CharField(
-        max_length=2, null=True, blank=True, choices=[('E3', 'E3'), ('E4', 'E4')]
+        max_length=2, null=True, blank=True,
+        choices=[('E2', 'E2'), ('E3', 'E3'), ('E4', 'E4')],
+        help_text='Grade this evidence supports; E1 is written by the officer '
+                  'call itself, so it lives on the outcome row',
     )
     detail = models.CharField(max_length=200, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)

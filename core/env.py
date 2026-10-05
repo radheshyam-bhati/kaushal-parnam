@@ -100,6 +100,13 @@ def database_config(default_name: str) -> dict:
         "PASSWORD": unquote(parsed.password or ""),
         "HOST": parsed.hostname or "localhost",
         "PORT": str(parsed.port or 5432),
+        # Deliberately False. The request transaction is opened by
+        # core.middleware.RLSMiddleware, not by Django, because the RLS session
+        # variables are written with set_config(..., true) and that only binds
+        # for the duration of the transaction that issued them. Django opens
+        # ATOMIC_REQUESTS after every middleware has run, which is too late --
+        # the settings were already committed and discarded. One explicit
+        # boundary, in one place, is easier to reason about than two.
         "ATOMIC_REQUESTS": False,
         "CONN_MAX_AGE": env_int("CONN_MAX_AGE", 60),
         "OPTIONS": {},

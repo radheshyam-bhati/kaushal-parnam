@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import secrets
 
+from django.core import signing
 from django.utils import timezone
 
 from core.services.audit import log_event
@@ -19,6 +20,28 @@ from core.services.audit import log_event
 
 def _token() -> str:
     return secrets.token_urlsafe(32)
+
+
+def make_confirm_token(outcome) -> str:
+    """A signed token carrying the outcome id (F-06).
+
+    Signing it rather than storing an opaque random string is what lets the
+    confirm view establish *what it is authorised to do* before it reads
+    anything: the view unsigns the token, binds the RLS scope to that one
+    outcome, and only then loads the employer row. With an opaque token the view
+    would have to read a row it is not yet allowed to see.
+    """
+    return signing.TimestampSigner().sign(outcome.pk)
+
+
+def read_confirm_token(token: str):
+    """Outcome id encoded in a confirm token, or ``None`` if the token is bad."""
+    from django.core.signing import BadSignature
+
+    try:
+        return int(signing.TimestampSigner().unsign(token, max_age=None))
+    except (BadSignature, TypeError, ValueError):
+        return None
 
 
 def prepare_employer_link(outcome) -> str:
@@ -34,7 +57,7 @@ def prepare_employer_link(outcome) -> str:
         },
     )
     if not employer.confirm_token:
-        employer.confirm_token = _token()
+        employer.confirm_token = make_confirm_token(outcome)
         employer.save(update_fields=['confirm_token'])
         log_event(
             component='employer', event_type='employer_link_created',
@@ -72,6 +95,7 @@ def record_confirmation(
     *,
     still_employed: bool,
     wage_verified: str | None,
+    skills_lacking: bool = False,
     note: str = '',
 ) -> dict:
     """Employer taps Confirm. Raises the outcome to E2 and keeps both wages.
@@ -87,6 +111,11 @@ def record_confirmation(
     )
     if mismatch:
         discrepancy['wage_mismatch'] = True
+    # Signal 2 of the 2-of-3 skill-gap rule (F-11): the employer is the only
+    # party who can say the training did not cover the job. Storing the flag
+    # here is what lets stats.py count it; without this, signal 2 is always
+    # zero on a real install and only ever 2-of-3.
+    discrepancy['skills_lacking'] = bool(skills_lacking)
     previous_discrepancy = employer.discrepancy_flags or {}
     previous_discrepancy.update(discrepancy)
 
@@ -123,6 +152,7 @@ def record_confirmation(
                 f'employer said {employer.wage_verified}'
                 if mismatch else 'wage agreed'
             )
+            + ('; employer reports a skill gap (F-11 signal 2)' if skills_lacking else '')
         ),
         utid=outcome.person_id, user_role='employer',
     )
@@ -131,5 +161,6 @@ def record_confirmation(
         'wage_claimed': employer.wage_claimed,
         'wage_verified': employer.wage_verified,
         'still_employed': still_employed,
+        'skills_lacking': bool(skills_lacking),
         'note': note,
     }

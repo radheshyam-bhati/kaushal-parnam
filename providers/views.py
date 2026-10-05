@@ -10,17 +10,20 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.models import Employer, OutcomeEvent, StatsPlacement, WAGE_BAND_LABELS
 from core.services.audit import log_event
-from core.services.employer_link import record_confirmation
+from core.middleware import bind_scope
+from core.services.employer_link import read_confirm_token, record_confirmation
 from core.services.evidence import (
     GRADE_FLOOR_LABELS,
     build_placement_rate,
     effective_grade,
     filter_by_grade,
 )
+from core.services.filters import apply_filters, filter_options, selected_filters
 from core.services.rls import visible_outcomes, visible_people
 from core.services.retention import cohort_retention
 from core.services.stats import flagged_gaps
@@ -43,14 +46,18 @@ def dashboard(request):
     if not request.user.is_provider_side:
         raise PermissionDenied('This dashboard is for training providers.')
 
-    people = visible_people(request.user)
+    scoped = visible_people(request.user)
+    filters = selected_filters(request.GET)
+    people = apply_filters(scoped, filters)
     floor = _min_grade(request)
-    outcomes = list(filter_by_grade(visible_outcomes(request.user), floor))
+    outcomes = list(filter_by_grade(
+        visible_outcomes(request.user).filter(person__in=people), floor
+    ))
     placements = [
         o for o in outcomes if effective_grade(o) in _grades(floor)
     ]
 
-    due = _due_count(request.user)
+    due = _due_count(people)
     rate = build_placement_rate(
         placements, reached=len(placements), due=due, label='placement', floor=floor
     )
@@ -75,7 +82,8 @@ def dashboard(request):
         'min_group_size': _k(),
         'withheld_groups': _withheld(request.user, floor),
         'wage_labels': WAGE_BAND_LABELS,
-        'filter_form': _filter_summary(request),
+        'filters': filters,
+        'filter_options': filter_options(scoped),
     })
 
 
@@ -85,11 +93,11 @@ def _grades(floor: str) -> list[str]:
     return grade_at_or_above(floor)
 
 
-def _due_count(user) -> int:
+def _due_count(people) -> int:
     from core.models import FollowupJob
 
     jobs = FollowupJob.objects.filter(
-        person__in=visible_people(user), due_at__lte=_now()
+        person__in=people, due_at__lte=_now()
     )
     return jobs.count()
 
@@ -141,19 +149,29 @@ def _withheld(user, floor: str) -> list[dict]:
     ]
 
 
-def _filter_summary(request) -> dict:
-    return {
-        'min_grade': request.GET.get('min_grade', 'E0'),
-        'district': request.GET.get('district', ''),
-    }
+
 
 
 # ===========================================================================
 # Employer one-tap confirm (F-06) -- no login required
 # ===========================================================================
 def employer_confirm(request, token):
-    """P-10 style pre-filled page. The employer taps Confirm; no account needed."""
-    employer = get_object_or_404(Employer, confirm_token=token)
+    """P-10 style pre-filled page. The employer taps Confirm; no account needed.
+
+    There is no ``request.user`` here, so the RLS scope is established from the
+    token itself: it is signed and carries the outcome id, so the view can bind
+    the scope to that one outcome before reading anything, and the policies admit
+    exactly that row and the employer, reason and audit rows attached to it.
+    """
+    outcome_id = read_confirm_token(token)
+    if outcome_id is None:
+        raise Http404('This confirmation link is not valid.')
+
+    bind_scope(user_role='employer', employer_outcome_id=outcome_id)
+
+    employer = get_object_or_404(
+        Employer.objects.select_related('outcome'), confirm_token=token
+    )
     outcome = employer.outcome
     if request.method == 'POST':
         still_employed = request.POST.get('still_employed') == 'yes'
@@ -162,6 +180,7 @@ def employer_confirm(request, token):
             employer,
             still_employed=still_employed,
             wage_verified=wage_verified,
+            skills_lacking=request.POST.get('skills_lacking') == 'yes',
             note=request.POST.get('note', '')[:300],
         )
         messages.success(request, 'Thank you. Your confirmation is recorded.')

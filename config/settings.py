@@ -5,6 +5,8 @@ Database is PostgreSQL (Row-Level Security, FOR UPDATE SKIP LOCKED); SQLite is a
 zero-setup fallback for local development only.
 """
 
+import sys
+
 from core.env import (
     BASE_DIR,
     database_config,
@@ -16,6 +18,11 @@ from core.env import (
 )
 
 load_dotenv()
+
+#: True while `manage.py test` is running. Django offers no supported flag for
+#: this, and it matters for exactly one decision: which staticfiles storage is
+#: active. See the STORAGES block below.
+_TESTING = 'test' in sys.argv
 
 # ---------------------------------------------------------------------------
 # Core
@@ -34,6 +41,7 @@ DPDP_CHILD_AGE_LIMIT = env_int("DPDP_CHILD_AGE_LIMIT", 18)
 F08_SIMPLIFIED_MVP = env_bool("F08_SIMPLIFIED_MVP", True)
 NON_REPLIER_SAMPLE_RATE = float(env("NON_REPLIER_SAMPLE_RATE", "0.10"))
 CLAIMED_JOB_SAMPLE_RATE = float(env("CLAIMED_JOB_SAMPLE_RATE", "0.05"))
+SELF_EMPLOYMENT_SAMPLE_RATE = float(env("SELF_EMPLOYMENT_SAMPLE_RATE", "0.10"))
 CSV_MAX_UPLOAD_BYTES = env_int("CSV_MAX_UPLOAD_BYTES", 10 * 1024 * 1024)
 AGEING_SNAPSHOT_DAYS = env_int("AGEING_SNAPSHOT_DAYS", 90)
 DEMO_REPLY_PROBABILITY = float(env("DEMO_REPLY_PROBABILITY", "0.25"))
@@ -71,6 +79,20 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.AuditLogMiddleware",
 ]
+
+# WhiteNoise serves /static/ from the container. Django's own staticfiles view
+# only answers when DEBUG is True, so under gunicorn with DEBUG=False every
+# stylesheet 404s without it. It lives in requirements-prod.txt rather than
+# requirements.txt, so it is imported defensively: a developer who has only run
+# `pip install -r requirements.txt` still gets a working DEBUG server instead of
+# an ImportError on the first request.
+try:  # pragma: no cover - depends on which requirements set is installed
+    import whitenoise  # noqa: F401
+
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+    _HAVE_WHITENOISE = True
+except ModuleNotFoundError:  # pragma: no cover
+    _HAVE_WHITENOISE = False
 
 ROOT_URLCONF = "config.urls"
 
@@ -140,6 +162,24 @@ LOCALE_PATHS = [BASE_DIR / "locale"]
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# Hash-named static files (WhiteNoise's CompressedManifest) are the right
+# production choice: immutable filenames, so they can be cached for a year.
+# They have a hard dependency on a build artefact, though -- every {% static %}
+# lookup consults staticfiles/staticfiles.json and raises
+# "Missing staticfiles manifest entry" without it. That failure is exactly what
+# you want in production, where it means collectstatic was never run. It is pure
+# noise in a test run, so the test command uses the plain storage; the template
+# code under test is identical either way, only the resolved URL differs.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if _TESTING or not _HAVE_WHITENOISE
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
 
 # No FileField or ImageField exists in this MVP, so nothing writes here. The
 # directory is created on demand if an upload feature is added later.
@@ -164,6 +204,16 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "no-reply@kaushal-parinam.local")
 # ---------------------------------------------------------------------------
 # Security (docs/02-TRD.md §5, docs/05-BACKEND-SCHEMA.md §5)
 # ---------------------------------------------------------------------------
+# CSRF_TRUSTED_ORIGINS must list every origin the browser will POST from. It was
+# unset, which is invisible on localhost (the Origin header matches the host) and
+# fatal in production: with DEBUG=False every form submission, login included,
+# fails the CSRF check and the app is unusable. Derived from ALLOWED_HOSTS so the
+# two cannot drift, and overridable for a deployment whose Origin differs from
+# its Host (a CDN or a TLS-terminating proxy).
+CSRF_TRUSTED_ORIGINS = env_list(
+    "CSRF_TRUSTED_ORIGINS",
+    ",".join(f"https://{host}" for host in ALLOWED_HOSTS),
+)
 SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", not DEBUG)
 SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)

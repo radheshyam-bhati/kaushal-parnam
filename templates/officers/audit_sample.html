@@ -37,11 +37,26 @@
         <label for="claimed_job_rate" style="margin:0">Claimed jobs</label>
         <input type="text" name="claimed_job_rate" id="claimed_job_rate" value="0.05" size="6">
       </div>
+      <div class="form-row" style="margin:0">
+        <label for="self_employment_rate" style="margin:0">Self-employment</label>
+        <input type="text" name="self_employment_rate" id="self_employment_rate" value="0.10" size="6">
+      </div>
       <button class="btn btn-primary" type="submit">Draw sample</button>
     </form>
     <p class="helptext">
-      Rates are settings: 10% of non-repliers and 5% of claimed jobs to start,
-      to be tuned in the pilot.
+      Rates are settings: 10% of non-repliers, 5% of claimed jobs and 10% of
+      self-employment outcomes to start, to be tuned in the pilot.
+    </p>
+    <div class="cluster" style="margin-top:12px">
+      <span class="badge">{{ self_employment_checked }} self-employment checks made</span>
+      {% if self_employment_checked %}
+        <span class="badge">{{ self_employment_confirmed }} confirmed at E1</span>
+      {% endif %}
+    </div>
+    <p class="helptext" style="margin-top:8px">
+      A self-employed trainee has no employer to confirm anything, so an
+      unverified claim stays at E0 forever. A sampled field check by an officer
+      is what raises it to E1.
     </p>
   </div>
 
@@ -67,11 +82,22 @@
                   {% else %}not called{% endif %}
                 </td>
                 <td>
-                  <form method="post" action="{% url 'officers:record_call' sample.pk %}" class="cluster" style="margin:0">
-                    {% csrf_token %}
-                    <button class="btn btn-outline btn-sm" name="result" value="verified" type="submit">Confirmed</button>
-                    <button class="btn btn-outline btn-sm" name="result" value="failed" type="submit">Failed</button>
-                  </form>
+                  {% if sample.sample_type == 'SELF_EMPLOYMENT' %}
+                    <form method="post" action="{% url 'officers:verify_self_employment' sample.pk %}"
+                          class="cluster" style="margin:0">
+                      {% csrf_token %}
+                      <input type="text" name="note" placeholder="what you saw"
+                             maxlength="200" style="max-width:180px">
+                      <button class="btn btn-outline btn-sm" name="result" value="verified" type="submit">Confirmed → E1</button>
+                      <button class="btn btn-outline btn-sm" name="result" value="failed" type="submit">Not confirmed</button>
+                    </form>
+                  {% else %}
+                    <form method="post" action="{% url 'officers:record_call' sample.pk %}" class="cluster" style="margin:0">
+                      {% csrf_token %}
+                      <button class="btn btn-outline btn-sm" name="result" value="verified" type="submit">Confirmed</button>
+                      <button class="btn btn-outline btn-sm" name="result" value="failed" type="submit">Failed</button>
+                    </form>
+                  {% endif %}
                 </td>
               </tr>
             {% endfor %}

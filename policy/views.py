@@ -13,7 +13,9 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from core.decorators import role_required
 from core.models import (
@@ -21,13 +23,28 @@ from core.models import (
     Definition,
     Definitions,
     DemandSnapshot,
+    FollowupJob,
+    IdMatchSuggestion,
     OutcomeEvent,
     Provider,
     PLACEMENT_STATUSES,
     StatsPlacement,
     StatsWageProgression,
 )
+from core.services.identity import (
+    RESOLUTION_CHOICES,
+    detect_near_matches,
+    open_suggestion_count,
+    pending_suggestions,
+    resolve_suggestion,
+)
 from core.services.audit import log_event
+from core.services.filters import (
+    FILTER_KEYS,
+    apply_filters,
+    filter_options,
+    selected_filters,
+)
 from core.services.evidence import (
     GRADE_FLOOR_LABELS,
     build_placement_rate,
@@ -45,14 +62,23 @@ POLICY_ROLES = ('policy_officer',)
 @role_required(*POLICY_ROLES, message='Only MSInS policy officers can open this page.')
 def dashboard(request):
     """P-06. Province-wide view. Every rate carries its response rate and mix."""
-    people = visible_people(request.user)
-    outcomes = visible_outcomes(request.user)
     floor = (request.GET.get('min_grade') or 'E0').upper()
 
     from core.services.evidence import effective_grade
 
+    # RLS first, then the cohort filter: a filter narrows the count, never the
+    # scope (core.services.filters).
+    scoped = visible_people(request.user)
+    filters = selected_filters(request.GET)
+    people = apply_filters(scoped, filters)
+    outcomes = visible_outcomes(request.user).filter(person__in=people)
+
     graded = [o for o in outcomes if effective_grade(o) in _grades(floor)]
-    due = OutcomeEvent.objects.count()  # every outcome implies at least one due round
+    # "Due" is every outcome round owed to the cohort in view, so the response
+    # rate stays honest when a district or course filter is applied.
+    due = FollowupJob.objects.filter(
+        person__in=people, due_at__lte=timezone.now()
+    ).count()
     reached = len(graded)
 
     rate = build_placement_rate(graded, reached=reached, due=due, label='placement', floor=floor)
@@ -78,6 +104,9 @@ def dashboard(request):
         'min_group_size': Definitions.min_group_size(),
         'demographics': _demographics(people),
         'definitions': _definition_rows(),
+        'filters': filters,
+        'filter_options': filter_options(scoped),
+        'filter_keys': FILTER_KEYS,
     })
 
 
@@ -119,10 +148,26 @@ def _district_rollup(outcomes, people, floor: str) -> list[dict]:
 
 
 def _demographics(people) -> dict:
+    """Cohort composition for the filter bar (F-10).
+
+    Counts, not just the set of values: a policy officer needs to see how thin a
+    slice is before trusting a rate cut from it.
+    """
+    from core.services.filters import AGE_BANDS
+
+    rows = list(people.only('gender', 'category', 'dob'))
+    gender: dict[str, int] = {}
+    category: dict[str, int] = {}
+    age_band: dict[str, int] = {band: 0 for band in AGE_BANDS}
+    for person in rows:
+        gender[person.gender] = gender.get(person.gender, 0) + 1
+        category[person.category] = category.get(person.category, 0) + 1
+        age_band[person.age_band] = age_band.get(person.age_band, 0) + 1
     return {
-        'gender': list(people.values('gender').order_by('gender')),
-        'category': list(people.values('category').order_by('category')),
-        'age_band': sorted({p.age_band for p in people}),
+        'gender': sorted(gender.items()),
+        'category': sorted(category.items()),
+        'age_band': [(band, count) for band, count in age_band.items() if count],
+        'total': len(rows),
     }
 
 
@@ -305,6 +350,52 @@ def wage_retention(request):
         'break_days': Definitions.break_days(),
         'min_employment_days': Definitions.min_employment_days(),
     })
+
+
+# ===========================================================================
+# Identity near-match review queue (F-03)
+# ===========================================================================
+@login_required
+@role_required(*POLICY_ROLES, message='Only MSInS policy officers can open this page.')
+def match_queue(request):
+    """F-03: suggest, never auto-merge. A human decides every pair."""
+    queued = 0
+    if request.method == 'POST' and request.POST.get('action') == 'scan':
+        queued = len(detect_near_matches(
+            visible_people(request.user), actor=request.user.role
+        ))
+        messages.success(
+            request,
+            f'Scan complete: {queued} new near-match pair(s) queued for review.'
+            if queued else
+            'Scan complete: no new near matches. Existing pairs are untouched.',
+        )
+        return redirect('policy:match_queue')
+
+    return render(request, 'policy/match_queue.html', {
+        'rows': pending_suggestions(),
+        'open_count': open_suggestion_count(),
+        'resolutions': RESOLUTION_CHOICES,
+        'queued_now': queued,
+    })
+
+
+@login_required
+@role_required(*POLICY_ROLES, message='Only MSInS policy officers can open this page.')
+@require_POST
+def resolve_match(request, suggestion_id):
+    suggestion = get_object_or_404(IdMatchSuggestion, pk=suggestion_id)
+    resolution = request.POST.get('resolution', '')
+    if resolution not in RESOLUTION_CHOICES:
+        messages.error(request, 'Choose a resolution.')
+        return redirect('policy:match_queue')
+    resolve_suggestion(suggestion, resolution, request.user.username)
+    messages.success(
+        request,
+        f'{suggestion.person_id} ~ {suggestion.candidate_utid} marked '
+        f'{resolution.replace("_", " ")}.',
+    )
+    return redirect('policy:match_queue')
 
 
 # ===========================================================================

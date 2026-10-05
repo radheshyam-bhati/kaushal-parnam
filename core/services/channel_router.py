@@ -14,17 +14,20 @@ from django.utils import timezone
 from core.adapters.channels import CHANNELS
 from core.services.followup import (
     MAX_RETRIES,
+    RETRY_LADDER,
     escalate_expired,
     mark_unreachable_outcome,
     record_attempt,
 )
 
-#: Escalation ladder: after the first attempt, try SMS then IVR then an officer.
-RETRY_LADDER = ['SMS', 'IVR']
-
 
 def next_channel(job) -> str:
-    """Channel to use for the next attempt on ``job``."""
+    """Channel to use for the next attempt on ``job``.
+
+    ``job.retries`` counts attempts already made, so 0 is the declared device
+    channel, 1 is the first fallback rung, and so on. The scheduler decides
+    *when* a rung is due; this decides *which* one it is.
+    """
     if job.retries == 0:
         return job.channel_plan
     index = min(job.retries - 1, len(RETRY_LADDER) - 1)

@@ -162,6 +162,12 @@ input[type="checkbox"], input[type="radio"] {
   vertical-align: middle; accent-color: var(--primary);
 }
 .check-row { display: flex; align-items: flex-start; gap: var(--space-2); margin-bottom: var(--space-3); }
+/* One-time code: fixed width so six digits read as one block, monospaced so
+   a transposed digit is visible before submitting. */
+.otp-input {
+  max-width: 8ch !important; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.3em; text-align: center; font-size: var(--fs-base) !important;
+}
 .check-row label { margin-bottom: 0; color: var(--text-primary); font-size: var(--fs-base); }
 .helptext { display: block; font-size: var(--fs-caption); color: var(--text-muted); margin-top: 4px; }
 .errorlist { list-style: none; margin: 4px 0 0; padding: 0; color: var(--danger); font-size: var(--fs-caption); }

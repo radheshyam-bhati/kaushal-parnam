@@ -67,6 +67,28 @@ def can_view_person(user, person) -> bool:
     return visible_people(user).filter(pk=person.pk).exists()
 
 
+def record_hidden_access(user, kind: str, reference: object) -> None:
+    """Note that a session asked for a row it is not allowed to see.
+
+    With the database policies enforced, an out-of-scope row is invisible rather
+    than forbidden, so the honest answer to "give me this record" is 404 -- it
+    does not confirm the record exists. That is better than the 403 this used to
+    return, but it would otherwise mean a cross-tenant attempt left no trace,
+    and DPDP s.8(6) wants those recorded. The attempt is logged here instead.
+    """
+    from core.services.audit import log_event
+
+    log_event(
+        component='rls',
+        event_type='rls_violation_attempt',
+        description=(
+            f'{getattr(user, "role", "anonymous")} asked for {kind} {reference}, '
+            f'which is outside its scope'
+        ),
+        user_role=getattr(user, 'role', 'anonymous'),
+    )
+
+
 def assert_can_view_person(user, person) -> None:
     from django.core.exceptions import PermissionDenied
 

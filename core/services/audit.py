@@ -8,10 +8,20 @@ Two sinks:
 from __future__ import annotations
 
 import logging
+from contextvars import ContextVar
 
 from core.logging import audit_log as emit
 
 LOGGER = "core.audit"
+
+#: Request id of the request currently being served, set by RLSMiddleware.
+#: log_event falls back to it so every row written during a request carries the
+#: id, without threading a ``request`` argument through every call site. It is a
+#: ContextVar rather than a thread-local because that is correct under both
+#: threaded and async workers.
+current_request_id: ContextVar[str | None] = ContextVar(
+    'kp_request_id', default=None
+)
 
 
 def _utid_for(request):
@@ -31,8 +41,20 @@ def log_event(
     request_id: str | None = None,
     **extra,
 ) -> None:
-    """Write one audit row and one structured log line."""
+    """Write one audit row and one structured log line.
+
+    ``request_id`` defaults to the id of the request in flight. It has to be
+    present on rows written during a request for two reasons: it is what
+    correlates a log line with the requests that produced it, and PostgreSQL
+    checks the SELECT policy against the ``RETURNING`` clause of an INSERT, so a
+    session must be able to read back the row it just wrote. Rows written outside
+    a request (the scheduler, management commands) legitimately have no id; those
+    run as ``kp_worker``, which bypasses RLS.
+    """
     from core.models import AuditLog
+
+    if request_id is None:
+        request_id = current_request_id.get()
 
     try:
         AuditLog.objects.create(

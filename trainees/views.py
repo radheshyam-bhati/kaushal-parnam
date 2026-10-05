@@ -16,13 +16,14 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.views import PasswordResetView
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseForbidden
+from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.models import Role
 from core.decorators import role_required
+from core.middleware import bind_scope
 from core.models import (
     AuditLog,
     Consent,
@@ -40,7 +41,7 @@ from core.services.channel_router import record_reply
 from core.services.evidence import effective_grade
 from core.services.gatekeeper import check_csv
 from core.services.otp import apply_erasure, issue_otp, verify_otp
-from core.services.rls import assert_can_view_person
+from core.services.rls import assert_can_view_person, record_hidden_access
 from core.services.retention import retention_for, wage_progression
 from core.services.utid import generate_utid
 from trainees.forms import (
@@ -126,6 +127,13 @@ def enrol(request):
             )
         else:
             utid = generate_utid()
+            # This form is public, so the request began with no role at all and
+            # the policies would refuse the insert. Bind the scope the applicant
+            # is acting under: they are a trainee creating their own record.
+            # The UTID is minted here, so it is not a value the client chose --
+            # they can only ever write rows keyed to this one id, and read back
+            # only those (core/migrations/0009).
+            bind_scope(user_role=Role.TRAINEE, utid=utid)
             person = Person.objects.create(
                 utid=utid,
                 name=form.cleaned_data['name'],
@@ -446,9 +454,19 @@ def _person_for_user(request):
 # ===========================================================================
 @login_required
 def outcome_detail(request, event_id):
-    outcome = get_object_or_404(
-        OutcomeEvent.objects.select_related('person', 'followup_job'), pk=event_id
-    )
+    # The database policies make an out-of-scope outcome invisible, so this
+    # misses rather than raising, and 404 is the right answer: it does not
+    # confirm the record exists. The attempt is still recorded.
+    try:
+        outcome = OutcomeEvent.objects.select_related(
+            'person', 'followup_job'
+        ).get(pk=event_id)
+    except OutcomeEvent.DoesNotExist:
+        record_hidden_access(request.user, 'outcome', event_id)
+        raise Http404('No such outcome record.')
+
+    # Reachable when the ORM scope and the database policy disagree, which would
+    # itself be a bug; kept so the denial is never silent.
     assert_can_view_person(request.user, outcome.person)
     return render(request, 'trainees/outcome_detail.html', {
         'outcome': outcome,
@@ -497,15 +515,59 @@ def my_data(request):
         ],
         'correction_form': correction_form,
         'otp_sent': request.session.get('otp_action'),
+        'otp_pending': request.session.get('otp_pending') or {},
+        'otp_form_action': _otp_form_action(request),
         'is_erased': not person.is_active,
         'audit_rows': AuditLog.objects.filter(utid=person.pk)[:20],
     })
 
 
+def _otp_form_action(request) -> str:
+    """URL the code-entry form posts back to for the pending action."""
+    from django.urls import reverse
+
+    pending = request.session.get('otp_pending') or {}
+    action = pending.get('action')
+    if action == 'CORRECTION':
+        return reverse('trainees:correct_contact')
+    if action == 'CONSENT_CHANGE':
+        return reverse('trainees:withdraw_consent', args=[pending.get('purpose', '')])
+    return reverse('trainees:confirm_erasure')
+
+
+def _otp_pending(request, action: str):
+    """The stashed change awaiting a code, or ``None`` if it is not this action."""
+    pending = request.session.get('otp_pending')
+    if pending and pending.get('action') == action:
+        return pending
+    return None
+
+
+def _otp_challenged(request, person, action: str, payload: dict):
+    """Issue a code and stash the pending change. Step 1 of every S-04 change."""
+    issue_otp(person, action=action)
+    request.session['otp_action'] = action
+    request.session['otp_utid'] = person.pk
+    request.session['otp_pending'] = {'action': action, **payload}
+    messages.info(
+        request,
+        'We sent a 6-digit code to your registered phone. Enter it below to '
+        'confirm this change.',
+    )
+    return redirect('trainees:my_data')
+
+
+
+
+
 @login_required
 @require_POST
 def withdraw_consent(request, purpose):
-    """S-04: withdraw one purpose. Follow-up messages stop when configured to."""
+    """S-04: withdraw one purpose, OTP-verified. Follow-up messages stop when
+    configured to. Withdrawal is a change to a compliance record, so it is
+    confirmed against the phone on file rather than trusted from the session
+    alone (docs/01-PRD.md §7 S-04).
+    """
     from django.conf import settings
 
     from core.models import CONSENT_PURPOSE_LABELS
@@ -519,6 +581,29 @@ def withdraw_consent(request, purpose):
         messages.error(request, 'That consent purpose is not recorded.')
         return redirect('trainees:my_data')
 
+    if consent.withdrawn_at is not None:
+        messages.info(
+            request,
+            f"'{CONSENT_PURPOSE_LABELS[purpose]}' consent is already withdrawn.",
+        )
+        return redirect('trainees:my_data')
+
+    submitted = (request.POST.get('code') or '').strip()
+    if not submitted:
+        return _otp_challenged(
+            request, person, 'CONSENT_CHANGE', {'purpose': purpose}
+        )
+
+    pending = _otp_pending(request, 'CONSENT_CHANGE')
+    if pending is None or pending.get('purpose') != purpose:
+        messages.error(request, 'Request a fresh code for this change.')
+        return redirect('trainees:my_data')
+    if not verify_otp(person, action='CONSENT_CHANGE', code=submitted):
+        messages.error(request, 'That code is wrong or has expired. Request a new one.')
+        return redirect('trainees:my_data')
+
+    request.session.pop('otp_pending', None)
+    request.session.pop('otp_action', None)
     consent.withdraw()
     cancelled = 0
     if purpose == 'follow-up' and settings.CONSENT_WITHDRAWAL_STOP:
@@ -544,6 +629,12 @@ def withdraw_consent(request, purpose):
 @login_required
 @require_POST
 def correct_contact(request):
+    """S-04: correct own contact details, OTP-verified.
+
+    A new phone number is a new way to reach the trainee, so it is the change
+    most worth confirming out of band: if the session were hijacked, changing
+    the phone would let the attacker keep receiving the follow-ups.
+    """
     person = _person_for_user(request)
     if person is None:
         return HttpResponseForbidden('No trainee record is linked to this login.')
@@ -553,6 +644,20 @@ def correct_contact(request):
         messages.error(request, 'Please correct the highlighted fields.')
         return redirect('trainees:my_data')
 
+    submitted = (request.POST.get('code') or '').strip()
+    if not submitted:
+        return _otp_challenged(request, person, 'CORRECTION', {})
+
+    pending = _otp_pending(request, 'CORRECTION')
+    if pending is None:
+        messages.error(request, 'Request a fresh code to save these details.')
+        return redirect('trainees:my_data')
+    if not verify_otp(person, action='CORRECTION', code=submitted):
+        messages.error(request, 'That code is wrong or has expired. Request a new one.')
+        return redirect('trainees:my_data')
+
+    request.session.pop('otp_pending', None)
+    request.session.pop('otp_action', None)
     Contact.objects.update_or_create(
         person=person,
         defaults=form.cleaned_data | {'shared_phone_flag': form.cleaned_data['device_type'] == 'shared'},

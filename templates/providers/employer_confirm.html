@@ -37,6 +37,19 @@
       </fieldset>
 
       <div class="form-row">
+        <label for="skills_lacking">Is the trainee missing a skill for this job?</label>
+        <select name="skills_lacking" id="skills_lacking">
+          <option value="no" selected>No, the training was enough</option>
+          <option value="yes">Yes, they are missing a skill</option>
+        </select>
+        <span class="helptext">
+          Optional, and the only place the system can hear it from the employer
+          side. This is one of the three signals the department uses to spot a
+          course that no longer matches local vacancies.
+        </span>
+      </div>
+
+      <div class="form-row">
         <label for="wage_verified">Wage band you would confirm</label>
         <select name="wage_verified" id="wage_verified">
           <option value="">Same as the trainee said</option>

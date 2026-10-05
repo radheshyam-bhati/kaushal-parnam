@@ -11,6 +11,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 
 from django.db import connection, transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from core.models import (
@@ -21,8 +22,30 @@ from core.models import (
     Person,
 )
 
-RETRY_HOURS = {'SMS': 48, 'IVR': 72}  # F-04 retry plan
-MAX_RETRIES = 3
+#: F-04 retry plan (docs/01-PRD.md §7): after the first attempt on the declared
+#: device channel, wait RETRY_HOURS[channel] before trying that channel again.
+RETRY_HOURS = {'SMS': 48, 'IVR': 72}
+#: Order the fallback channels are tried in. Single source of truth: the router
+#: picks the rung, the scheduler decides when that rung is due.
+RETRY_LADDER = ['SMS', 'IVR']
+MAX_RETRIES = len(RETRY_LADDER) + 1
+
+
+def _retry_cutoffs(now):
+    """``(retries, cutoff)`` pairs: when each retry rung becomes due.
+
+    ``retries`` is the attempt count already made, so the rung for index ``i``
+    of the ladder fires after ``RETRY_HOURS[RETRY_LADDER[i]]`` hours of silence.
+    """
+    return [
+        (index + 1, now - timedelta(hours=RETRY_HOURS[channel]))
+        for index, channel in enumerate(RETRY_LADDER)
+    ]
+
+
+def escalation_cutoff(now, max_attempts: int = MAX_RETRIES):
+    """Silence required before a fully-attempted job is escalated to an officer."""
+    return now - timedelta(hours=RETRY_HOURS[RETRY_LADDER[-1]])
 
 
 def _as_date(value):
@@ -96,37 +119,59 @@ def schedule_missing_rounds(now=None) -> int:
     return created
 
 
-def claim_due_jobs(limit: int = 100) -> list[int]:
-    """Atomically claim due PENDING jobs and mark them SENT.
+def claim_due_jobs(limit: int = 100, now=None) -> list[int]:
+    """Atomically claim every job that owes an attempt, and mark them SENT.
+
+    Two populations qualify, and both are needed for the F-04 ladder to run:
+
+    * a ``PENDING`` job whose ``due_at`` has arrived -- the first attempt, sent
+      on the channel the trainee's device type declared;
+    * a ``SENT`` job that has been silent long enough for the next rung of
+      :data:`RETRY_LADDER` -- the 48h SMS step, then the 72h IVR step.
+
+    Claiming only PENDING jobs would leave every job at one attempt forever, so
+    the retry rungs and the escalation below them could never be reached.
 
     ``FOR UPDATE SKIP LOCKED`` is what lets two workers drain the same table.
     On SQLite the same work is done inside a transaction with a compare-and-set
     update, which is sufficient for the single-process demo.
     """
-    now = timezone.now()
+    now = now or timezone.now()
+    cutoffs = _retry_cutoffs(now)
     if connection.vendor == 'postgresql':
+        retry_clause = ' OR '.join(
+            ["(status = 'SENT' AND retries = %s AND last_attempt_at <= %s)"] * len(cutoffs)
+        )
+        params = [now]
+        for retries, cutoff in cutoffs:
+            params.extend([retries, cutoff])
+        params.append(limit)
         with connection.cursor() as cursor:
             cursor.execute(
-                """
+                f"""
                 UPDATE followup_job
                    SET status = 'SENT', updated_at = NOW(), updated_by = 'scheduler'
                  WHERE id IN (
                        SELECT id FROM followup_job
-                        WHERE status = 'PENDING' AND due_at <= %s
+                        WHERE (status = 'PENDING' AND due_at <= %s)
+                           OR {retry_clause}
                         ORDER BY due_at
                         FOR UPDATE SKIP LOCKED
                         LIMIT %s
                  )
                 RETURNING id
                 """,
-                [now, limit],
+                params,
             )
             return [row[0] for row in cursor.fetchall()]
 
+    due = Q(status='PENDING', due_at__lte=now)
+    for retries, cutoff in cutoffs:
+        due |= Q(status='SENT', retries=retries, last_attempt_at__lte=cutoff)
     with transaction.atomic():
         rows = list(
             FollowupJob.objects.select_for_update()
-            .filter(status='PENDING', due_at__lte=now)
+            .filter(due)
             .order_by('due_at')[:limit]
             .values_list('id', flat=True)
         )
@@ -134,6 +179,26 @@ def claim_due_jobs(limit: int = 100) -> list[int]:
             status='SENT', updated_at=now, updated_by='scheduler'
         )
         return rows
+
+
+def claim_escalations(limit: int = 100, max_attempts: int = MAX_RETRIES, now=None) -> list[int]:
+    """Claim fully-attempted jobs that have stayed silent long enough to escalate.
+
+    Separate from :func:`claim_due_jobs` because the outcome is not another
+    message: the ladder is exhausted, so the round becomes an officer task.
+    """
+    now = now or timezone.now()
+    silent_since = escalation_cutoff(now)
+    return list(
+        FollowupJob.objects.select_for_update()
+        .filter(
+            status='SENT',
+            retries__gte=max_attempts,
+            last_attempt_at__lte=silent_since,
+        )
+        .order_by('last_attempt_at')[:limit]
+        .values_list('id', flat=True)
+    )
 
 
 def record_attempt(job: FollowupJob, channel: str, result: str, **kwargs) -> None:

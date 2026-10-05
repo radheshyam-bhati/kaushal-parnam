@@ -1,0 +1,51 @@
+# Production overlay (docs/02-TRD.md §8).
+#
+#   SECRET_KEY=... docker compose -f docker-compose.yml -f compose.production.yml up -d --build
+#
+# Differences from the demo file, all of them deliberate:
+#
+#   DEBUG=False              detailed error pages are an information leak
+#   real SECRET_KEY          required; the demo fallback is refused below
+#   HTTPS-only cookies       SESSION_COOKIE_SECURE / CSRF_COOKIE_SECURE
+#   HSTS on                  once the hostname is HTTPS-only
+#   SSL redirect on          terminate TLS at the proxy or here, not both
+#   no bind mount            code is baked into the image, not mounted over it
+#
+# Everything security-sensitive reads from the environment; nothing is hardcoded
+# here. CSRF_TRUSTED_ORIGINS must list every origin the browser will POST from,
+# or every form submission -- including login -- fails the CSRF check.
+
+services:
+  web:
+    command: >
+      gunicorn config.wsgi:application
+      --bind 0.0.0.0:8000
+      --workers 3
+      --timeout 60
+      --access-logfile -
+      --error-logfile -
+    environment:
+      - DATABASE_URL=${DATABASE_URL:?set DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY:?set SECRET_KEY to a long random value}
+      - DEBUG=False
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:?set ALLOWED_HOSTS to your hostname}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:?set CSRF_TRUSTED_ORIGINS, e.g. https://kaushal.example.gov.in}
+      - DJANGO_TIME_ZONE=Asia/Kolkata
+      - SESSION_COOKIE_SECURE=True
+      - CSRF_COOKIE_SECURE=True
+      - SECURE_SSL_REDIRECT=True
+      - SECURE_HSTS_SECONDS=31536000
+      - SECURE_HSTS_INCLUDE_SUBDOMAINS=True
+      - SECURE_HSTS_PRELOAD=True
+      - SECURE_PROXY_SSL_HEADER=HTTP_X_FORWARDED_PROTO,HTTP_X_FORWARDED_SECURE
+    volumes: []
+    restart: always
+
+  scheduler:
+    environment:
+      - DATABASE_URL=${DATABASE_URL:?set DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY:?set SECRET_KEY to a long random value}
+      - DEBUG=False
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:?set ALLOWED_HOSTS to your hostname}
+      - DJANGO_TIME_ZONE=Asia/Kolkata
+    restart: always

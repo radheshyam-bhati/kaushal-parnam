@@ -260,6 +260,11 @@ class Command(BaseCommand):
                     defaults={'language': rng.choice(LANGUAGES), 'given_by': 'trainee'},
                 )
 
+            # F-03: every trainee holds at least one external scheme ID, so the
+            # crosswalk is populated and the S-05 "inconsistent identifiers"
+            # penalty reflects a real gap rather than every trainee at once.
+            self._seed_crosswalk(person, rng=rng)
+
             enrolment, _ = Enrolment.objects.update_or_create(
                 person=person,
                 defaults={
@@ -330,6 +335,32 @@ class Command(BaseCommand):
         from django.conf import settings
 
         return f'{settings.INTERNAL_UTID_PREFIX}-{on_date:%Y%m%d}-{person_index + 1:04d}'
+
+    def _seed_crosswalk(self, person, *, rng) -> None:
+        """Link each trainee to one or two external scheme IDs (F-03).
+
+        A small share are left unlinked on purpose: that is what the S-05
+        "inconsistent identifiers" penalty is there to catch, and a demo in
+        which the metric can never fire would be no demonstration at all.
+        """
+        from core.models import IdCrosswalk
+
+        if rng.random() < 0.04:
+            return
+
+        schemes = ['SID', 'SDMS'] if rng.random() < 0.45 else ['SID']
+        if rng.random() < 0.15:
+            schemes.append('e-Shram')
+
+        for scheme in schemes:
+            IdCrosswalk.objects.get_or_create(
+                person=person,
+                scheme=scheme,
+                defaults={
+                    'programme_id': f'{scheme}-{person.utid}',
+                    'linked_by': 'seed_demo',
+                },
+            )
 
     def _seed_outcomes(self, *, person, enrolment, provider_id, placement_weight, rng, stats):
         """Give each trainee up to four outcome events across the rounds."""

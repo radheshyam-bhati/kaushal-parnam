@@ -9,6 +9,7 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -22,11 +23,13 @@ from core.models import (
     OUTCOME_STATUS_CHOICES,
 )
 from core.services.audit import log_event
-from core.services.rls import visible_people, visible_outcomes
+from core.services.rls import record_hidden_access, visible_people, visible_outcomes
 from core.services.weights import (
     draw_claimed_job_sample,
     draw_non_replier_sample,
+    draw_self_employment_sample,
     record_call_result,
+    record_field_verification,
 )
 
 
@@ -133,6 +136,13 @@ def audit_sample(request):
         'verification_rate': round(100.0 * verified / called, 1) if called else None,
         'non_replier_rate': request.GET.get('non_replier_rate', ''),
         'claimed_job_rate': request.GET.get('claimed_job_rate', ''),
+        'self_employment_rate': request.GET.get('self_employment_rate', ''),
+        'self_employment_checked': base.filter(
+            sample_type='SELF_EMPLOYMENT', result_verified__isnull=False
+        ).count(),
+        'self_employment_confirmed': base.filter(
+            sample_type='SELF_EMPLOYMENT', result_verified=True
+        ).count(),
     })
 
 
@@ -141,24 +151,69 @@ def audit_sample(request):
 def draw_samples(request):
     non_replier_rate = request.POST.get('non_replier_rate') or None
     claimed_rate = request.POST.get('claimed_job_rate') or None
+    self_emp_rate = request.POST.get('self_employment_rate') or None
     non_repliers = draw_non_replier_sample(
         float(non_replier_rate) if non_replier_rate else None
     )
     claimed = draw_claimed_job_sample(
         float(claimed_rate) if claimed_rate else None
     )
+    self_employment = draw_self_employment_sample(
+        float(self_emp_rate) if self_emp_rate else None
+    )
     log_event(
         component='audit', event_type='audit_sample_draw',
         description=(
-            f'Drew {len(non_repliers)} non-repliers and {len(claimed)} claimed jobs '
-            f'for {request.user.district or "all districts"}'
+            f'Drew {len(non_repliers)} non-repliers, {len(claimed)} claimed jobs and '
+            f'{len(self_employment)} self-employment outcomes for '
+            f'{request.user.district or "all districts"}'
         ),
         user_role=request.user.role,
     )
     messages.success(
         request,
-        f'Drew {len(non_repliers)} non-repliers and {len(claimed)} claimed jobs. '
-        f'Each carries weight 1/p so the rate can represent everyone.',
+        f'Drew {len(non_repliers)} non-repliers, {len(claimed)} claimed jobs and '
+        f'{len(self_employment)} self-employment outcomes. Each carries weight 1/p '
+        f'so the rate can represent everyone.',
+    )
+    return redirect('officers:audit_sample')
+
+
+@login_required
+@require_POST
+def verify_self_employment(request, sample_id):
+    """F-12: field-verify a sampled self-employment outcome, raising it to E1."""
+    # A sample outside the officer's district is invisible under the policies,
+    # so the lookup misses; 404 rather than 403 because a 403 would confirm the
+    # record exists. The attempt is logged either way.
+    try:
+        sample = AuditSample.objects.select_related('outcome__person').get(pk=sample_id)
+    except AuditSample.DoesNotExist:
+        record_hidden_access(request.user, 'audit sample', sample_id)
+        raise Http404('No such audit sample.')
+
+    if sample.sample_type != 'SELF_EMPLOYMENT':
+        messages.error(request, 'That row is not a self-employment field sample.')
+        return redirect('officers:audit_sample')
+
+    person = sample.outcome.person
+    if request.user.district and person.district != request.user.district:
+        raise PermissionDenied("No permission to verify another district's outcome.")
+
+    record_field_verification(
+        sample,
+        verified=request.POST.get('result') == 'verified',
+        checked_by=request.user.username,
+        note=(request.POST.get('note') or '')[:200],
+    )
+    messages.success(
+        request,
+        f'Field check recorded for {person.pk}: '
+        + (
+            'confirmed, raised to E1.'
+            if request.POST.get('result') == 'verified'
+            else 'not confirmed. The claim stays at E0.'
+        ),
     )
     return redirect('officers:audit_sample')
 

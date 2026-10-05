@@ -17,7 +17,12 @@ from django.core.management.base import BaseCommand
 
 from core.models import FollowupJob
 from core.services.channel_router import dispatch, record_unreachable
-from core.services.followup import claim_due_jobs, schedule_missing_rounds
+from core.services.followup import (
+    MAX_RETRIES,
+    claim_due_jobs,
+    claim_escalations,
+    schedule_missing_rounds,
+)
 
 
 class Command(BaseCommand):
@@ -27,7 +32,10 @@ class Command(BaseCommand):
         parser.add_argument('--limit', type=int, default=100)
         parser.add_argument('--loop', action='store_true', help='keep polling')
         parser.add_argument('--interval', type=int, default=10, help='seconds between passes')
-        parser.add_argument('--max-attempts', type=int, default=3)
+        parser.add_argument(
+            '--max-attempts', type=int, default=MAX_RETRIES,
+            help='attempts before the round is escalated to a district officer',
+        )
         parser.add_argument('--no-schedule', action='store_true', help='skip backfill')
 
     def handle(self, *args, **options):
@@ -50,12 +58,13 @@ class Command(BaseCommand):
             job = FollowupJob.objects.select_related('person').get(pk=job_id)
             self.stdout.write(dispatch(job))
 
-        # Anything still unanswered after the retry window escalates.
-        unanswered = FollowupJob.objects.filter(
-            status='SENT', retries__gte=options['max_attempts']
-        ).select_related('person')
+        # The ladder is exhausted and the trainee has stayed silent past the last
+        # rung's window: escalate to an officer task.
         escalated = 0
-        for job in unanswered:
+        for job_id in claim_escalations(
+            limit=options['limit'], max_attempts=options['max_attempts']
+        ):
+            job = FollowupJob.objects.select_related('person').get(pk=job_id)
             record_unreachable(job)
             escalated += 1
         if escalated:
