@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load kp_tags %}
+{% block title %}Enrol — consent and contact passport{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <h1 style="font-size:2rem">Enrol: consent and contact passport</h1>
+  <p style="color:var(--text-secondary)">
+    Four purposes, each one separate. You can withdraw any of them later from
+    "My Data". Nothing is sent to an employer or matched to a record unless you
+    say yes here.
+  </p>
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-error" role="alert">
+      <span class="alert-icon" aria-hidden="true">!</span>
+      <span>{{ form.non_field_errors|join:" " }}</span>
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate class="stack" style="margin-top:24px">
+    {% csrf_token %}
+
+    <fieldset>
+      <legend>1. About you</legend>
+      {% for field in form|fields:"name dob gender category district" %}
+        <div class="form-row {% if field.errors %}field-error{% endif %}">
+          <label class="required" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>2. How to reach you</legend>
+      <p class="helptext">
+        Phones change and are often shared. That is why we ask for a second
+        contact: it is the difference between a real follow-up rate and a
+        misleading one.
+      </p>
+      {% for field in form|fields:"language own_phone second_contact_name second_phone second_contact_relationship" %}
+        <div class="form-row {% if field.errors %}field-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>3. Your phone decides how we message you</legend>
+      {% for key, label in form.fields.device_type.choices %}
+        <div class="check-row">
+          <input type="radio" name="device_type" id="device_{{ key }}" value="{{ key }}"
+                 {% if form.device_type.value == key %}checked{% endif %}>
+          <label for="device_{{ key }}">
+            {{ label }}
+            <span class="helptext">{{ form.fields.device_type.help_text }}</span>
+          </label>
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>4. Consent, purpose by purpose</legend>
+      <p class="helptext">
+        DPDP Act 2023 s.6: consent is per purpose, and withdrawing it must be as
+        easy as giving it. Tick only what you agree to.
+      </p>
+      {% for field in form|fields:"consent_follow_up consent_employer_check consent_record_match consent_statistics" %}
+        <div class="check-row {% if field.errors %}field-error{% endif %}">
+          {{ field }}
+          <label for="{{ field.id_for_label }}">
+            {{ field.label }}
+            <span class="helptext">{{ field.help_text }}</span>
+            {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </label>
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>5. Age gate</legend>
+      {% if form.guardian_consent.value %}
+        <p style="color:var(--warning)">
+          You told us you are under {{ app.dpdp_child_age_limit }} years old.
+          DPDP requires verifiable parental consent below {{ app.dpdp_child_age_limit }}. This pilot targets
+          trainees aged 18–35; if you are 15–17, please consult your programme coordinator.
+        </p>
+      {% endif %}
+      <div class="check-row {% if form.guardian_consent.errors %}field-error{% endif %}">
+        {{ form.guardian_consent }}
+        <label for="{{ form.guardian_consent.id_for_label }}">
+          {{ form.guardian_consent.label }}
+          {% if form.guardian_consent.errors %}<ul class="errorlist">{% for e in form.guardian_consent.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>6. Your course and centre</legend>
+      <div class="form-row {% if form.provider_id.errors %}field-error{% endif %}">
+        <label class="required" for="{{ form.provider_id.id_for_label }}">{{ form.provider_id.label }}</label>
+        <select name="provider_id" id="{{ form.provider_id.id_for_label }}">
+          <option value="">Choose your training centre</option>
+          {% for pid, pname in providers %}
+            <option value="{{ pid }}" {% if form.provider_id.value == pid %}selected{% endif %}>{{ pid }} — {{ pname }}</option>
+          {% endfor %}
+        </select>
+        {% if form.provider_id.errors %}<ul class="errorlist">{% for e in form.provider_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="form-row {% if form.qualification_id.errors %}field-error{% endif %}">
+        <label class="required" for="{{ form.qualification_id.id_for_label }}">{{ form.qualification_id.label }}</label>
+        <select name="qualification_id" id="{{ form.qualification_id.id_for_label }}">
+          <option value="">Choose your course</option>
+          {% for qid, qname in qualifications %}
+            <option value="{{ qid }}" {% if form.qualification_id.value == qid %}selected{% endif %}>{{ qname }} ({{ qid }})</option>
+          {% endfor %}
+        </select>
+        {% if form.qualification_id.errors %}<ul class="errorlist">{% for e in form.qualification_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      {% for field in form|fields:"course_start_date course_end_date sdms_id" %}
+        <div class="form-row {% if field.errors %}field-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <div class="check-row {% if form.notice_accepted.errors %}field-error{% endif %}">
+      {{ form.notice_accepted }}
+      <label for="{{ form.notice_accepted.id_for_label }}">
+        {{ form.notice_accepted.label }}
+        {% if form.notice_accepted.errors %}<ul class="errorlist">{% for e in form.notice_accepted.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </label>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Submit and get my ID</button>
+    <p class="helptext">
+      Submitting creates one internal ID for you, in the form
+      <code>{{ app.utid_prefix }}-YYYYMMDD-NNNN</code>. We do not store any Aadhaar number.
+    </p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Outcome {{ outcome.pk }}{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">
+      {{ outcome.get_status_display }}
+      <span class="grade grade-{{ grade }}" style="vertical-align:middle">{{ grade }}</span>
+    </h1>
+    <p style="color:var(--text-secondary)">
+      {{ person.display_name }} · {{ person.utid }} · as of {{ outcome.reference_date|date:"d M Y" }}
+      {% if outcome.followup_job %} · answered round {{ outcome.followup_job.round }}{% endif %}
+    </p>
+    <div class="cluster">
+      <a class="btn btn-secondary" href="{{ request.META.HTTP_REFERER|default:'/' }}">Back</a>
+      <a class="btn btn-primary" href="{% url 'trainees:outcome_capture' %}">Add a newer record</a>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>What was recorded</h3>
+      <table>
+        <tbody>
+          <tr><th scope="row">Status</th><td>{{ outcome.get_status_display }}</td></tr>
+          <tr><th scope="row">Role (NCO)</th><td>{{ outcome.role_code|default:"—" }}</td></tr>
+          <tr><th scope="row">Start date</th><td>{{ outcome.start_date|default:"—"|date:"d M Y" }}</td></tr>
+          <tr><th scope="row">Wage band</th><td>{{ outcome.wage_band|default:"—" }}</td></tr>
+          <tr><th scope="row">Employer</th><td>{{ outcome.employer_name|default:"—" }}</td></tr>
+          <tr><th scope="row">Recorded by</th><td>{{ outcome.created_by }}</td></tr>
+          <tr><th scope="row">Recorded at</th><td>{{ outcome.created_at|date:"d M Y H:i" }}</td></tr>
+          <tr><th scope="row">Weight</th><td>{{ outcome.weight|floatformat:2 }} (inverse-probability)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>How it was checked</h3>
+      {% if reasons %}
+        <p>Reasons given:</p>
+        <ul>
+          {% for reason in reasons %}
+            <li>{{ reason.label }}{% if reason.text %} — {{ reason.text }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="helptext">No reason codes recorded.</p>
+      {% endif %}
+
+      {% if employer %}
+        <h4>Employer check</h4>
+        <p>
+          {{ employer.employer_name }}:
+          {% if employer.verified %}confirmed{% else %}not yet confirmed{% endif %}.
+          {% if employer.has_wage_mismatch %}
+            <br><span style="color:var(--warning)">
+              Wage disagreement kept on record: trainee said {{ employer.wage_claimed }},
+              employer said {{ employer.wage_verified }}.
+            </span>
+          {% elif employer.wage_verified %}
+            Wage band agreed: {{ employer.wage_verified }}.
+          {% endif %}
+        </p>
+      {% endif %}
+
+      {% if evidence %}
+        <h4>Evidence records</h4>
+        <ul>
+          {% for record in evidence %}
+            <li>{{ record.get_kind_display }} → grade {{ record.level|default:"—" }}
+              {% if record.result_verified %}(verified){% endif %}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if attempts %}
+  <div class="card">
+    <h3>Contact attempts for this round</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">#</th><th scope="col">Channel</th><th scope="col">Result</th><th scope="col">Badge</th><th scope="col">When</th></tr></thead>
+        <tbody>
+          {% for attempt in attempts %}
+            <tr>
+              <th scope="row">{{ attempt.attempt_number }}</th>
+              <td>{{ attempt.get_channel_display }}</td>
+              <td>{{ attempt.get_result_display }}</td>
+              <td><span class="badge badge-{{ attempt.demo_label }}">{{ attempt.demo_label }}</span></td>
+              <td>{{ attempt.created_at|date:"d M Y H:i" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

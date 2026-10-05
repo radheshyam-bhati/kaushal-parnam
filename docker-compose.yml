@@ -1,0 +1,48 @@
+version: "3.8"
+
+# Demo environment for Kaushal Parinam (docs/02-TRD.md §8, §13).
+#   docker compose up --build
+#   docker compose exec web python manage.py migrate
+#   docker compose exec web python manage.py seed_demo
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/kaushal_parinam
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DJANGO_TIME_ZONE=Asia/Kolkata
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-docker-demo-key}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=kaushal_parinam
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kaushal_parinam"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Redis is optional and NOT required: the follow-up scheduler uses a
+  # PostgreSQL job table with FOR UPDATE SKIP LOCKED (docs/02-TRD.md §1).
+  # Uncomment only if you want to compare against a Bull-queue style setup.
+  # redis:
+  #   image: redis:7
+  #   ports:
+  #     - "6379:6379"
+
+volumes:
+  pg_data:

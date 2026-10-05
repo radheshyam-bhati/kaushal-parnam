@@ -1,0 +1,11 @@
+{# Error state. docs/02-TRD.md §11: specific and actionable, never "error 500". #}
+<div class="error-state" role="alert">
+  <h3>{{ heading|default:"We could not load this" }}</h3>
+  <p>{{ message|default:"Please refresh, or try again in a few moments." }}</p>
+  <div class="cluster" style="justify-content:center">
+    <button class="btn btn-primary" onclick="window.location.reload()">Try again</button>
+    {% if action_url %}
+      <a class="btn btn-secondary" href="{{ action_url }}">{{ action_label|default:"Go back" }}</a>
+    {% endif %}
+  </div>
+</div>

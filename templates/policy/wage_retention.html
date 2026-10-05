@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Wage and retention{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Wage progression and retention</h1>
+    <p style="color:var(--text-secondary)">
+      "Retained" means employed for at least {{ min_employment_days }} days with
+      any gap no longer than {{ break_days }} days. That break rule lives in the
+      definitions registry, so changing it moves every number here.
+    </p>
+    <p>
+      <a class="btn btn-secondary" href="{% url 'policy:definitions' %}">Change the break rule</a>
+    </p>
+  </div>
+
+  <div class="card">
+    {% if rows %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Course</th><th scope="col">Provider</th><th scope="col">District</th>
+                <th scope="col">Wage T+3</th><th scope="col">Wage T+6</th><th scope="col">Wage T+12</th>
+                <th scope="col">Months retained</th><th scope="col">Respondents</th></tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <th scope="row">{{ row.course }}</th>
+                <td>{{ row.provider }}</td>
+                <td>{{ row.district }}</td>
+                <td>{{ row.wage_t3|default:"—" }}</td>
+                <td>{{ row.wage_t6|default:"—" }}</td>
+                <td>{{ row.wage_t12|default:"—" }}</td>
+                <td>{{ row.retention_months }}</td>
+                <td>{{ row.respondents }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with heading="No wage progression yet" message="Run the statistics batch once trainees have answered at least one round." %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

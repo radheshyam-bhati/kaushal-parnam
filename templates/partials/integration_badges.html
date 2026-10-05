@@ -1,0 +1,25 @@
+{# Integration classification badges.
+   Sourced from docs/03-APP-FLOW.md "Integration Classification (demo)" and
+   docs/02-TRD.md §12. Included on every page so no judge has to ask whether a
+   number came from a live government system. #}
+<details class="card no-print" style="padding:12px 16px">
+  <summary style="cursor:pointer; font-size:0.875rem; color:var(--text-secondary)">
+    What is live and what is simulated?
+  </summary>
+  <div class="table-wrap" style="margin-top:12px">
+    <table>
+      <thead>
+        <tr><th scope="col">Integration</th><th scope="col">Badge</th><th scope="col">In this demo</th></tr>
+      </thead>
+      <tbody>
+        {% for item in integrations %}
+          <tr>
+            <th scope="row">{{ item.name }}</th>
+            <td><span class="badge badge-{{ item.label }}">{{ item.label }}</span></td>
+            <td>{{ item.kind }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</details>

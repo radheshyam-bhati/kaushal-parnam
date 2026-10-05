@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Random call-back sample{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Random call-back sample</h1>
+    <p style="color:var(--text-secondary)">
+      The department draws this sample, not the provider — that is the whole
+      point. Each sampled record stores the probability <em>p</em> of being drawn,
+      so its weight is 1 ÷ <em>p</em>. Weighted results then represent every
+      trainee, not only the ones who answered.
+    </p>
+    <p class="helptext">
+      For the 36-hour MVP the sample is drawn and the weights are applied to the
+      reported rates. The independent telephone calls themselves are a
+      Pilot-phase activity.
+    </p>
+    <div class="cluster">
+      <span class="badge">{{ called }} called</span>
+      <span class="badge">{{ verified }} confirmed</span>
+      {% if verification_rate is not None %}
+        <span class="badge">verification rate {{ verification_rate }}%</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Draw a sample</h3>
+    <form method="post" action="{% url 'officers:draw_samples' %}" class="cluster">
+      {% csrf_token %}
+      <div class="form-row" style="margin:0">
+        <label for="non_replier_rate" style="margin:0">Non-repliers</label>
+        <input type="text" name="non_replier_rate" id="non_replier_rate" value="0.10" size="6">
+      </div>
+      <div class="form-row" style="margin:0">
+        <label for="claimed_job_rate" style="margin:0">Claimed jobs</label>
+        <input type="text" name="claimed_job_rate" id="claimed_job_rate" value="0.05" size="6">
+      </div>
+      <button class="btn btn-primary" type="submit">Draw sample</button>
+    </form>
+    <p class="helptext">
+      Rates are settings: 10% of non-repliers and 5% of claimed jobs to start,
+      to be tuned in the pilot.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Sampled records</h3>
+    {% if samples %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Outcome</th><th scope="col">Type</th><th scope="col">p</th>
+                <th scope="col">Weight</th><th scope="col">Result</th><th scope="col">Action</th></tr>
+          </thead>
+          <tbody>
+            {% for sample in samples %}
+              <tr>
+                <th scope="row">{{ sample.outcome.person.utid }}</th>
+                <td>{{ sample.get_sample_type_display }}</td>
+                <td>{{ sample.probability }}</td>
+                <td>{{ sample.weight|floatformat:1 }}</td>
+                <td>
+                  {% if sample.result_verified == True %}confirmed
+                  {% elif sample.result_verified == False %}could not confirm
+                  {% else %}not called{% endif %}
+                </td>
+                <td>
+                  <form method="post" action="{% url 'officers:record_call' sample.pk %}" class="cluster" style="margin:0">
+                    {% csrf_token %}
+                    <button class="btn btn-outline btn-sm" name="result" value="verified" type="submit">Confirmed</button>
+                    <button class="btn btn-outline btn-sm" name="result" value="failed" type="submit">Failed</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with heading="No sample drawn yet" message="Draw one above to see the weights applied to the reported rates." %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

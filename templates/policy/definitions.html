@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Definitions registry{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <div class="card">
+    <h1 style="font-size:2rem">Definitions registry</h1>
+    <p style="color:var(--text-secondary)">
+      These four rules drive every number in the system. Change one and all
+      dashboards recompute from it — nothing is hard-coded in a query.
+    </p>
+    <p class="helptext">
+      Values are JSON. Every change is written to the audit trail with your name.
+    </p>
+  </div>
+
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      {% for row in rows %}
+        <div class="form-row">
+          <label for="{{ row.key }}">{{ row.get_key_display }}</label>
+          <input type="text" name="{{ row.key }}" id="{{ row.key }}"
+                 value='{{ row.value|escapejs }}' size="60"
+                 aria-describedby="{{ row.key }}_help">
+          <span class="helptext" id="{{ row.key }}_help">
+            {{ row.description }}
+            Currently {{ row.value }}. Last changed {{ row.updated_at|date:"d M Y" }}
+            by {{ row.updated_by|default:"system" }}.
+          </span>
+        </div>
+      {% endfor %}
+      <button class="btn btn-primary" type="submit">Save definitions</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>What these mean today</h3>
+    <ul>
+      <li>Follow-up rounds at T+{{ round_intervals|join:", " }} days from certification.</li>
+      <li>"Retained" means employed for {{ min_employment_days }} days with any
+        gap no longer than {{ break_days }} days.</li>
+      <li>A course is flagged for a skill gap when at least {{ min_signals }} of
+        the 3 signals agree.</li>
+      <li>Dashboard groups below {{ min_group_size }} people are withheld.</li>
+    </ul>
+    <p class="helptext">
+      Try it: change <code>BREAK_RULE</code> from 60 to 30 days and the retention
+      figures on the wage and retention page move immediately.
+    </p>
+  </div>
+</div>
+{% endblock %}

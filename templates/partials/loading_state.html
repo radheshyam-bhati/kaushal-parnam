@@ -1,0 +1,9 @@
+{# Loading state. docs/04-UI-UX-BRIEF.md §9 forbids infinite spinners, so this
+   is a static skeleton plus a timeout hint, not an animation loop. #}
+<div class="loading-state" role="status" aria-live="polite">
+  <h3>{{ heading|default:"Loading…" }}</h3>
+  <p>{{ hint|default:"Reading from the statistics store, which holds no names or phone numbers." }}</p>
+  <div class="skeleton skeleton-line-1"></div>
+  <div class="skeleton skeleton-line-2"></div>
+  <div class="skeleton skeleton-line-3"></div>
+</div>

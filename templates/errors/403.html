@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Access denied{% endblock %}
+{% block content %}
+<div class="error-state" role="alert">
+  <h3>Access denied</h3>
+  <p>{{ message|default:"Your role cannot see this record. Providers see only their own trainees; officers see only their own district." }}</p>
+  <p class="helptext">This attempt has been written to the audit trail.</p>
+  <div class="cluster" style="justify-content:center">
+    <a class="btn btn-primary" href="{% url 'role_home' %}">Back to my dashboard</a>
+  </div>
+</div>
+{% endblock %}

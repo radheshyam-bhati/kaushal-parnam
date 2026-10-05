@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Erasure complete{% endblock %}
+{% block content %}
+<div class="container-narrow">
+  <div class="card">
+    <h1 style="font-size:2rem">Your data has been erased</h1>
+    <p>
+      Your identity record {{ utid }} is now withheld, every consent purpose is
+      marked withdrawn, and {{ result.jobs_cancelled }} pending follow-up jobs
+      were cancelled so nobody contacts you again.
+    </p>
+    <p>
+      {{ result.outcomes_kept }} outcome record(s) are kept in an anonymised form.
+      De-identified statistics about your scheme are still available for policy
+      making, which is what DPDP Rule 8(3) allows. An audit trail of this erasure
+      is kept.
+    </p>
+    <a class="btn btn-primary" href="{% url 'home' %}">Back to the start page</a>
+  </div>
+</div>
+{% endblock %}

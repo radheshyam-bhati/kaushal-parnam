@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Policy dashboard{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">MSInS outcome dashboard</h1>
+    <p style="color:var(--text-secondary)">
+      {{ people_count }} trainees · {{ outcome_count }} outcome records ·
+      {{ e2_plus }} graded E2 or above
+    </p>
+    <div class="cluster">
+      <a class="btn btn-secondary" href="{% url 'policy:provider_comparison' %}">Expected vs actual</a>
+      <a class="btn btn-secondary" href="{% url 'policy:skill_gap' %}">Skill-gap maps</a>
+      <a class="btn btn-secondary" href="{% url 'policy:funding_report' %}">Outcome-funding report</a>
+      <a class="btn btn-secondary" href="{% url 'policy:data_quality' %}">Data quality</a>
+      <a class="btn btn-secondary" href="{% url 'policy:definitions' %}">Definitions registry</a>
+      <a class="btn btn-secondary" href="{% url 'policy:wage_retention' %}">Wage &amp; retention</a>
+      <a class="btn btn-secondary" href="{% url 'policy:audit_trail' %}">Audit trail</a>
+    </div>
+  </div>
+
+  {% include "partials/grade_filter.html" %}
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Placement rate</h3>
+      {% include "dashboard/_rate.html" with rate=rate %}
+    </div>
+    <div class="card">
+      <h3>After non-response weighting</h3>
+      <div class="rate">
+        <span class="rate-value">{{ weights.weighted_rate|floatformat:0 }}%</span>
+        <span class="rate-context">
+          weighted placement
+          (response rate: {{ weights.weighted_response_rate|floatformat:0 }}%)
+        </span>
+      </div>
+      <div class="mix">
+        {% for grade, share in rate.mix_percent.items %}
+          <span class="grade grade-{{ grade }}">{{ grade }}: {{ share|floatformat:0 }}%</span>
+        {% endfor %}
+      </div>
+      <p class="helptext" style="margin-top:12px">
+        {{ weights.sampled }} outcome(s) carry an inverse-probability weight from
+        the department's random call-back sample.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    {% include "dashboard/grade_chart.html" with mix=rate.mix %}
+  </div>
+
+  <div class="card">
+    <h3>By district</h3>
+    <p class="helptext">
+      Every row shows its own response rate. Districts below {{ min_group_size }}
+      people are withheld.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">District</th><th scope="col">Trainees</th><th scope="col">Reached</th>
+              <th scope="col">Response rate</th><th scope="col">Placement rate</th><th scope="col">Grade mix</th></tr>
+        </thead>
+        <tbody>
+          {% for row in districts %}
+            {% if row.withheld %}
+              <tr>
+                <th scope="row">{{ row.district }}</th>
+                <td colspan="5"><em>Data withheld</em> — fewer than {{ min_group_size }} reached</td>
+              </tr>
+            {% else %}
+              <tr>
+                <th scope="row">{{ row.district }}</th>
+                <td>{{ row.trainees }}</td>
+                <td>{{ row.reached }}</td>
+                <td>{{ row.response_rate|floatformat:1 }}%</td>
+                <td>
+                  {{ row.placement_rate|floatformat:1 }}%
+                  {% for grade, count in row.grade_mix.items %}
+                    {% if count %}<span class="grade grade-{{ grade }}">{{ grade }}: {{ count }}</span>{% endif %}
+                  {% endfor %}
+                </td>
+                <td>
+                  {% for grade, count in row.grade_mix.items %}
+                    <span class="grade grade-{{ grade }}">{{ grade }}: {{ count }}</span>
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endif %}
+          {% empty %}
+            <tr><td colspan="6">No district data yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Skill gaps — 3 of 3 signals agree</h3>
+      {% if gaps_3of3 %}
+        <ul>
+          {% for gap in gaps_3of3 %}
+            <li><strong>{{ gap.course }}</strong> · {{ gap.district }} —
+              vacancies {{ gap.vacancy_count }}, employer {{ gap.employer_skills_lacking_count }},
+              trainee {{ gap.trainee_skills_lacking_count }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "partials/empty_state.html" with heading="No course has all three signals" message="Nothing needs urgent course redesign on current evidence." %}
+      {% endif %}
+    </div>
+    <div class="card">
+      <h3>Skill gaps — 2 of 3 signals agree</h3>
+      {% if gaps_2of3 %}
+        <ul>
+          {% for gap in gaps_2of3 %}
+            <li><strong>{{ gap.course }}</strong> · {{ gap.district }} —
+              vacancies {{ gap.vacancy_count }}, employer {{ gap.employer_skills_lacking_count }},
+              trainee {{ gap.trainee_skills_lacking_count }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "partials/empty_state.html" with heading="No course has two agreeing signals" message="Watch list is empty." %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Policy settings in force</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Definition</th><th scope="col">Value</th><th scope="col">Updated</th></tr></thead>
+        <tbody>
+          {% for row in definitions %}
+            <tr>
+              <th scope="row">{{ row.key }}</th>
+              <td><code>{{ row.value }}</code></td>
+              <td>{{ row.updated_at|date:"d M Y" }} by {{ row.updated_by|default:"—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px">
+      <a class="btn btn-secondary" href="{% url 'policy:definitions' %}">Edit the definitions registry</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

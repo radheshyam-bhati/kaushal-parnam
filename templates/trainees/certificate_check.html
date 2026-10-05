@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Certificate check{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <div class="card">
+    <h1 style="font-size:2rem">Check a certificate</h1>
+    <p style="color:var(--text-secondary)">
+      Confirms a certificate through a DigiLocker mock endpoint.
+      <span class="badge badge-MOCK">MOCK API</span>
+    </p>
+    {% if not has_consent %}
+      <div class="alert alert-warning" role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span>
+          You have not given record-match consent, so we cannot check a
+          certificate on your behalf. Change that on the
+          <a href="{% url 'trainees:my_data' %}">My Data</a> page if you want to.
+        </span>
+      </div>
+    {% endif %}
+
+    <form method="post">{% csrf_token %}
+      <div class="form-row">
+        <label class="required" for="certificate_id">Certificate ID</label>
+        <input type="text" name="certificate_id" id="certificate_id" placeholder="PMKVY-2024-BATCH1">
+      </div>
+      <button class="btn btn-primary" type="submit">Check certificate</button>
+    </form>
+
+    {% if result %}
+      <div class="alert {% if result.ok %}alert-success{% else %}alert-warning{% endif %}" role="status" style="margin-top:16px">
+        <span class="alert-icon" aria-hidden="true">i</span>
+        <span>
+          {{ result.data.status }}{% if result.data.certificate_id %} · {{ result.data.certificate_id }}{% endif %}
+          — {{ result.detail }}
+        </span>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if history %}
+  <div class="card">
+    <h3>Previous checks</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Certificate</th><th scope="col">Status</th><th scope="col">When</th></tr></thead>
+        <tbody>
+          {% for row in history %}
+            <tr>
+              <th scope="row">{{ row.certificate_id }}</th>
+              <td>{{ row.verification_status }}</td>
+              <td>{{ row.checked_at|date:"d M Y H:i" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

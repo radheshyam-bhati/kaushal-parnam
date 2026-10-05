@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}My Data{% endblock %}
+
+{% block content %}
+{% if no_identity %}
+  {% include "partials/empty_state.html" with heading="No trainee record on this login" message="Sign in with the account that holds your enrolment to see and change your data." action_url="/login/" action_label="Sign in" %}
+{% else %}
+
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Your data, your choices</h1>
+    <p style="color:var(--text-secondary)">
+      {{ person.display_name }} · {{ person.utid }} ·
+      {% if is_erased %}<span class="grade grade-E0">Identity erased</span>{% else %}active record{% endif %}
+    </p>
+    <p style="color:var(--text-secondary)">
+      Your data lives in two places: an identity record with your name and phone,
+      and an anonymous statistics store with no names in it. That separation is
+      what stops a reporting mistake from becoming a privacy breach.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Consent</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Purpose</th><th scope="col">Status</th><th scope="col">Given</th>
+              <th scope="col">Withdrawn</th><th scope="col">Notice version</th><th scope="col"></th></tr>
+        </thead>
+        <tbody>
+          {% for row in consent_rows %}
+            <tr>
+              <th scope="row">{{ row.label }}</th>
+              <td>
+                {% if row.active %}<span class="grade grade-E2">On</span>
+                {% elif row.consent %}<span class="grade grade-E0">Withdrawn</span>
+                {% else %}<span class="badge">Not given</span>{% endif %}
+              </td>
+              <td>{% if row.consent %}{{ row.consent.given_at|date:"d M Y" }}{% else %}—{% endif %}</td>
+              <td>{% if row.consent and row.consent.withdrawn_at %}{{ row.consent.withdrawn_at|date:"d M Y" }}{% else %}—{% endif %}</td>
+              <td>{% if row.consent %}{{ row.consent.notice_version }}{% else %}—{% endif %}</td>
+              <td>
+                {% if row.consent and row.active %}
+                  <form method="post" action="{% url 'trainees:withdraw_consent' row.purpose %}">
+                    {% csrf_token %}
+                    <button class="btn btn-outline btn-sm" type="submit">Withdraw</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="helptext">
+      Withdrawing one purpose stops only that purpose's messages.
+      {% if consent_withdrawal_stop %}Follow-up jobs still pending are cancelled.{% endif %}
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Your contact details</h3>
+    <form method="post" action="{% url 'trainees:correct_contact' %}" novalidate>
+      {% csrf_token %}
+      {% for field in correction_form %}
+        <div class="form-row {% if field.errors %}field-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+      <button class="btn btn-primary" type="submit">Save contact details</button>
+      <p class="helptext">
+        Changing your phone type changes which channel your follow-ups use.
+      </p>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Your outcome records</h3>
+    {% if outcome_rows %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Reference date</th><th scope="col">Status</th>
+                 <th scope="col">Highest grade</th><th scope="col">Anonymised</th></tr></thead>
+          <tbody>
+            {% for row in outcome_rows %}
+              <tr>
+                <th scope="row">{{ row.outcome.reference_date|date:"d M Y" }}</th>
+                <td><a href="{% url 'trainees:outcome_detail' row.outcome.pk %}">{{ row.outcome.get_status_display }}</a></td>
+                <td><span class="grade grade-{{ row.grade }}">{{ row.grade }}</span></td>
+                <td>{% if row.outcome.is_anonymous %}yes{% else %}no{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with heading="No outcome events yet" message="These appear after your first follow-up round." %}
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3>Verify a certificate</h3>
+    <p style="color:var(--text-secondary)">
+      Confirm a certificate through the DigiLocker mock.
+      <a href="{% url 'trainees:certificate_check' %}">Check a certificate</a>
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Ask for erasure</h3>
+    <p style="color:var(--text-secondary)">
+      Erasure soft-deletes your identity: your name and phone are withheld, all
+      consent purposes are marked withdrawn, and pending follow-ups are cancelled.
+      Outcome records are kept in anonymised form because de-identified statistics
+      are still needed for policy. An audit trail is kept.
+    </p>
+    {% if is_erased %}
+      <div class="alert alert-success" role="status">
+        <span class="alert-icon" aria-hidden="true">i</span>
+        <span>Erasure already completed for {{ person.utid }}.</span>
+      </div>
+    {% else %}
+      <form method="post" action="{% url 'trainees:request_erasure' %}">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Request erasure of my data</button>
+      </form>
+      {% if otp_sent == 'ERASURE' %}
+        <form method="post" action="{% url 'trainees:confirm_erasure' %}"
+              style="margin-top:16px" novalidate>
+          {% csrf_token %}
+          <div class="form-row">
+            <label class="required" for="code">6-digit code sent to your phone</label>
+            <input type="text" name="code" id="code" inputmode="numeric" maxlength="6"
+                   autocomplete="one-time-code">
+            <span class="helptext">In this demo the code is printed in the server console.</span>
+          </div>
+          <button class="btn btn-danger" type="submit">Confirm erasure</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {% if audit_rows %}
+  <div class="card">
+    <h3>Your audit trail</h3>
+    <p class="helptext">Every action taken on your record, as required by DPDP s.8(6).</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">When</th><th scope="col">Event</th><th scope="col">Description</th></tr></thead>
+        <tbody>
+          {% for row in audit_rows %}
+            <tr>
+              <th scope="row">{{ row.timestamp|date:"d M H:i" }}</th>
+              <td>{{ row.event_type }}</td>
+              <td>{{ row.description }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

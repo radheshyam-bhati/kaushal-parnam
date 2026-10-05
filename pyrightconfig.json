@@ -1,0 +1,76 @@
+{
+  "//": [
+    "Pylance / Pyright configuration for Kaushal Parinam.",
+    "",
+    "The codebase is deliberately lightly annotated: models carry full field",
+    "definitions, services carry docstrings explaining which feature ID they",
+    "implement, and view functions take a plain `request`. Adding parameter",
+    "annotations to every view is churn with no safety benefit, because Django",
+    "already enforces the request/response contract at runtime.",
+    "",
+    "That choice means Pylance cannot infer Django's dynamic types, so it emits",
+    "several hundred 'partially unknown' diagnostics on correct code. Those are",
+    "switched off below.",
+    "",
+    "The rules that DO catch real bugs stay on: unused imports, optional member",
+    "access on a possibly-None value, undefined names, and argument type",
+    "errors. An unused import or a None dereference is a bug worth a red squiggle."
+  ],
+
+  "include": [
+    "accounts",
+    "analytics",
+    "config",
+    "core",
+    "officers",
+    "policy",
+    "providers",
+    "trainees"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    ".pgdata",
+    "staticfiles",
+    "media",
+    "docs"
+  ],
+
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "error",
+  "reportUndefinedVariable": "error",
+
+  "// --- the ones that caught real bugs ---": "",
+  "reportUnusedImport": "error",
+  "reportUnusedVariable": "error",
+  "reportOptionalMemberAccess": "error",
+  "reportOptionalSubscript": "error",
+  "reportOptionalCall": "error",
+  "reportArgumentType": "error",
+  "reportCallIssue": "error",
+  "reportAttributeAccessIssue": "error",
+  "reportIndexIssue": "error",
+  "reportOperatorIssue": "error",
+  "reportRedeclaration": "error",
+
+  "// --- suppressed: Django ORM and view contracts are dynamic ---": "",
+  "reportMissingParameterType": "none",
+  "reportMissingTypeArgument": "none",
+  "reportUnknownParameterType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportUnknownLambdaType": "none",
+  "reportUnknownArrayType": "none",
+  "reportAny": "none",
+  "reportExplicitAny": "none",
+  "reportIncompatibleMethodOverride": "none",
+  "reportUntypedFunctionDecorator": "none",
+  "reportUntypedClassDecorator": "none",
+  "reportUntypedBaseClass": "none",
+  "reportUntypedNamedTuple": "none",
+  "reportPrivateUsage": "none",
+
+  "// --- off: this is a server-rendered Django app, no React/DOM surface ---": "",
+  "reportInvalidCast": "none",
+  "reportUnusedExpression": "none"
+}

@@ -1,0 +1,13 @@
+{# Minimum-grade filter (F-07). Plain GET so the URL is bookmarkable. #}
+<form method="get" class="cluster" style="margin-bottom:16px">
+  {% for key, value in request.GET.items %}
+    {% if key != 'min_grade' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}
+  {% endfor %}
+  <label for="min_grade" style="margin:0">Show outcomes graded</label>
+  <select name="min_grade" id="min_grade" data-auto-submit>
+    {% for key, label in grade_floors.items %}
+      <option value="{{ key }}" {% if key == floor %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button class="btn btn-secondary btn-sm" type="submit">Apply</button></noscript>
+</form>

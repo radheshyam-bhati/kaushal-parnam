@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Help me{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  {% if not eligible %}
+    {% include "partials/empty_state.html" with heading="You are not eligible for 'Help me' routing" message="'Help me' is for trainees whose latest outcome is 'not working and looking'. If that has changed, update your status and it will appear here." action_url="/outcome/capture/" action_label="Update my status" %}
+  {% else %}
+  <div class="stack">
+    <div class="card">
+      <h1 style="font-size:2rem">Let us help you find work</h1>
+      <p style="color:var(--text-secondary)">
+        You told us you are not working but you are looking. Two routes:
+      </p>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Option A — job matches</h3>
+        <p style="color:var(--text-secondary)">
+          Synthetic vacancies from the Mahaswayam adapter
+          <span class="badge badge-SIMULATED">SIMULATED DATA</span>,
+          matched by your district and occupation code.
+        </p>
+        <form method="post" action="{% url 'trainees:help_me' %}">
+          {% csrf_token %}
+          <input type="hidden" name="option" value="MAHASWAYAM">
+          <button class="btn btn-primary" type="submit">Show me matching jobs</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Option B — a counsellor calls you</h3>
+        <p style="color:var(--text-secondary)">
+          Creates a callback task in the district officer's list. An officer will
+          phone you; this goes into the same queue as an unreachable follow-up,
+          so it is never lost.
+        </p>
+        <form method="post" action="{% url 'trainees:help_me' %}">
+          {% csrf_token %}
+          <input type="hidden" name="option" value="COUNSELLOR">
+          <button class="btn btn-secondary" type="submit">Ask a counsellor to call me</button>
+        </form>
+      </div>
+    </div>
+
+    {% if matches %}
+      <div class="card">
+        <h3>{{ matches|length }} matching opening(s) in {{ person.district }}</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Reference</th><th scope="col">Role</th>
+                       <th scope="col">Employer</th><th scope="col">Wage band</th></tr></thead>
+            <tbody>
+              {% for job in matches %}
+                <tr>
+                  <th scope="row">{{ job.ref }}</th>
+                  <td>{{ job.title }}</td>
+                  <td>{{ job.employer }}</td>
+                  <td>{{ job.wage_band }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="helptext">Synthetic listings for the demo. No real employer is contacted.</p>
+      </div>
+    {% endif %}
+
+    {% if request_record %}
+      <div class="card">
+        <h3>Recorded</h3>
+        <p>
+          You chose <strong>{{ request_record.option }}</strong> at
+          {{ request_record.requested_at|date:"d M Y H:i" }}.
+          {% if request_record.task %} A counsellor task (#{{ request_record.task.pk }}) is now open.{% endif %}
+        </p>
+      </div>
+    {% endif %}
+
+    <div class="card">
+      <h3>Why this exists</h3>
+      <p style="color:var(--text-secondary)">
+        Telling someone who is out of work "please fill this form again" is how
+        you end up with a 25% response rate and a biased placement figure.
+        Offering something useful in exchange for an honest answer is how the
+        reach gets high enough to trust.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

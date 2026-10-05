@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block content %}
+<div class="error-state" role="alert">
+  <h3>We could not find that page</h3>
+  <p>{{ path }} does not match anything in Kaushal Parinam. Check the address, or start again from the dashboard.</p>
+  <div class="cluster" style="justify-content:center">
+    <a class="btn btn-primary" href="{% url 'role_home' %}">Go to my dashboard</a>
+    <a class="btn btn-secondary" href="{% url 'home' %}">Home</a>
+  </div>
+</div>
+{% endblock %}

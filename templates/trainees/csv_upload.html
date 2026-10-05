@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Upload trainee batch{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <div class="card">
+    <h1 style="font-size:2rem">Upload a trainee batch</h1>
+    <p style="color:var(--text-secondary)">
+      Every row goes through four checks before it is enrolled: duplicate phone,
+      age below the course minimum, dates out of order, and unregistered centre.
+      Flagged rows are reported, not silently dropped — the rest of the batch
+      still uploads.
+    </p>
+    <p>
+      <a href="{% url 'trainees:csv_upload' %}?template=1">Download the template</a>
+      or run <code>python manage.py gatekeeper_check --template</code>.
+    </p>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-row">
+        <label class="required" for="csv_file">CSV file</label>
+        <input type="file" name="csv_file" id="csv_file" accept=".csv,text/csv">
+        <span class="helptext">Maximum 10MB. UTF-8 encoded, first row is the header.</span>
+      </div>
+      <button class="btn btn-primary" type="submit">Check and upload</button>
+    </form>
+  </div>
+
+  {% if report %}
+    {% if report.header_error %}
+      <div class="card">
+        <div class="error-state" role="alert">
+          <h3>CSV format error</h3>
+          <p>{{ report.header_error }}</p>
+          <a class="btn btn-primary" href="{% url 'trainees:csv_upload' %}">Try again</a>
+        </div>
+      </div>
+    {% else %}
+      <div class="card">
+        <h3>Gatekeeper report</h3>
+        <div class="alert {% if report.flagged_rows %}alert-warning{% else %}alert-success{% endif %}" role="status">
+          <span class="alert-icon" aria-hidden="true">i</span>
+          <span>{{ report.summary }}. Flag rate: {{ report.flag_rate }}%.</span>
+        </div>
+
+        <div class="grid grid-4">
+          <div><div class="stat">{{ report.total_rows }}</div><div class="stat-label">rows read</div></div>
+          <div><div class="stat">{{ report.accepted_rows }}</div><div class="stat-label">cleared</div></div>
+          <div><div class="stat">{{ report.flagged_rows }}</div><div class="stat-label">flagged</div></div>
+          <div><div class="stat">{{ report.flag_rate }}%</div><div class="stat-label">flag rate</div></div>
+        </div>
+
+        {% if report.flagged_rows %}
+          <div class="table-wrap" style="margin-top:16px">
+            <table>
+              <thead><tr><th scope="col">Row</th><th scope="col">Check that failed</th><th scope="col">Message</th></tr></thead>
+              <tbody>
+                {% for result in report.results %}
+                  {% if result.is_flagged %}
+                    <tr>
+                      <th scope="row">{{ result.row_number }}</th>
+                      <td colspan="2">
+                        {% for message in result.messages %}<div>{{ message }}</div>{% endfor %}
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="helptext">
+            Flagged rows are excluded from outcome tracking. You can add them
+            manually after correcting the source data.
+          </p>
+        {% else %}
+          {% include "partials/empty_state.html" with heading="Nothing flagged" message="Every row in this batch passed all four gatekeeper checks." %}
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="card">
+      {% include "partials/empty_state.html" with heading="No CSV uploaded yet" message="Choose a file above, or download the template to see the required columns." %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

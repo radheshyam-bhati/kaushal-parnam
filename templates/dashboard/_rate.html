@@ -1,0 +1,42 @@
+{# The ONLY place a percentage is rendered.
+
+   docs/01-PRD.md F-10: "Every rate has response rate shown beside it" and
+   "Grade mix shown beside every rate". A bare percentage is never published, so
+   any new dashboard must include this partial rather than writing the number
+   out directly.
+
+   Usage from a template:
+       include "dashboard/_rate.html" with rate=some_rate
+#}
+{% if rate %}
+  <div class="rate {% if rate.is_low_reach %}low-reach{% endif %}"
+       role="group"
+       aria-label="{{ rate.label }} with reach and grade mix">
+    <span class="rate-value">{{ rate.value|floatformat:0 }}%</span>
+    <span class="rate-context">
+      {{ rate.label }}
+      (response rate: <strong>{{ rate.response_rate|floatformat:0 }}%</strong>)
+      {% if rate.denominator %}
+        · {{ rate.numerator }}/{{ rate.denominator }} reached
+      {% else %}
+        · nobody reached yet
+      {% endif %}
+    </span>
+  </div>
+
+  <div class="mix" aria-label="Evidence grade mix">
+    {% for grade, share in rate.mix_percent.items %}
+      <span class="grade grade-{{ grade }}">{{ grade }}: {{ share|floatformat:0 }}%</span>
+    {% endfor %}
+  </div>
+
+  {% if rate.is_low_reach %}
+    <p class="helptext" style="color:var(--warning)">
+      Reach is below 30%. Treat this rate as indicative only and read the
+      random call-back sample before drawing a conclusion.
+    </p>
+  {% endif %}
+  {% if rate.note %}<p class="helptext">{{ rate.note }}</p>{% endif %}
+{% else %}
+  <p class="helptext">No rate to show yet.</p>
+{% endif %}

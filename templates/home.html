@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <p class="badge">SMART INDIA HACKATHON 2026 · Problem Statement SIH 26135</p>
+    <h1 style="margin-top:12px">Kaushal Parinam</h1>
+    <p class="stat-label" style="font-size:1.125rem">
+      A consent-based longitudinal outcome tracking system that links every
+      certification to a verified employment record, grades every claim E0–E4,
+      and shows reach honestly beside every rate.
+    </p>
+    <p style="color:var(--text-secondary)">
+      This is a layer on top of Skill India Digital and Mahaswayam. It does not
+      replace them; it answers the question neither of them answers — what
+      happened to the trainee after the certificate was issued?
+    </p>
+    <div class="cluster">
+      <a class="btn btn-primary" href="{% url 'trainees:enrol' %}">Enrol Now</a>
+      {% if dashboard_url %}
+        <a class="btn btn-secondary" href="{{ dashboard_url }}">Go to my dashboard</a>
+      {% else %}
+        <a class="btn btn-secondary" href="{% url 'login' %}">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="stat">{{ person_count }}</div>
+      <div class="stat-label">trainees with a consent record</div>
+    </div>
+    <div class="card">
+      <div class="stat">{{ outcome_count }}</div>
+      <div class="stat-label">append-only outcome events, graded E0–E4</div>
+    </div>
+    <div class="card">
+      <div class="stat">{{ open_tasks }}</div>
+      <div class="stat-label">trainees escalated to an officer call</div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Why the numbers you see carry a reach rate</h3>
+      <p>
+        Follow-up replies run at roughly 20–30% (NCVER benchmark). A 42%
+        placement rate on its own says nothing about the 58% you never heard
+        from. So every rate in this system is printed next to its response rate
+        and its grade mix, and a department-drawn random sample of non-repliers
+        is weighted back in.
+      </p>
+      <p class="helptext">
+        Never a bare percentage — the partial that renders every rate lives at
+        templates/dashboard/_rate.html.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Consent first, and withdrawable</h3>
+      <p>
+        Four purposes, each toggled separately at enrolment: follow-up contact,
+        employer validation, record match, and statistics. Withdrawing one
+        purpose stops only that purpose. "My Data" lets a trainee correct their
+        details, withdraw consent, or request erasure through an OTP check.
+      </p>
+      <p class="helptext">
+        No Aadhaar number is stored anywhere in this system.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Skill gaps need two agreeing signals</h3>
+      <p>
+        A course is flagged only where at least two of three signals agree:
+        vacancies exist for that occupation in the district, employers report
+        "skills lacking" for its graduates, or trainees themselves say so. One
+        signal is never enough to redesign a course.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Evidence grades, not self-reported numbers</h3>
+      <p>
+        E0 trainee self-report · E1 officer confirmed · E2 employer confirmed ·
+        E3 document seen · E4 matched to an EPFO/ESIC record. Any dashboard can
+        be filtered to a minimum grade, so you can see what the rate looks like
+        counting only employer-confirmed outcomes.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

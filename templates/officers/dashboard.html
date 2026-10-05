@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Officer dashboard{% endblock %}
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">District officer — {{ district }}</h1>
+    <div class="grid grid-3" style="margin-top:16px">
+      <div><div class="stat">{{ people_count }}</div><div class="stat-label">trainees in district</div></div>
+      <div><div class="stat">{{ outcome_count }}</div><div class="stat-label">outcome records</div></div>
+      <div><div class="stat">{{ open_tasks }}</div><div class="stat-label">open assisted tasks</div></div>
+    </div>
+    <div class="cluster" style="margin-top:16px">
+      <a class="btn btn-primary" href="{% url 'officers:task_list' %}">Assisted follow-up tasks</a>
+      <a class="btn btn-secondary" href="{% url 'officers:audit_sample' %}">Random call-back sample</a>
+    </div>
+    <p class="helptext">You can only see trainees in {{ district }}. Another district's tasks return 403.</p>
+  </div>
+
+  <div class="card">
+    <h3>Most recent outcome records in your district</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">When</th><th scope="col">Trainee</th><th scope="col">Status</th><th scope="col">Grade</th><th scope="col">Recorded by</th></tr></thead>
+        <tbody>
+          {% for outcome in recent_outcomes %}
+            <tr>
+              <th scope="row">{{ outcome.created_at|date:"d M H:i" }}</th>
+              <td>{{ outcome.person.utid }}</td>
+              <td>{{ outcome.get_status_display }}</td>
+              <td><span class="grade grade-{{ outcome.evidence_level }}">{{ outcome.evidence_level }}</span></td>
+              <td>{{ outcome.created_by }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5">No records yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

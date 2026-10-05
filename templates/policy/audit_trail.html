@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Audit trail{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Audit trail</h1>
+    <p style="color:var(--text-secondary)">
+      {{ total }} entries, newest first. Every privileged read, every consent
+      change and every erasure is written here. Entries are never updated or
+      deleted.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">When</th><th scope="col">Component</th><th scope="col">Role</th>
+              <th scope="col">Event</th><th scope="col">UTID</th><th scope="col">Description</th></tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <th scope="row">{{ row.timestamp|date:"d M H:i:s" }}</th>
+              <td>{{ row.component }}</td>
+              <td>{{ row.user_role }}</td>
+              <td>{{ row.event_type }}</td>
+              <td>{{ row.utid|default:"—" }}</td>
+              <td>{{ row.description }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">No audit entries yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

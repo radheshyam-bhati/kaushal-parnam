@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Thank you{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <div class="card">
+    <h1 style="font-size:2rem">Thank you, that is recorded</h1>
+    <p>
+      {{ outcome.person.display_name }}{% if result.still_employed %} is recorded as still working for you{% else %} is recorded as no longer working for you{% endif %}.
+      The record is now graded <span class="grade grade-E2">E2 employer confirmed</span>
+      instead of E0 self-report.
+    </p>
+    {% if result.mismatch %}
+      <div class="alert alert-warning" role="status">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span>
+          You confirmed a different wage band. Both answers are kept: the trainee
+          said {{ result.wage_claimed }}, you said {{ result.wage_verified }}.
+          This is shown to the department as a discrepancy, not as an error.
+        </span>
+      </div>
+    {% endif %}
+    <p class="helptext">You can close this page. Nothing further is needed from you.</p>
+  </div>
+</div>
+{% endblock %}

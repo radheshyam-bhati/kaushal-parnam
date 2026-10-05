@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong{% endblock %}
+{% block content %}
+<div class="error-state" role="alert">
+  <h3>Something went wrong on our side</h3>
+  <p>The page could not be built. Nothing you submitted has been lost. Try again in a moment.</p>
+  <div class="cluster" style="justify-content:center">
+    <button class="btn btn-primary" onclick="window.location.reload()">Try again</button>
+    <a class="btn btn-secondary" href="{% url 'home' %}">Home</a>
+  </div>
+</div>
+{% endblock %}

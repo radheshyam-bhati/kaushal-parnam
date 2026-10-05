@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Officer task list{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Assisted follow-up tasks — {{ district }}</h1>
+    <p style="color:var(--text-secondary)">
+      Every trainee the automated channels could not reach appears here. That is
+      the point: a low response rate must not turn into missing people.
+    </p>
+    <div class="cluster">
+      <span class="badge">{{ open_count }} open</span>
+      <span class="badge">{{ people_count }} trainees in district</span>
+      <span class="badge">{{ unreached_count }} recorded unreachable</span>
+      <a class="btn btn-secondary btn-sm" href="{% url 'officers:audit_sample' %}">Audit sample</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cluster" style="margin-bottom:16px">
+      <a class="btn btn-outline btn-sm" href="?status=OPEN">Open</a>
+      <a class="btn btn-outline btn-sm" href="?status=DONE">Done</a>
+      <a class="btn btn-outline btn-sm" href="?status=all">All</a>
+    </div>
+
+    {% if tasks %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Priority</th><th scope="col">Trainee</th><th scope="col">Round</th>
+                <th scope="col">Type</th><th scope="col">Why</th><th scope="col">Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <th scope="row">{{ task.priority }}</th>
+                <td>
+                  {{ task.person.display_name }}<br>
+                  <span class="helptext">{{ task.person.utid }}</span>
+                </td>
+                <td>{% if task.followup_job %}{{ task.followup_job.round }}{% else %}—{% endif %}</td>
+                <td>{{ task.get_task_type_display }}</td>
+                <td>{{ task.note|default:"—" }}</td>
+                <td>
+                  <details>
+                    <summary class="btn btn-outline btn-sm" style="display:inline-block">Act</summary>
+                    <form method="post" action="{% url 'officers:record_outcome' task.pk %}" style="margin-top:8px">
+                      {% csrf_token %}
+                      <label for="status_{{ task.pk }}">What did the trainee say?</label>
+                      <select name="status" id="status_{{ task.pk }}">
+                        <option value="wage_employment">Wage employment</option>
+                        <option value="self_employment">Self-employment</option>
+                        <option value="apprenticeship">Apprenticeship / stipend</option>
+                        <option value="further_study">Further study</option>
+                        <option value="not_working_looking">Not working — looking</option>
+                        <option value="not_working_not_looking">Not working — not looking</option>
+                        <option value="could_not_be_reached">Could not be reached</option>
+                      </select>
+                      <label for="note_{{ task.pk }}" style="margin-top:8px">Note</label>
+                      <input type="text" name="note" id="note_{{ task.pk }}" maxlength="300">
+                      <button class="btn btn-primary btn-sm" type="submit" style="margin-top:8px">
+                        Save at grade E1
+                      </button>
+                      <span class="helptext" style="display:block">
+                        An officer phone call is grade E1 — stronger than a
+                        WhatsApp reply, weaker than the employer.
+                      </span>
+                    </form>
+                    <form method="post" action="{% url 'officers:close_task' task.pk %}" style="margin-top:8px">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="CLOSED">
+                      <input type="hidden" name="note" value="Trainee not reachable by phone">
+                      <button class="btn btn-secondary btn-sm" type="submit">Close as unreachable</button>
+                    </form>
+                  </details>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with heading="No assisted follow-up tasks" message="All trainees were reached through the automated channels." %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

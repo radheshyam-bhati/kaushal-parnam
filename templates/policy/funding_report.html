@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Outcome-funding report{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Outcome-funding report</h1>
+    <p style="color:var(--text-secondary)">
+      {{ total_e2 }} employer-confirmed (E2+) outcomes in total.
+      {{ never_included }}
+    </p>
+    <div class="alert alert-warning" role="note">
+      <span class="alert-icon" aria-hidden="true">!</span>
+      <span>
+        CAG found forged placement papers where placement drove payment. That is
+        why this report counts only outcomes an employer confirmed, and shows the
+        audit result next to each figure.
+      </span>
+    </div>
+    <p>
+      <a class="btn btn-primary" href="{% url 'policy:funding_export' %}">Export CSV</a>
+    </p>
+  </div>
+
+  <div class="card">
+    {% if rows %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Course</th><th scope="col">Provider</th><th scope="col">District</th>
+                <th scope="col">E2+ outcomes</th><th scope="col">Response rate</th>
+                <th scope="col">Weighted rate</th><th scope="col">Audit called</th><th scope="col">Audit confirmed</th></tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <th scope="row">{{ row.course }}</th>
+                <td>{{ row.provider }}</td>
+                <td>{{ row.district }}</td>
+                <td>{{ row.e2_plus }}</td>
+                <td>{{ row.response_rate|floatformat:1 }}%</td>
+                <td>{{ row.weighted_rate|floatformat:1 }}%</td>
+                <td>{{ row.audit_called }}</td>
+                <td>
+                  {% if row.audit_rate is not None %}
+                    {{ row.audit_verified }} ({{ row.audit_rate|floatformat:0 }}%)
+                  {% else %}
+                    <span class="badge">not sampled</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with heading="No E2+ outcomes yet" message="Run the statistics batch and have employers confirm a few outcomes first." %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

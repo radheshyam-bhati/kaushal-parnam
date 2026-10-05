@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Data quality{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Data-quality score per provider</h1>
+    <p style="color:var="color:var(--text-secondary)">
+      Four penalties, each traceable to a number you can inspect on this page:
+      outcomes with no evidence record, inconsistent identifiers, stale demand
+      data, and the share of follow-ups nobody answered.
+    </p>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="stat" style="color:var(--success)">{{ green|length }}</div>
+      <div class="stat-label">green (75-100)</div>
+    </div>
+    <div class="card">
+      <div class="stat" style="color:var(--warning)">{{ amber|length }}</div>
+      <div class="stat-label">amber (50-74)</div>
+    </div>
+    <div class="card">
+      <div class="stat" style="color:var(--danger)">{{ red|length }}</div>
+      <div class="stat-label">red (0-49)</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Provider</th><th scope="col">Score</th><th scope="col">Missing provenance</th>
+              <th scope="col">Inconsistent IDs</th><th scope="col">Stale demand rows</th>
+              <th scope="col">Unreached share</th><th scope="col">Response rate</th></tr>
+        </thead>
+        <tbody>
+          {% for score in scores %}
+            <tr>
+              <th scope="row">{{ score.provider.name }}<br><span class="helptext">{{ score.provider_id }}</span></th>
+              <td>
+                <strong>{{ score.score }}</strong>/100
+                {% if score.band == 'green' %}<span class="grade grade-E2">green</span>
+                {% elif score.band == 'amber' %}<span class="grade grade-E1">amber</span>
+                {% else %}<span class="grade grade-E0">red</span>{% endif %}
+              </td>
+              <td>{{ score.missing_provenance }}</td>
+              <td>{{ score.inconsistent_ids }}</td>
+              <td>{{ score.stale_demand_rows }}</td>
+              <td>{{ score.unreached_share|floatformat:2 }}</td>
+              <td>{{ score.response_rate|floatformat:1 }}%</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7">No providers yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

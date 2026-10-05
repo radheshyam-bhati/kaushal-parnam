@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load kp_tags %}
+{% block title %}Your dashboard{% endblock %}
+
+{% block content %}
+{% if no_identity %}
+  {% include "partials/empty_state.html" with heading="No trainee record on this login" message="This login is not linked to a UTID yet. Enrol first, or sign in with the account that holds your enrolment." action_url="/enrol/" action_label="Go to enrolment" %}
+{% else %}
+
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Welcome, {{ person.display_name }}</h1>
+    <p style="color:var(--text-secondary)">
+      Your unique ID is <strong>{{ person.utid }}</strong>. Your consent status and
+      next follow-up are below.
+    </p>
+    <div class="cluster">
+      <a class="btn btn-primary" href="{% url 'trainees:outcome_capture' %}">Update my status now</a>
+      {% if latest and latest.status == 'not_working_looking' %}
+        <a class="btn btn-primary" href="{% url 'trainees:help_me' %}">Help me find work</a>
+      {% endif %}
+      <a class="btn btn-secondary" href="{% url 'trainees:my_data' %}">My Data</a>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Consent status</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Purpose</th><th scope="col">Status</th><th scope="col">Given</th></tr></thead>
+          <tbody>
+            {% for row in consent_rows %}
+              <tr>
+                <th scope="row">{{ row.label }}</th>
+                <td>
+                  {% if row.active %}<span class="grade grade-E2">On</span>
+                  {% elif row.consent %}<span class="grade grade-E0">Withdrawn</span>
+                  {% else %}<span class="badge">Not given</span>{% endif %}
+                </td>
+                <td>{% if row.consent %}{{ row.consent.given_at|date:"d M Y" }}{% else %}—{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="helptext">
+        <a href="{% url 'trainees:my_data' %}">Manage consent on the "My Data" page.</a>
+        Consent can be withdrawn for one purpose at a time.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Next follow-up</h3>
+      {% if next_job %}
+        <p class="stat">{{ next_job.due_at|date:"d M Y" }}</p>
+        <p class="stat-label">
+          Round {{ next_job.round }} · channel {{ next_job.get_channel_plan_display }}
+          · status {{ next_job.get_status_display }}
+        </p>
+        <p class="helptext">
+          You will get a WhatsApp form, an IVR call, or an SMS depending on the
+          phone type you declared at enrolment. If nothing works, an officer
+          calls you — you will not simply disappear from the numbers.
+        </p>
+      {% else %}
+        {% include "partials/empty_state.html" with heading="No follow-up scheduled" message="All four rounds are done, or follow-up consent is withdrawn." %}
+      {% endif %}
+    </div>
+  </div>
+
+  {% if latest %}
+  <div class="card">
+    <h3>Your latest outcome</h3>
+    <p class="stat">{{ latest.get_status_display }}</p>
+    <p class="stat-label">
+      as of {{ latest.reference_date|date:"d M Y" }}
+      · grade <span class="grade grade-{{ latest_grade }}">{{ latest_grade }}</span>
+      {% if latest.start_date %} · started {{ latest.start_date|date:"d M Y" }}{% endif %}
+      {% if latest.wage_band %} · wage band {{ latest.wage_band }}{% endif %}
+    </p>
+    {% if latest.employer_name %}
+      <p style="color:var(--text-secondary)">Employer: {{ latest.employer_name }}</p>
+    {% endif %}
+    {% if latest.reason_codes %}
+      <p style="color:var(--text-secondary)">
+        You told us:
+        {% for group, codes in latest.reason_codes.items %}{% for code in codes %}
+          <span class="badge">{{ group }}: {{ code|humanise }}</span>
+        {% endfor %}{% endfor %}
+      </p>
+    {% endif %}
+
+    <div class="cluster" style="margin-top:12px">
+      {% if latest_grade == 'E2' or latest_grade == 'E3' or latest_grade == 'E4' %}
+        {% if latest.work_proof %}
+          <p class="helptext">
+            Work-Proof issued: <strong>{{ latest.work_proof.certificate_id }}</strong>
+            (DigiLocker reference {{ latest.work_proof.digilocker_ref }}) —
+            <span class="badge badge-MOCK">MOCK API</span>. It never includes your wage.
+          </p>
+        {% elif consent_has_record_match %}
+          <form method="post" action="{% url 'trainees:issue_work_proof' %}">
+            {% csrf_token %}
+            <input type="hidden" name="outcome_id" value="{{ latest.pk }}">
+            <button class="btn btn-primary" type="submit">Issue my Work-Proof to DigiLocker</button>
+            <p class="helptext">
+              Your employer confirmed this job, so you can take a verified work
+              record into DigiLocker. It shows the employer, role, start date and
+              whether you are still working — never your wage.
+            </p>
+          </form>
+        {% endif %}
+      {% endif %}
+      <a class="btn btn-secondary" href="{% url 'trainees:outcome_detail' latest.pk %}">See how this was checked</a>
+    </div>
+    <p class="helptext" style="margin-top:12px">
+      This record is append-only: correcting something adds a new record rather
+      than overwriting this one, so the history stays auditable.
+    </p>
+  </div>
+  {% else %}
+  <div class="card">
+    {% include "partials/empty_state.html" with heading="No outcome events yet" message="Your first follow-up round will ask you what you are doing now. Nothing is assumed about you until you answer." action_url="/outcome/capture/" action_label="Answer now" %}
+  </div>
+  {% endif %}
+
+  {% if outcomes %}
+  <div class="card">
+    <h3>Your outcome history</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Reference date</th><th scope="col">Status</th>
+            <th scope="col">Role</th><th scope="col">Wage band</th>
+            <th scope="col">Grade</th><th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for outcome in outcomes %}
+            <tr>
+              <th scope="row">{{ outcome.reference_date|date:"d M Y" }}</th>
+              <td>{{ outcome.get_status_display }}</td>
+              <td>{{ outcome.role_code|default:"—" }}</td>
+              <td>{{ outcome.wage_band|default:"—" }}</td>
+              <td><span class="grade grade-{{ outcome.evidence_level }}">{{ outcome.evidence_level }}</span></td>
+              <td><a href="{% url 'trainees:outcome_detail' outcome.pk %}">Details</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if retention and retention.employed_rounds %}
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Retention</h3>
+      <p class="stat">{{ retention.months_retained }} months</p>
+      <p class="stat-label">
+        break rule: a gap of at most {{ retention.break_days_allowed }} days still counts
+        as continuous employment
+      </p>
+      {% if retention.gaps %}
+        <p style="color:var(--warning)">
+          {% for gap in retention.gaps %}{{ gap }}<br>{% endfor %}
+        </p>
+      {% endif %}
+    </div>
+    <div class="card">
+      <h3>Wage progression</h3>
+      <table>
+        <thead><tr><th scope="col">Round</th><th scope="col">Wage band</th></tr></thead>
+        <tbody>
+          {% for month, band in wage_progression.items %}
+            <tr><th scope="row">T+{{ month }} months</th><td>{{ band|default:"not working" }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h3>All four follow-up rounds</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Round</th><th scope="col">Due</th><th scope="col">Channel</th><th scope="col">Status</th><th scope="col">Attempts</th></tr></thead>
+        <tbody>
+          {% for job in jobs %}
+            <tr>
+              <th scope="row">{{ job.round }}</th>
+              <td>{{ job.due_at|date:"d M Y" }}</td>
+              <td>{{ job.get_channel_plan_display }}</td>
+              <td>{{ job.get_status_display }}</td>
+              <td>{{ job.retries }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5">No rounds scheduled.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{# Empty state. docs/03-APP-FLOW.md J-11: friendly text plus a way to act. #}
+<div class="empty-state" role="status" aria-live="polite">
+  <h3>{{ heading|default:"Nothing here yet" }}</h3>
+  <p>{{ message|default:"Records will appear here once data arrives." }}</p>
+  {% if action_url %}
+    <a class="btn btn-primary" href="{{ action_url }}">{{ action_label|default:"Take the next step" }}</a>
+  {% endif %}
+</div>

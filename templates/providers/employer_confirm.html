@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Confirm employment{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <div class="card">
+    <p class="badge badge-SANDBOX">SANDBOX · WhatsApp template</p>
+    <h1 style="font-size:2rem">One quick confirmation</h1>
+    <p style="color:var(--text-secondary)">
+      {{ person.display_name }} told us they are working for you. Please check the
+      details below and confirm. No login needed — this page is unique to this
+      trainee's record.
+    </p>
+
+    <table>
+      <tbody>
+        <tr><th scope="row">Trainee</th><td>{{ person.display_name }}</td></tr>
+        <tr><th scope="row">Course</th><td>{{ enrolment.qualification.course_name|default:"—" }}</td></tr>
+        <tr><th scope="row">Centre</th><td>{{ enrolment.provider.name|default:"—" }}</td></tr>
+        <tr><th scope="row">Trainee said they joined on</th><td>{{ outcome.start_date|default:"not stated"|date:"d M Y" }}</td></tr>
+        <tr><th scope="row">Trainee said the wage band is</th><td>{{ outcome.wage_band|default:"not stated" }}</td></tr>
+      </tbody>
+    </table>
+
+    <form method="post" style="margin-top:20px">
+      {% csrf_token %}
+      <fieldset>
+        <legend>Are they still working for you?</legend>
+        <div class="check-row">
+          <input type="radio" name="still_employed" id="employed_yes" value="yes" required>
+          <label for="employed_yes">Yes, still working here</label>
+        </div>
+        <div class="check-row">
+          <input type="radio" name="still_employed" id="employed_no" value="no" required>
+          <label for="employed_no">No, they have left</label>
+        </div>
+      </fieldset>
+
+      <div class="form-row">
+        <label for="wage_verified">Wage band you would confirm</label>
+        <select name="wage_verified" id="wage_verified">
+          <option value="">Same as the trainee said</option>
+          {% for value, label in wage_labels.items %}
+            <option value="{{ value }}" {% if value == outcome.wage_band %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <span class="helptext">
+          If you pick a different band, both answers are kept on record. A
+          disagreement is information, not an error.
+        </span>
+      </div>
+
+      <div class="form-row">
+        <label for="note">Anything to add</label>
+        <textarea name="note" id="note" rows="2" maxlength="300"></textarea>
+      </div>
+
+      <button class="btn btn-primary" type="submit">Confirm</button>
+      <p class="helptext">
+        Confirming raises this outcome from E0 (trainee said so) to
+        E2 (employer confirmed). It does not share the trainee's wage with anyone.
+      </p>
+    </form>
+  </div>
+</div>
+{% endblock %}

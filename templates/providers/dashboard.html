@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Provider dashboard{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">
+      {{ user.provider_id }} cohort dashboard
+    </h1>
+    <p style="color:var(--text-secondary)">
+      {{ people_count }} trainees · {{ due_count }} follow-up rounds due
+      · signed in as {{ user.get_role_display }}
+    </p>
+    <p class="helptext">
+      Row-level security is live on this page: these figures are built from
+      <code>enrolment.provider_id = {{ user.provider_id }}</code>, so another
+      provider's trainees are not in the query at all. Verified on the
+      <a href="{% url 'policy:provider_comparison' %}">policy comparison</a> page.
+    </p>
+  </div>
+
+  {% include "partials/grade_filter.html" %}
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Placement rate</h3>
+      {% include "dashboard/_rate.html" with rate=rate %}
+      <p class="helptext" style="margin-top:12px">
+        Filter: {{ grade_floors|default_if_none:"" }}{{ rate.floor }} —
+        {{ rate.floor }} and above only.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>After non-response weighting</h3>
+      <div class="rate">
+        <span class="rate-value">{{ weights.weighted_rate|floatformat:0 }}%</span>
+        <span class="rate-context">
+          weighted placement
+          (response rate: {{ weights.weighted_response_rate|floatformat:0 }}%)
+        </span>
+      </div>
+      <div class="mix">
+        {% for grade, share in rate.mix_percent.items %}
+          <span class="grade grade-{{ grade }}">{{ grade }}: {{ share|floatformat:0 }}%</span>
+        {% endfor %}
+      </div>
+      <p class="helptext" style="margin-top:12px">
+        {{ weights.sampled }} outcome(s) carry an inverse-probability weight from
+        the department's random call-back sample. The gap between this figure and
+        the raw rate above is what non-response costs you.
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="stat">{{ retention.respondents }}</div>
+      <div class="stat-label">trainees with at least one employed round</div>
+    </div>
+    <div class="card">
+      <div class="stat">{{ retention.average_months_retained }}</div>
+      <div class="stat-label">average months retained (break ≤ {{ retention.break_days_allowed }} days)</div>
+    </div>
+    <div class="card">
+      <div class="stat">{{ skill_gaps|length }}</div>
+      <div class="stat-label">skill-gap flags in your districts</div>
+    </div>
+  </div>
+
+  <div class="card">
+    {% include "dashboard/grade_chart.html" with mix=rate.mix %}
+  </div>
+
+  {% if withheld_groups %}
+  <div class="card">
+    <h3>Groups below the minimum size</h3>
+    <p class="helptext">
+      Cells with fewer than {{ min_group_size }} people are withheld so a small
+      cohort cannot be re-identified. They still count in your own totals.
+    </p>
+    <ul>
+      {% for group in withheld_groups %}
+        <li>{{ group.course }} · {{ group.district }} · {{ group.reached }} reached — data withheld</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h3>Skill gaps in your districts</h3>
+    <p class="helptext">
+      A course is listed only where at least 2 of 3 signals agree:
+      vacancies exist, employers report "skills lacking", or trainees say so.
+    </p>
+    {% if skill_gaps %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Course</th><th scope="col">District</th><th scope="col">Signals</th>
+                <th scope="col">Vacancies</th><th scope="col">Employer says lacking</th><th scope="col">Trainee says lacking</th></tr>
+          </thead>
+          <tbody>
+            {% for gap in skill_gaps %}
+              <tr>
+                <th scope="row">{{ gap.course }}</th>
+                <td>{{ gap.district }}</td>
+                <td>
+                  {% if gap.signals_agree_count == 3 %}<span class="grade grade-E0">{{ gap.signals_agree_count }}/3</span>
+                  {% else %}<span class="grade grade-E1">{{ gap.signals_agree_count }}/3</span>{% endif %}
+                </td>
+                <td>{{ gap.vacancy_count }}</td>
+                <td>{{ gap.employer_skills_lacking_count }}</td>
+                <td>{{ gap.trainee_skills_lacking_count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with heading="No skill-gap flag in your districts" message="No course has two agreeing signals yet." %}
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3>Why trainees are not placed</h3>
+    {% if reasons %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th scope="col">Group</th><th scope="col">Reason</th><th scope="col">Count</th></tr></thead>
+          <tbody>
+            {% for reason in reasons %}
+              <tr>
+                <th scope="row">{{ reason.group }}</th>
+                <td>{{ reason.label }}</td>
+                <td>{{ reason.count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      {% include "partials/empty_state.html" with heading="No reasons recorded yet" message="Reasons appear once trainees answer a follow-up with a 'not working' status." %}
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3>Upload the next batch</h3>
+    <p>
+      <a class="btn btn-secondary" href="{% url 'trainees:csv_upload' %}">Upload CSV with gatekeeper checks</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

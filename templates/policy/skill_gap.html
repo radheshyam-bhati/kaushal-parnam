@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Skill-gap maps{% endblock %}
+
+{% block content %}
+<div class="stack">
+  <div class="card">
+    <h1 style="font-size:2rem">Skill-gap view</h1>
+    <p style="color:var(--text-secondary)">
+      A course is flagged only where at least {{ threshold }} of 3 signals agree:
+      vacancies exist for the occupation in the district, employers report
+      "skills lacking" for its graduates, or trainees say the skills were lacking.
+    </p>
+    <p class="helptext">
+      Vacancy counts come from the NCS adapter
+      <span class="badge badge-SIMULATED">SIMULATED DATA</span>,
+      snapshot dated {{ snapshot_date|default:"—" }}.
+      {% if is_stale %}<span style="color:var(--warning)">This snapshot is stale; refresh it before acting.</span>{% endif %}
+    </p>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Red — 3 of 3 signals agree</h3>
+      {% if red %}
+        <ul>
+          {% for gap in red %}
+            <li><strong>{{ gap.course }}</strong> · {{ gap.district }} (NCO {{ gap.occupation_code }})
+              <ul>
+                <li>Vacancies in district: {{ gap.vacancy_count }}</li>
+                <li>Employers reporting skills lacking: {{ gap.employer_skills_lacking_count }}</li>
+                <li>Trainees reporting skills lacking: {{ gap.trainee_skills_lacking_count }}</li>
+              </ul>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "partials/empty_state.html" with heading="Nothing with three agreeing signals" message="No course needs emergency redesign on current evidence." %}
+      {% endif %}
+    </div>
+    <div class="card">
+      <h3>Orange — 2 of 3 signals agree</h3>
+      {% if orange %}
+        <ul>
+          {% for gap in orange %}
+            <li><strong>{{ gap.course }}</strong> · {{ gap.district }} —
+              vacancies {{ gap.vacancy_count }}, employer {{ gap.employer_skills_lacking_count }},
+              trainee {{ gap.trainee_skills_lacking_count }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "partials/empty_state.html" with heading="Nothing with two agreeing signals" message="Watch list is empty." %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Every course in the system, flagged or not</h3>
+    <p class="helptext">Grey rows have fewer than {{ threshold }} signals and are not flagged.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Course</th><th scope="col">District</th><th scope="col">Signals</th>
+              <th scope="col">Vacancies</th><th scope="col">Employer</th><th scope="col">Trainee</th><th scope="col">Flag</th></tr>
+        </thead>
+        <tbody>
+          {% for gap in all_gaps %}
+            <tr>
+              <th scope="row">{{ gap.course }}</th>
+              <td>{{ gap.district }}</td>
+              <td>{{ gap.signals_agree_count }}/3</td>
+              <td>{{ gap.vacancy_count }}</td>
+              <td>{{ gap.employer_skills_lacking_count }}</td>
+              <td>{{ gap.trainee_skills_lacking_count }}</td>
+              <td>{% if gap.gap_flag %}<span class="grade grade-E0">Flagged</span>{% else %}<span class="badge">Not flagged</span>{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7">Run <code>python manage.py generate_stats</code> to build the skill-gap table.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

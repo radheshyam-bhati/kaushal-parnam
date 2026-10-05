@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load kp_tags %}
+{% block title %}Your outcome{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <h1 style="font-size:2rem">
+    {% if round %}Follow-up round {{ round }}{% else %}Update your status{% endif %}
+  </h1>
+  <p style="color:var(--text-secondary)">
+    As of today, what is your status? Your answer is recorded once, at grade
+    {% if job %}E0 (your own report){% else %}E0{% endif %}. Nobody overwrites it —
+    a later answer is added as a new record.
+  </p>
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-error" role="alert">
+      <span class="alert-icon" aria-hidden="true">!</span>
+      <span>{{ form.non_field_errors|join:" " }}</span>
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate class="stack" style="margin-top:16px">
+    {% csrf_token %}
+
+    <fieldset>
+      <legend>Status</legend>
+      {% for radio in form.status %}
+        <div class="check-row">
+          {{ radio.tag }}
+          <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+        </div>
+      {% endfor %}
+      {% if form.status.errors %}<ul class="errorlist">{% for e in form.status.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Reference date</legend>
+      <div class="form-row {% if form.reference_date.errors %}field-error{% endif %}">
+        <label class="required" for="{{ form.reference_date.id_for_label }}">{{ form.reference_date.label }}</label>
+        {{ form.reference_date }}
+        {% if form.reference_date.errors %}<ul class="errorlist">{% for e in form.reference_date.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>If you are working</legend>
+      <p class="helptext">
+        Optional, but employer name plus start date and wage band is what lets us
+        check your job with the employer later.
+      </p>
+      {% for field in form|fields:"employer_name employer_phone role_code start_date wage_band" %}
+        <div class="form-row {% if field.errors %}field-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>If you are self-employed</legend>
+      {% for field in form|fields:"self_employment_activity income_band months_active" %}
+        <div class="form-row {% if field.errors %}field-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>If you are in an apprenticeship or on a stipend</legend>
+      {% for field in form|fields:"establishment_name stipend_band apprenticeship_months" %}
+        <div class="form-row {% if field.errors %}field-error{% endif %}">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>If you are not working, why not?</legend>
+      <p class="helptext">
+        This is the single most useful answer in the whole system: it is what
+        tells the department which course to change. Pick as many as apply.
+      </p>
+      {% for field in form|fields:"employment_reasons training_reasons personal_reasons" %}
+        <p style="margin-bottom:4px; font-weight:600">{{ field.label }}</p>
+        {% for check in field %}
+          <div class="check-row">{{ check.tag }}<label for="{{ check.id_for_label }}">{{ check.choice_label }}</label></div>
+        {% endfor %}
+      {% endfor %}
+      <div class="form-row">
+        <label for="{{ form.free_text.id_for_label }}">{{ form.free_text.label }}</label>
+        {{ form.free_text }}
+        <span class="helptext">Our staff read this. No automatic text reading in this version.</span>
+      </div>
+      {% if form.employment_reasons.errors %}<ul class="errorlist">{% for e in form.employment_reasons.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </fieldset>
+
+    <button class="btn btn-primary" type="submit">Save my outcome</button>
+    <p class="helptext">
+      Stored with your UTID {{ person.utid }} and graded E0. Your employer is only
+      contacted if you gave consent for employer validation.
+    </p>
+  </form>
+</div>
+{% endblock %}

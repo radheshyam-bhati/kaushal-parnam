@@ -1,0 +1,95 @@
+{% load static i18n %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Kaushal Parinam{% endblock %} — Kaushal Parinam (Skill Outcomes)</title>
+  <meta name="description" content="Consent-based longitudinal outcome tracking for skilling programmes. A layer on top of SIDH and Mahaswayam.">
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="language-{{ LANGUAGE_CODE|slice:':2' }}">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header no-print">
+    <div class="container">
+      <a class="brand" href="{% url 'home' %}">
+        Kaushal Parinam
+        <small>कौशल परिणाम · Skill Outcomes</small>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        {% if user.is_authenticated %}
+          <a href="{% url 'role_home' %}">My dashboard</a>
+          {% if user.role == 'trainee' %}
+            <a href="{% url 'trainees:my_data' %}">My Data</a>
+            <a href="{% url 'trainees:certificate_check' %}">Certificate check</a>
+          {% endif %}
+          {% if user.role == 'policy_officer' %}
+            <a href="{% url 'policy:provider_comparison' %}">Provider comparison</a>
+            <a href="{% url 'policy:skill_gap' %}">Skill gaps</a>
+            <a href="{% url 'policy:definitions' %}">Definitions</a>
+          {% endif %}
+          {% if user.role == 'provider' or user.role == 'provider_coordinator' %}
+            <a href="{% url 'providers:dashboard' %}">My cohorts</a>
+          {% endif %}
+          {% if user.role == 'provider_coordinator' or user.role == 'policy_officer' %}
+            <a href="{% url 'trainees:csv_upload' %}">Upload CSV</a>
+          {% endif %}
+          {% if user.role == 'district_officer' or user.role == 'policy_officer' %}
+            <a href="{% url 'officers:task_list' %}">Tasks</a>
+            <a href="{% url 'officers:audit_sample' %}">Audit sample</a>
+          {% endif %}
+          <span class="badge">{{ user.get_role_display }}</span>
+          <form method="post" action="{% url 'logout' %}" style="display:inline">
+            {% csrf_token %}
+            <button class="btn btn-outline btn-sm" type="submit">Sign out</button>
+          </form>
+        {% else %}
+          <a href="{% url 'login' %}">Sign in</a>
+          <a class="btn btn-primary btn-sm" href="{% url 'trainees:enrol' %}">Enrol Now</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <div id="request-error" class="alert alert-error container" role="alert" hidden></div>
+
+  <main id="main" class="container" style="padding-top:24px; padding-bottom:48px">
+    {% if messages %}
+      <div aria-live="polite">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }}">
+            <span class="alert-icon" aria-hidden="true">
+              {% if message.tags == 'error' %}!{% elif message.tags == 'warning' %}!{% else %}i{% endif %}
+            </span>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="container no-print" style="padding-bottom:24px">
+    {% include "partials/integration_badges.html" %}
+    <p class="helptext" style="margin-top:16px">
+      All demo data are synthetic. No real person is shown. Nothing here is production.
+      Consent can be withdrawn at any time from
+      {% if user.is_authenticated and user.role == 'trainee' %}<a href="{% url 'trainees:my_data' %}">My Data</a>{% else %}the "My Data" page{% endif %}.
+    </p>
+  </footer>
+
+  <nav class="bottom-nav no-print" aria-label="Main">
+    <a href="{% url 'home' %}"><span aria-hidden="true">&#8962;</span>Home</a>
+    <a href="{% url 'role_home' %}"><span aria-hidden="true">&#9638;</span>Dashboard</a>
+    <a href="{% url 'trainees:enrol' %}"><span aria-hidden="true">&#10003;</span>Enrol</a>
+    <a href="{% url 'trainees:my_data' %}"><span aria-hidden="true">&#128100;</span>My Data</a>
+    <a href="{% url 'trainees:enrol' %}#help"><span aria-hidden="true">?</span>Help</a>
+  </nav>
+
+  <div id="live-region" class="skip-link" role="status" aria-live="polite"></div>
+  <script src="{% static 'js/app.js' %}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

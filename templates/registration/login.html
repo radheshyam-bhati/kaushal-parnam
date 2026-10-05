@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+  <div class="card">
+    <h1 style="font-size:2rem">Sign in</h1>
+    <p style="color:var(--text-secondary)">
+      Each role lands on its own dashboard. Row-level security is active the
+      moment you sign in: a provider can only read their own trainees' rows.
+    </p>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-error" role="alert">
+          <span class="alert-icon" aria-hidden="true">!</span>
+          <span>That username and password did not match. Check them and try again.</span>
+        </div>
+      {% endif %}
+
+      <div class="form-row">
+        <label for="{{ form.username.id_for_label }}">Username or phone</label>
+        {{ form.username }}
+      </div>
+      <div class="form-row">
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+      </div>
+      <div class="cluster">
+        <button class="btn btn-primary" type="submit">Sign in</button>
+        <a class="btn btn-outline" href="{% url 'password_reset' %}">Forgot password</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Demo logins</h3>
+    <p class="helptext">Seeded by <code>python manage.py seed_demo</code>. Password for all: <code>demo-pass-1234</code>.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Username</th><th scope="col">Role</th><th scope="col">Sees</th></tr></thead>
+        <tbody>
+          <tr><td>trainee</td><td>Trainee</td><td>own record only</td></tr>
+          <tr><td>provider_a</td><td>Provider (Centre-A)</td><td>Centre-A trainees only</td></tr>
+          <tr><td>provider_b</td><td>Provider (Centre-B)</td><td>Centre-B trainees only</td></tr>
+          <tr><td>officer_mumbai</td><td>District officer</td><td>Mumbai district</td></tr>
+          <tr><td>officer_pune</td><td>District officer</td><td>Pune district</td></tr>
+          <tr><td>policy</td><td>Policy officer (MSInS)</td><td>all districts, aggregated</td></tr>
+          <tr><td>coordinator_a</td><td>Provider coordinator</td><td>CSV upload for Centre-A</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+# Kaushal Parinam — Python/Django dependencies
+# Stack fixed by docs/02-TRD.md §1 (Django + HTMX + Chart.js + PostgreSQL).
+
+Django>=5.0,<6.1
+psycopg[binary]>=3.1          # PostgreSQL driver (docs/02-TRD.md §1)
+dj-database-url>=2.1          # DATABASE_URL parsing (docs/02-TRD.md §4)
+django-environ>=0.11          # .env reading
+python-dotenv>=1.0            # .env reading
+django-filter>=24.0           # dashboard filters (docs/06-IMPLEMENTATION-PLAN.md Phase 5)
+statsmodels>=0.14             # S-02 fair-peer regression only; no ML (docs/02-TRD.md §7)
+pandas>=2.0                   # analytics batch (docs/02-TRD.md §1)
+
+# Production-only (docs/02-TRD.md §8). Install with: pip install -r requirements-prod.txt
+# gunicorn>=22.0
