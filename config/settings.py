@@ -147,6 +147,11 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 LOG_DIR = BASE_DIR / "logs"
+# logs/ is gitignored and git does not track empty directories, so a fresh clone
+# has no logs/ at all. Without this the RotatingFileHandler below cannot open its
+# file and Django refuses to start, which breaks every command including
+# `migrate` and `test`.
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Email — console backend for the demo (docs/02-TRD.md §11)
