@@ -1,62 +1,118 @@
 {% extends "base.html" %}
-{% block title %}Expected vs actual{% endblock %}
+{% block title %}Fair Peer Provider Comparison — Kaushal Parinam{% endblock %}
 
 {% block content %}
-<div class="stack">
-  <div class="card">
-    <h1 style="font-size:2rem">Expected vs actual provider placement</h1>
-    <p style="color:var(--text-secondary)">{{ note }}</p>
-    <p class="helptext">
-      Rules and a transparent regression only — no machine learning, so a
-      department officer can reproduce every number from the table below.
-      Providers with fewer than {{ min_group_size }} trainees are not ranked.
+<div class="stack-lg">
+  <!-- Intelligence Header -->
+  <div class="card card-hero bg-grid-texture">
+    <div class="cluster-between" style="margin-bottom:12px">
+      <div class="cluster">
+        <span class="badge badge-CIVIC">ECONOMETRIC BENCHMARKING</span>
+        <span class="badge badge-SANDBOX">ORDINARY LEAST SQUARES</span>
+      </div>
+      <span class="badge">k = {{ min_group_size }} privacy threshold</span>
+    </div>
+
+    <h1 style="font-size:2.25rem; color:var(--primary-dark); margin-bottom:8px">
+      Fair Peer Comparison: Actual vs Expected Placement
+    </h1>
+    <p style="font-size:1.125rem; color:var(--text-secondary); margin-bottom:16px; max-width:960px">
+      Distinguishing genuine training quality from local economic disadvantage. Ordinary Least Squares regression controls for local district vacancy indices and baseline cohort composition.
     </p>
+
+    <div class="alert alert-info" style="margin-bottom:0">
+      <span class="alert-icon" aria-hidden="true">i</span>
+      <span>
+        <strong>Deterministic &amp; Auditable:</strong> Transparent regression without black-box ML. Every standard error, confidence bound, and residual can be audited and reproduced directly by district officers.
+      </span>
+    </div>
   </div>
 
+  <!-- Main Comparison Table -->
   <div class="card">
+    <div class="card-header">
+      <div>
+        <span class="filter-label">PROVIDER RANKING</span>
+        <h3 style="margin-top:2px">Risk-Adjusted Performance Matrix</h3>
+      </div>
+      <span class="badge">95% Confidence Bounds</span>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th scope="col">Provider</th><th scope="col">District</th><th scope="col">Reached</th>
-            <th scope="col">Raw rate</th><th scope="col">Expected</th><th scope="col">95% interval</th>
-            <th scope="col">Actual − expected</th><th scope="col">Verdict</th>
+            <th scope="col">Training Centre</th>
+            <th scope="col">District</th>
+            <th scope="col">Reached</th>
+            <th scope="col">Raw Placement Rate</th>
+            <th scope="col">Econometric Expected</th>
+            <th scope="col">95% Confidence Band</th>
+            <th scope="col">Performance Delta (pp)</th>
+            <th scope="col">Outcome Verdict</th>
           </tr>
         </thead>
         <tbody>
           {% for row in rows %}
             {% if row.withheld %}
-              <tr>
-                <th scope="row">{{ row.provider_name }}</th>
+              <tr style="background:var(--surface-muted)">
+                <th scope="row">
+                  <div style="font-weight:700">{{ row.provider_name }}</div>
+                  <span class="helptext" style="font-family:var(--font-family-mono)">{{ row.provider_id }}</span>
+                </th>
                 <td>{{ row.district }}</td>
                 <td>{{ row.reached }}</td>
-                <td colspan="5"><em>Data withheld</em> — fewer than {{ min_group_size }} trainees reached</td>
+                <td colspan="5" style="color:var(--text-muted); font-style:italic">
+                  Data withheld — cohort size below state threshold (k = {{ min_group_size }})
+                </td>
               </tr>
             {% else %}
               <tr>
-                <th scope="row">{{ row.provider_name }}<br><span class="helptext">{{ row.provider_id }}</span></th>
-                <td>{{ row.district }}</td>
-                <td>{{ row.reached }}</td>
-                <td>{{ row.raw_rate|floatformat:1 }}%</td>
-                <td>{{ row.expected_rate|floatformat:1 }}%</td>
-                <td>{{ row.ci_low|floatformat:1 }}–{{ row.ci_high|floatformat:1 }}%</td>
+                <th scope="row">
+                  <div style="font-weight:700; color:var(--primary-dark)">{{ row.provider_name }}</div>
+                  <span class="helptext" style="font-family:var(--font-family-mono)">{{ row.provider_id }}</span>
+                </th>
+                <td><span class="badge">{{ row.district }}</span></td>
+                <td style="font-weight:600">{{ row.reached }}</td>
                 <td>
-                  {% if row.gap > 0 %}+{% endif %}{{ row.gap|floatformat:1 }} pp
+                  <strong style="font-size:var(--fs-base)">{{ row.raw_rate|floatformat:1 }}%</strong>
                 </td>
-                <td>{{ row.verdict }}</td>
+                <td style="color:var(--text-secondary); font-weight:600">
+                  {{ row.expected_rate|floatformat:1 }}%
+                </td>
+                <td style="font-size:var(--fs-xs); color:var(--text-muted); font-family:var(--font-family-mono)">
+                  [{{ row.ci_low|floatformat:1 }}% – {{ row.ci_high|floatformat:1 }}%]
+                </td>
+                <td>
+                  <span class="grade" style="{% if row.gap >= 0 %}background:var(--emerald-light); color:var(--emerald-dark); border-color:var(--emerald-border);{% else %}background:var(--amber-light); color:var(--amber-dark); border-color:var(--amber-border);{% endif %}">
+                    {% if row.gap > 0 %}+{% endif %}{{ row.gap|floatformat:1 }} pp
+                  </span>
+                </td>
+                <td>
+                  {% if 'Far above' in row.verdict or 'Above' in row.verdict %}
+                    <span class="badge badge-SANDBOX" style="font-weight:700">{{ row.verdict }}</span>
+                  {% elif 'Below' in row.verdict or 'Far below' in row.verdict %}
+                    <span class="badge badge-SIMULATED" style="font-weight:700">{{ row.verdict }}</span>
+                  {% else %}
+                    <span class="badge" style="font-weight:600">{{ row.verdict }}</span>
+                  {% endif %}
+                </td>
               </tr>
             {% endif %}
           {% empty %}
-            <tr><td colspan="8">No provider outcomes yet.</td></tr>
+            <tr><td colspan="8" class="helptext" style="text-align:center; padding:24px">No provider outcome records calculated yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <p class="helptext" style="margin-top:12px">
-      Read this table as a pair: a provider whose raw rate is lowest but whose
-      gap is near zero is being penalised by the local labour market, not by
-      teaching quality.
-    </p>
+
+    <!-- Explanatory Guide Box -->
+    <div class="card" style="margin-top:20px; background:var(--surface-subtle); border-color:var(--border)">
+      <h4 style="font-size:var(--fs-sm); color:var(--primary-dark); margin-bottom:6px">How to Interpret Risk-Adjusted Residuals:</h4>
+      <p style="font-size:var(--fs-xs); color:var(--text-secondary); margin-bottom:0">
+        A centre operating in a district with depressed industrial hiring (e.g. Centre-B in Pune) will exhibit a lower <em>raw rate</em>. When the econometric expected rate is factored in, the residual gap narrows, demonstrating that lower placement is driven by localized vacancy scarcity rather than pedagogical failure.
+      </p>
+    </div>
   </div>
 </div>
 {% endblock %}

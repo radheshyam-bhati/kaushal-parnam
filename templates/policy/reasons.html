@@ -1,0 +1,1041 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Why Outcomes Stall — Reasons Intelligence Dashboard — Kaushal Parinam{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ==========================================================================
+     Reasons Intelligence Dashboard — Premium Stylesheet
+     ========================================================================== */
+
+  .reasons-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    position: relative;
+  }
+
+  /* Intelligence Hero Section */
+  .reasons-hero {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 60%, #1E3A8A 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 16px 36px -8px rgba(10, 25, 59, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .reasons-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .reasons-hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+  }
+
+  .reasons-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #FCD34D;
+    background: rgba(217, 119, 6, 0.2);
+    border: 1px solid rgba(253, 230, 138, 0.3);
+    padding: 4px 12px;
+    border-radius: 9999px;
+    margin-bottom: 14px;
+  }
+
+  .reasons-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: #FFFFFF;
+    margin: 0 0 10px 0;
+  }
+
+  .reasons-subtitle {
+    font-size: 1.125rem;
+    color: #E2E8F0;
+    line-height: 1.5;
+    margin: 0 0 20px 0;
+    font-weight: 400;
+    max-width: 800px;
+  }
+
+  .reasons-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    font-size: var(--fs-xs);
+    color: #94A3B8;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 14px;
+  }
+
+  .reasons-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .reasons-meta-pill {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  /* ==========================================================================
+     Large Segmented Domain Visualization
+     ========================================================================== */
+  .segmented-domain-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .segmented-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: var(--space-5);
+  }
+
+  /* Segmented Track Bar */
+  .domain-track {
+    display: flex;
+    height: 28px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #F1F5F9;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+    margin-bottom: var(--space-6);
+  }
+
+  .domain-segment {
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    font-family: var(--font-family-mono);
+  }
+
+  .domain-segment:hover {
+    filter: brightness(1.1);
+  }
+
+  .domain-segment.seg-employment {
+    background: linear-gradient(90deg, #0F2756 0%, #1E3A8A 100%);
+  }
+
+  .domain-segment.seg-training {
+    background: linear-gradient(90deg, #D97706 0%, #F59E0B 100%);
+  }
+
+  .domain-segment.seg-personal {
+    background: linear-gradient(90deg, #059669 0%, #10B981 100%);
+  }
+
+  /* Domain Cards Grid */
+  .domain-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+
+  @media (max-width: 900px) {
+    .domain-cards-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .domain-card {
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+    border: 1.5px solid transparent;
+  }
+
+  .domain-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .domain-card.active-filter {
+    outline: 2px solid var(--primary);
+  }
+
+  .domain-card.employment {
+    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
+    border-color: #BFDBFE;
+  }
+
+  .domain-card.training {
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%);
+    border-color: #FDE68A;
+  }
+
+  .domain-card.personal {
+    background: linear-gradient(180deg, #FFFFFF 0%, #ECFDF5 100%);
+    border-color: #A7F3D0;
+  }
+
+  .domain-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .domain-badge {
+    font-size: var(--fs-2xs);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+
+  .domain-badge.employment { background: #DBEAFE; color: #1E40AF; }
+  .domain-badge.training   { background: #FEF3C7; color: #92400E; }
+  .domain-badge.personal   { background: #D1FAE5; color: #065F46; }
+
+  .domain-card-val {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1;
+    font-family: var(--font-family-display);
+    margin-bottom: 4px;
+  }
+
+  .domain-card.employment .domain-card-val { color: #0F2756; }
+  .domain-card.training .domain-card-val   { color: #D97706; }
+  .domain-card.personal .domain-card-val   { color: #059669; }
+
+  .domain-card-title {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
+  }
+
+  .domain-card-sub {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  /* ==========================================================================
+     Horizontal Ranked Bar Visualization
+     ========================================================================== */
+  .ranked-reasons-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ranked-header-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .reasons-filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .reason-pill-btn {
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .reason-pill-btn:hover {
+    background: #E2E8F0;
+    color: var(--text-primary);
+  }
+
+  .reason-pill-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(15, 39, 86, 0.2);
+  }
+
+  /* Ranked Bar Item */
+  .ranked-reasons-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ranked-reason-row {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ranked-reason-row:hover {
+    background: #F8FAFC;
+    border-color: var(--primary-border);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px -4px rgba(15, 39, 86, 0.1);
+  }
+
+  .ranked-reason-row.selected-row {
+    border-color: var(--primary);
+    background: #EFF6FF;
+    outline: 2px solid var(--primary);
+  }
+
+  .reason-row-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .reason-row-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .reason-rank-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-family-mono);
+  }
+
+  .ranked-reason-row:hover .reason-rank-number {
+    background: var(--primary-subtle);
+    color: var(--primary);
+  }
+
+  .reason-label-text {
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+
+  .reason-metrics-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: var(--fs-xs);
+  }
+
+  .reason-count-highlight {
+    font-family: var(--font-family-mono);
+    font-weight: 800;
+    font-size: var(--fs-md);
+    color: var(--primary-dark);
+  }
+
+  /* Progress Bar Container */
+  .horizontal-bar-track {
+    height: 10px;
+    background: #F1F5F9;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .horizontal-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .horizontal-bar-fill.fill-employment {
+    background: linear-gradient(90deg, #0F2756 0%, #2563EB 100%);
+  }
+
+  .horizontal-bar-fill.fill-training {
+    background: linear-gradient(90deg, #D97706 0%, #F59E0B 100%);
+  }
+
+  .horizontal-bar-fill.fill-personal {
+    background: linear-gradient(90deg, #059669 0%, #10B981 100%);
+  }
+
+  /* Footer meta row in bar */
+  .reason-row-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--fs-xs);
+    color: var(--text-muted);
+    padding-top: 2px;
+  }
+
+  /* Evidence Convergence Badge */
+  .convergence-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+  }
+
+  .convergence-indicator.tier-3 {
+    background: #ECFDF5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+  }
+
+  .convergence-indicator.tier-2 {
+    background: #FFFBEB;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+  }
+
+  .convergence-indicator.tier-1 {
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+  }
+
+  /* ==========================================================================
+     Reason Detail Right-Side Drawer
+     ========================================================================== */
+  .reasons-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 19, 43, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+
+  .reasons-drawer-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .reasons-drawer-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 500px;
+    max-width: 92vw;
+    background: #FFFFFF;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .reasons-drawer-panel.open {
+    transform: translateX(0);
+  }
+
+  .reasons-drawer-header {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 100%);
+    color: #FFFFFF;
+    padding: var(--space-6);
+    position: relative;
+  }
+
+  .reasons-drawer-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #FFFFFF;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background-color 0.15s ease;
+  }
+
+  .reasons-drawer-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .reasons-drawer-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    flex: 1;
+  }
+
+  /* Convergence Gauge Card */
+  .convergence-gauge-card {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+  }
+
+  .convergence-gauge-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .dual-source-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .source-stat-box {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .source-stat-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: var(--font-family-mono);
+  }
+
+  .source-stat-lbl {
+    font-size: var(--fs-2xs);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* Diagnostic Cluster */
+  .drawer-cluster-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .cluster-info-box {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+  }
+
+  .cluster-info-lbl {
+    font-size: var(--fs-2xs);
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .cluster-info-val {
+    font-size: var(--fs-md);
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-top: 2px;
+  }
+
+  /* Policy Action Box */
+  .action-box {
+    background: linear-gradient(135deg, #0A193B 0%, #1E3A8A 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    color: #FFFFFF;
+  }
+
+  .action-box-lbl {
+    font-size: var(--fs-2xs);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #FCD34D;
+    margin-bottom: 6px;
+  }
+
+  .action-box-text {
+    font-size: var(--fs-base);
+    font-weight: 700;
+    line-height: 1.4;
+    color: #FFFFFF;
+    margin-bottom: 12px;
+  }
+
+  .action-box-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: var(--fs-xs);
+    color: #E2E8F0;
+    line-height: 1.6;
+  }
+
+  .reasons-drawer-footer {
+    padding: var(--space-4) var(--space-6);
+    background: #F8FAFC;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reasons-layout">
+
+  <!-- ========================================================================
+       1. Header: "Why outcomes stall"
+       ======================================================================== -->
+  <div class="reasons-hero">
+    <div class="reasons-hero-content">
+      <div class="reasons-eyebrow">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Longitudinal Non-Placement &amp; Attrition Intelligence
+      </div>
+      <h1 class="reasons-title">Why outcomes stall</h1>
+      <p class="reasons-subtitle">
+        Triangulating trainee exit feedback with post-placement employer verifications to identify why certified graduates do not convert into long-term employment.
+      </p>
+
+      <div class="reasons-meta-row">
+        <div class="reasons-meta-item">
+          <span>Diagnostic Protocol:</span>
+          <span class="reasons-meta-pill">NCVER / F-11 Multi-Source Taxonomy</span>
+        </div>
+        <div class="reasons-meta-item">
+          <span>Total Diagnostic Signals:</span>
+          <span class="reasons-meta-pill">{{ total_reasons }} Recorded Stall Events</span>
+        </div>
+        <div class="reasons-meta-item">
+          <span>Evidence Triangulation:</span>
+          <span class="reasons-meta-pill">Trainee Follow-ups + Employer Validations</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       2. Large Segmented Domain Visualization
+       ======================================================================== -->
+  <div class="segmented-domain-card">
+    <div class="segmented-card-header">
+      <div>
+        <span class="filter-label">HIGH-LEVEL ROOT CAUSE COMPOSITION</span>
+        <h2 style="margin:2px 0 0 0; font-size:1.25rem; color:var(--primary-dark)">
+          Macro Attrition Domain Distribution
+        </h2>
+      </div>
+      <span class="badge badge-CIVIC">State-wide Aggregate</span>
+    </div>
+
+    <!-- Segmented Progress Bar -->
+    <div class="domain-track" title="Employment-related: {{ emp_pct }}% | Training-related: {{ train_pct }}% | Personal: {{ pers_pct }}%">
+      <div class="domain-segment seg-employment" style="width: {{ emp_pct }}%" onclick="filterDomain('employment-related')">
+        {{ emp_pct }}%
+      </div>
+      <div class="domain-segment seg-training" style="width: {{ train_pct }}%" onclick="filterDomain('training-related')">
+        {{ train_pct }}%
+      </div>
+      <div class="domain-segment seg-personal" style="width: {{ pers_pct }}%" onclick="filterDomain('personal')">
+        {{ pers_pct }}%
+      </div>
+    </div>
+
+    <!-- 3 Domain Cards -->
+    <div class="domain-cards-grid">
+      <!-- Employment-related -->
+      <div class="domain-card employment" id="card-employment" onclick="filterDomain('employment-related')">
+        <div class="domain-card-header">
+          <span class="domain-badge employment">Macro Economic &amp; Market</span>
+          <span class="badge" style="background:#FFFFFF; font-weight:700">{{ emp_pct }}%</span>
+        </div>
+        <div class="domain-card-val">{{ emp_group_count }}</div>
+        <h3 class="domain-card-title">Employment-related</h3>
+        <p class="domain-card-sub">
+          Local job deficit, inadequate starting wages, business closures, or early probation contract terminations.
+        </p>
+      </div>
+
+      <!-- Training-related -->
+      <div class="domain-card training" id="card-training" onclick="filterDomain('training-related')">
+        <div class="domain-card-header">
+          <span class="domain-badge training">Curricular &amp; Vocational</span>
+          <span class="badge" style="background:#FFFFFF; font-weight:700">{{ train_pct }}%</span>
+        </div>
+        <div class="domain-card-val">{{ train_group_count }}</div>
+        <h3 class="domain-card-title">Training-related</h3>
+        <p class="domain-card-sub">
+          Practical skill deficits, lack of hands-on toolkits, trade mismatches, or unrecognised certification standards.
+        </p>
+      </div>
+
+      <!-- Personal -->
+      <div class="domain-card personal" id="card-personal" onclick="filterDomain('personal')">
+        <div class="domain-card-header">
+          <span class="domain-badge personal">Socio-Economic &amp; Mobility</span>
+          <span class="badge" style="background:#FFFFFF; font-weight:700">{{ pers_pct }}%</span>
+        </div>
+        <div class="domain-card-val">{{ pers_group_count }}</div>
+        <h3 class="domain-card-title">Personal</h3>
+        <p class="domain-card-sub">
+          Family caregiving obligations, lack of transport/safe hostels, inter-state migration, or health barriers.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       3. Detailed Reason Analysis (Horizontal Ranked Bar Visualization)
+       ======================================================================== -->
+  <div class="ranked-reasons-card">
+    <div class="ranked-header-bar">
+      <div>
+        <span class="filter-label">GRANULAR ROOT-CAUSE RANKING</span>
+        <h2 style="margin:2px 0 0 0; font-size:1.25rem; color:var(--primary-dark)">
+          Ranked Barrier &amp; Deficit Analysis
+        </h2>
+      </div>
+
+      <div class="reasons-filter-pills">
+        <button class="reason-pill-btn active" onclick="filterDomainPill('all', this)">All Reasons</button>
+        <button class="reason-pill-btn" onclick="filterDomainPill('employment-related', this)">Employment-related</button>
+        <button class="reason-pill-btn" onclick="filterDomainPill('training-related', this)">Training-related</button>
+        <button class="reason-pill-btn" onclick="filterDomainPill('personal', this)">Personal</button>
+      </div>
+    </div>
+
+    <!-- Ranked Horizontal Bars List -->
+    <div class="ranked-reasons-list" id="rankedListContainer">
+      {% for reason in ranked_reasons %}
+        <div class="ranked-reason-row"
+             data-code="{{ reason.code }}"
+             data-label="{{ reason.label }}"
+             data-group="{{ reason.group }}"
+             data-group-display="{{ reason.group_display }}"
+             data-count="{{ reason.count }}"
+             data-pct="{{ reason.pct }}"
+             data-top-course="{{ reason.top_course }}"
+             data-top-district="{{ reason.top_district }}"
+             data-emp-mentions="{{ reason.employer_mentions }}"
+             data-trainee-mentions="{{ reason.trainee_mentions }}"
+             data-conv-level="{{ reason.convergence_level }}"
+             data-conv-tier="{{ reason.convergence_tier }}"
+             data-conv-ratio="{{ reason.convergence_ratio }}"
+             data-conv-desc="{{ reason.convergence_desc }}"
+             data-recommendation="{{ reason.recommendation }}"
+             data-policy-action="{{ reason.policy_action }}"
+             onclick="openReasonDrawer(this)">
+          
+          <div class="reason-row-top">
+            <div class="reason-row-title-wrap">
+              <span class="reason-rank-number">{{ forloop.counter }}</span>
+              <div>
+                <span class="reason-label-text">{{ reason.label }}</span>
+                <span class="domain-badge {% if reason.group == 'employment-related' %}employment{% elif reason.group == 'training-related' %}training{% else %}personal{% endif %}" style="margin-left:8px">
+                  {{ reason.group_display }}
+                </span>
+              </div>
+            </div>
+
+            <div class="reason-metrics-group">
+              <div>
+                <span style="color:var(--text-muted)">Affected:</span>
+                <span class="reason-count-highlight">{{ reason.count }}</span>
+                <span style="color:var(--text-secondary); font-size:var(--fs-2xs)">({{ reason.pct }}%)</span>
+              </div>
+              <span class="convergence-indicator tier-{{ reason.convergence_tier }}">
+                {{ reason.convergence_level }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Horizontal Bar Gauge -->
+          <div class="horizontal-bar-track">
+            <div class="horizontal-bar-fill {% if reason.group == 'employment-related' %}fill-employment{% elif reason.group == 'training-related' %}fill-training{% else %}fill-personal{% endif %}"
+                 style="width: {{ reason.bar_width_pct }}%"></div>
+          </div>
+
+          <div class="reason-row-footer">
+            <span>Top affected trade: <strong style="color:var(--primary-dark)">{{ reason.top_course }}</strong> in <strong style="color:var(--primary-dark)">{{ reason.top_district }}</strong></span>
+            <span>Corroboration: <strong>{{ reason.employer_mentions }}</strong> employers · <strong>{{ reason.trainee_mentions }}</strong> trainees</span>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================================================================
+     4. Reason Detail Right-Side Drawer
+     ======================================================================== -->
+<div class="reasons-drawer-overlay" id="reasonsOverlay" onclick="closeReasonDrawer()"></div>
+
+<aside class="reasons-drawer-panel" id="reasonsDrawer" aria-labelledby="reasonDrawerTitle" aria-hidden="true" role="dialog">
+  <div class="reasons-drawer-header">
+    <button class="reasons-drawer-close" onclick="closeReasonDrawer()" aria-label="Close detail drawer">✕</button>
+    <div style="font-size:var(--fs-xs); color:#FCD34D; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px">
+      Root-Cause Investigation
+    </div>
+    <h2 class="drawer-title" id="drawerReasonTitle">Skills lacking</h2>
+    <div class="drawer-subtitle" id="drawerGroupSubtitle">Training-related · Vocational Deficit</div>
+
+    <div class="drawer-badge-row" style="margin-top:14px; display:flex; gap:8px">
+      <span class="badge" style="background:#FFFFFF; color:var(--primary-dark); font-weight:800" id="drawerAffectedCount">
+        128 affected trainees
+      </span>
+      <span id="drawerConvergenceBadge" class="convergence-indicator tier-3">
+        Strong Triangulation
+      </span>
+    </div>
+  </div>
+
+  <div class="reasons-drawer-body">
+    <!-- Top Affected Trade & District -->
+    <div class="drawer-cluster-grid">
+      <div class="cluster-info-box">
+        <div class="cluster-info-lbl">Top Affected Course</div>
+        <div class="cluster-info-val" id="drawerTopCourse">Plumbing</div>
+      </div>
+      <div class="cluster-info-box">
+        <div class="cluster-info-lbl">Top District Cluster</div>
+        <div class="cluster-info-val" id="drawerTopDistrict">Pune</div>
+      </div>
+    </div>
+
+    <!-- Evidence Convergence Gauge -->
+    <div class="convergence-gauge-card">
+      <div class="convergence-gauge-header">
+        <div>
+          <div style="font-size:var(--fs-xs); font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--primary-dark)">
+            Evidence Convergence Indicator
+          </div>
+          <div style="font-size:var(--fs-2xs); color:var(--text-secondary); margin-top:2px" id="drawerConvDesc">
+            High dual-source agreement between trainees and employers.
+          </div>
+        </div>
+        <span class="badge badge-CIVIC" id="drawerConvRatio">88% Match</span>
+      </div>
+
+      <div class="dual-source-bar">
+        <div class="source-stat-box" style="border-top:3px solid #D97706">
+          <div class="source-stat-val" style="color:#D97706" id="drawerEmpMentions">84</div>
+          <div class="source-stat-lbl">Employer Mentions</div>
+        </div>
+        <div class="source-stat-box" style="border-top:3px solid #2563EB">
+          <div class="source-stat-val" style="color:#2563EB" id="drawerTraineeMentions">73</div>
+          <div class="source-stat-lbl">Trainee Mentions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Policy Recommendation & Action Roadmap -->
+    <div class="action-box">
+      <div class="action-box-lbl" id="drawerPolicyAction">Curricular Review &amp; Lab Audit</div>
+      <div class="action-box-text" id="drawerRecommendation">
+        "Review practical training content: increase workshop hours to 70% and audit toolkits."
+      </div>
+      <ul class="action-box-list" id="drawerActionSteps">
+        <li>Mandate revised QP-NOS curriculum with minimum 70% hands-on workshop hours.</li>
+        <li>Conduct spot audit on training centre pipe-jointing toolkits and hydrostatic rigs.</li>
+        <li>Issue advisory to Maharashtra State Skill Development Society (MSSDS).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="reasons-drawer-footer">
+    <button class="btn btn-primary btn-sm" style="flex:1" onclick="alert('Targeted policy remediation task initiated.')">
+      Initiate Policy Remediation
+    </button>
+    <button class="btn btn-secondary btn-sm" onclick="alert('Diagnostic report exported.')">
+      Export Evidence Brief
+    </button>
+  </div>
+</aside>
+
+<script>
+  /* ==========================================================================
+     Reasons Intelligence Interactive Logic
+     ========================================================================== */
+
+  let activeDomain = 'all';
+
+  function openReasonDrawer(row) {
+    const label = row.getAttribute('data-label');
+    const groupDisplay = row.getAttribute('data-group-display');
+    const count = row.getAttribute('data-count');
+    const topCourse = row.getAttribute('data-top-course');
+    const topDistrict = row.getAttribute('data-top-district');
+    const empMentions = row.getAttribute('data-emp-mentions');
+    const traineeMentions = row.getAttribute('data-trainee-mentions');
+    const convLevel = row.getAttribute('data-conv-level');
+    const convTier = row.getAttribute('data-conv-tier');
+    const convRatio = row.getAttribute('data-conv-ratio');
+    const convDesc = row.getAttribute('data-conv-desc');
+    const recommendation = row.getAttribute('data-recommendation');
+    const policyAction = row.getAttribute('data-policy-action');
+
+    // Highlight row
+    document.querySelectorAll('.ranked-reason-row').forEach(r => r.classList.remove('selected-row'));
+    row.classList.add('selected-row');
+
+    // Populate drawer elements
+    document.getElementById('drawerReasonTitle').innerText = label;
+    document.getElementById('drawerGroupSubtitle').innerText = `${groupDisplay} Domain`;
+    document.getElementById('drawerAffectedCount').innerText = `${count} affected trainees`;
+
+    const convBadge = document.getElementById('drawerConvergenceBadge');
+    convBadge.className = `convergence-indicator tier-${convTier}`;
+    convBadge.innerText = convLevel;
+
+    document.getElementById('drawerTopCourse').innerText = topCourse;
+    document.getElementById('drawerTopDistrict').innerText = topDistrict;
+    document.getElementById('drawerEmpMentions').innerText = empMentions;
+    document.getElementById('drawerTraineeMentions').innerText = traineeMentions;
+    document.getElementById('drawerConvRatio').innerText = `${convRatio}% Corroboration`;
+    document.getElementById('drawerConvDesc').innerText = convDesc;
+
+    document.getElementById('drawerPolicyAction').innerText = policyAction;
+    document.getElementById('drawerRecommendation').innerText = `"${recommendation}"`;
+
+    // Open Drawer
+    document.getElementById('reasonsOverlay').classList.add('open');
+    const drawer = document.getElementById('reasonsDrawer');
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeReasonDrawer() {
+    document.getElementById('reasonsOverlay').classList.remove('open');
+    const drawer = document.getElementById('reasonsDrawer');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    document.querySelectorAll('.ranked-reason-row').forEach(r => r.classList.remove('selected-row'));
+  }
+
+  function filterDomain(domain) {
+    if (activeDomain === domain) {
+      activeDomain = 'all';
+    } else {
+      activeDomain = domain;
+    }
+
+    // Sync pill buttons
+    document.querySelectorAll('.reason-pill-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.innerText.toLowerCase().includes(activeDomain.replace('-related', '').toLowerCase()) || (activeDomain === 'all' && btn.innerText.includes('All'))) {
+        btn.classList.add('active');
+      }
+    });
+
+    applyDomainFilter();
+  }
+
+  function filterDomainPill(domain, btn) {
+    activeDomain = domain;
+    document.querySelectorAll('.reason-pill-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyDomainFilter();
+  }
+
+  function applyDomainFilter() {
+    // Card active styles
+    document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('active-filter'));
+    if (activeDomain === 'employment-related') document.getElementById('card-employment')?.classList.add('active-filter');
+    if (activeDomain === 'training-related') document.getElementById('card-training')?.classList.add('active-filter');
+    if (activeDomain === 'personal') document.getElementById('card-personal')?.classList.add('active-filter');
+
+    // Filter rows
+    const rows = document.querySelectorAll('#rankedListContainer .ranked-reason-row');
+    rows.forEach(row => {
+      const rowGroup = row.getAttribute('data-group');
+      if (activeDomain === 'all' || rowGroup === activeDomain) {
+        row.style.display = 'flex';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  // Keyboard accessibility
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeReasonDrawer();
+    }
+  });
+</script>
+{% endblock %}

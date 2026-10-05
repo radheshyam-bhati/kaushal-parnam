@@ -1,51 +1,91 @@
 {% extends "base.html" %}
-{% block title %}Outcome-funding report{% endblock %}
+{% block title %}Outcome Funding Report — Kaushal Parinam{% endblock %}
 
 {% block content %}
-<div class="stack">
-  <div class="card">
-    <h1 style="font-size:2rem">Outcome-funding report</h1>
-    <p style="color:var(--text-secondary)">
-      {{ total_e2 }} employer-confirmed (E2+) outcomes in total.
-      {{ never_included }}
-    </p>
-    <div class="alert alert-warning" role="note">
-      <span class="alert-icon" aria-hidden="true">!</span>
-      <span>
-        CAG found forged placement papers where placement drove payment. That is
-        why this report counts only outcomes an employer confirmed, and shows the
-        audit result next to each figure.
+<div class="stack-lg">
+  <!-- Intelligence Header -->
+  <div class="card card-hero bg-grid-texture">
+    <div class="cluster-between" style="margin-bottom:12px">
+      <div class="cluster">
+        <span class="badge badge-CIVIC">FISCAL ACCOUNTABILITY</span>
+        <span class="badge badge-SANDBOX">PAY-FOR-SUCCESS (PFS)</span>
+      </div>
+      <span class="badge" style="background:var(--emerald-light); color:var(--emerald-dark); border-color:var(--emerald-border)">
+        {{ total_e2 }} E2+ Outcomes Eligible
       </span>
     </div>
-    <p>
-      <a class="btn btn-primary" href="{% url 'policy:funding_export' %}">Export CSV</a>
+
+    <h1 style="font-size:2.25rem; color:var(--primary-dark); margin-bottom:8px">
+      Performance-Linked Outcome Funding Report
+    </h1>
+    <p style="font-size:1.125rem; color:var(--text-secondary); margin-bottom:16px; max-width:960px">
+      Government tranches are released strictly on <strong>verified employer confirmations (Grade E2+)</strong> and statutory records. Unverified provider self-claims (E0) and unreached trainees are never counted here and excluded by design.
     </p>
+
+    <div class="alert alert-warning" style="margin-bottom:20px">
+      <span class="alert-icon" aria-hidden="true">!</span>
+      <span>
+        <strong>CAG Audit Defense:</strong> Historical CAG audits uncovered systematic fake placement certificates when subsidy payouts were tied to self-reported claims. This report enforces E2+ verification depth and displays random call-back audit results alongside each cohort.
+      </span>
+    </div>
+
+    <div class="cluster">
+      <a class="btn btn-primary" href="{% url 'policy:funding_export' %}">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Export Audit-Ready CSV
+      </a>
+      <a class="btn btn-secondary" href="{% url 'policy:dashboard' %}">Return to Dashboard</a>
+    </div>
   </div>
 
+  <!-- Milestone Table -->
   <div class="card">
+    <div class="card-header">
+      <div>
+        <span class="filter-label">DISBURSEMENT SCHEDULE</span>
+        <h3 style="margin-top:2px">Eligible Funding Milestones by Qualification</h3>
+      </div>
+      <span class="badge">E2+ Verified Tranches</span>
+    </div>
+
     {% if rows %}
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th scope="col">Course</th><th scope="col">Provider</th><th scope="col">District</th>
-                <th scope="col">E2+ outcomes</th><th scope="col">Response rate</th>
-                <th scope="col">Weighted rate</th><th scope="col">Audit called</th><th scope="col">Audit confirmed</th></tr>
+            <tr>
+              <th scope="col">Course</th>
+              <th scope="col">Training Provider</th>
+              <th scope="col">District</th>
+              <th scope="col">E2+ Verified Count</th>
+              <th scope="col">Response Reach</th>
+              <th scope="col">Weighted Rate</th>
+              <th scope="col">Audit Sample Calls</th>
+              <th scope="col">Audit Pass Rate</th>
+            </tr>
           </thead>
           <tbody>
             {% for row in rows %}
               <tr>
-                <th scope="row">{{ row.course }}</th>
+                <th scope="row" style="color:var(--primary-dark)"><strong>{{ row.course }}</strong></th>
                 <td>{{ row.provider }}</td>
-                <td>{{ row.district }}</td>
-                <td>{{ row.e2_plus }}</td>
-                <td>{{ row.response_rate|floatformat:1 }}%</td>
-                <td>{{ row.weighted_rate|floatformat:1 }}%</td>
+                <td><span class="badge">{{ row.district }}</span></td>
+                <td>
+                  <span class="grade grade-E2" style="font-size:var(--fs-xs)">{{ row.e2_plus }} Verified</span>
+                </td>
+                <td>
+                  <span class="reach-badge {% if row.response_rate < 30 %}low{% else %}high{% endif %}">
+                    {{ row.response_rate|floatformat:1 }}%
+                  </span>
+                </td>
+                <td style="font-weight:700">{{ row.weighted_rate|floatformat:1 }}%</td>
                 <td>{{ row.audit_called }}</td>
                 <td>
                   {% if row.audit_rate is not None %}
-                    {{ row.audit_verified }} ({{ row.audit_rate|floatformat:0 }}%)
+                    <span class="grade" style="{% if row.audit_rate >= 80 %}background:var(--emerald-light); color:var(--emerald-dark);{% else %}background:var(--amber-light); color:var(--amber-dark);{% endif %}">
+                      {{ row.audit_verified }}/{{ row.audit_called }} ({{ row.audit_rate|floatformat:0 }}%)
+                    </span>
                   {% else %}
-                    <span class="badge">not sampled</span>
+                    <span class="badge" style="color:var(--text-muted)">Not Sampled</span>
                   {% endif %}
                 </td>
               </tr>
@@ -54,7 +94,7 @@
         </table>
       </div>
     {% else %}
-      {% include "partials/empty_state.html" with heading="No E2+ outcomes yet" message="Run the statistics batch and have employers confirm a few outcomes first." %}
+      {% include "partials/empty_state.html" with heading="No E2+ outcomes verified yet" message="Run the automated follow-up scheduler and employer confirmations to generate verified milestones." %}
     {% endif %}
   </div>
 </div>

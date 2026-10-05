@@ -1,101 +1,133 @@
 {% extends "base.html" %}
-{% block title %}Outcome {{ outcome.pk }}{% endblock %}
+{% block title %}Outcome Milestone #{{ outcome.pk }} — Kaushal Parinam{% endblock %}
 
 {% block content %}
-<div class="stack">
-  <div class="card">
-    <h1 style="font-size:2rem">
-      {{ outcome.get_status_display }}
-      <span class="grade grade-{{ grade }}" style="vertical-align:middle">{{ grade }}</span>
-    </h1>
-    <p style="color:var(--text-secondary)">
-      {{ person.display_name }} · {{ person.utid }} · as of {{ outcome.reference_date|date:"d M Y" }}
-      {% if outcome.followup_job %} · answered round {{ outcome.followup_job.round }}{% endif %}
-    </p>
-    <div class="cluster">
-      <a class="btn btn-secondary" href="{{ request.META.HTTP_REFERER|default:'/' }}">Back</a>
-      <a class="btn btn-primary" href="{% url 'trainees:outcome_capture' %}">Add a newer record</a>
+<div class="container-narrow stack-lg" style="max-width:800px; margin:0 auto">
+  
+  <!-- Success Milestone Header -->
+  <div class="card card-hero bg-grid-texture" style="padding:clamp(20px, 4vw, 32px); border-radius:var(--radius-2xl)">
+    <div class="cluster-between" style="margin-bottom:12px">
+      <div class="cluster">
+        <span class="badge badge-SANDBOX">
+          <span style="width:6px; height:6px; border-radius:50%; background:var(--emerald)"></span>
+          RECORDED IN LEDGER
+        </span>
+        <span class="badge">MILESTONE #{{ outcome.pk }}</span>
+      </div>
+      <span class="grade grade-{{ grade }}" style="font-size:var(--fs-sm)">{{ grade }} · {% if grade == 'E2' %}Employer confirmed{% elif grade == 'E1' %}Officer call{% elif grade == 'E4' %}Statutory record{% else %}Trainee reported{% endif %}</span>
     </div>
+
+    <h1 style="font-size:clamp(1.75rem, 4vw, 2.5rem); color:var(--primary-dark); margin:0 0 6px; line-height:1.2">
+      {{ outcome.get_status_display }}
+    </h1>
+    <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:16px">
+      {{ person.display_name }} (<code>{{ person.utid }}</code>) · As of {{ outcome.reference_date|date:"d M Y" }}
+      {% if outcome.followup_job %} · Follow-up Cycle Round {{ outcome.followup_job.round }}{% endif %}
+    </p>
+
+    <!-- Employer Confirmation Hook (if employed) -->
+    {% if outcome.status == 'wage_employment' %}
+      <div class="card" style="background:var(--emerald-light); border:1px solid var(--emerald-border); padding:16px; border-radius:var(--radius-lg); margin-top:16px">
+        <div class="cluster-between" style="margin-bottom:6px">
+          <strong style="color:var(--emerald-dark); font-size:var(--fs-sm)">Would you like your employer to confirm this?</strong>
+          <span class="badge badge-SANDBOX" style="background:var(--emerald); color:#FFFFFF">UPGRADE TO GRADE E2</span>
+        </div>
+        <p style="font-size:var(--fs-xs); color:var(--emerald-dark); margin-bottom:12px">
+          Employer confirmation elevates your record to Grade E2, qualifying your centre for outcome funding and enabling your verified DigiLocker Work-Proof.
+        </p>
+
+        <div class="cluster">
+          {% if employer and employer.verified %}
+            <span class="badge badge-SANDBOX" style="font-weight:700">✓ Employer Confirmed</span>
+          {% else %}
+            <a class="btn btn-emerald btn-sm" href="{% url 'providers:send_employer_link' outcome.pk %}">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              Send Employer Confirmation Link
+            </a>
+          {% endif %}
+          <a class="btn btn-outline btn-sm" href="{% url 'trainees:dashboard' %}" style="background:#FFFFFF">
+            Return to Dashboard
+          </a>
+        </div>
+      </div>
+    {% endif %}
   </div>
 
-  <div class="grid grid-2">
-    <div class="card">
-      <h3>What was recorded</h3>
-      <table>
-        <tbody>
-          <tr><th scope="row">Status</th><td>{{ outcome.get_status_display }}</td></tr>
-          <tr><th scope="row">Role (NCO)</th><td>{{ outcome.role_code|default:"—" }}</td></tr>
-          <tr><th scope="row">Start date</th><td>{{ outcome.start_date|default:"—"|date:"d M Y" }}</td></tr>
-          <tr><th scope="row">Wage band</th><td>{{ outcome.wage_band|default:"—" }}</td></tr>
-          <tr><th scope="row">Employer</th><td>{{ outcome.employer_name|default:"—" }}</td></tr>
-          <tr><th scope="row">Recorded by</th><td>{{ outcome.created_by }}</td></tr>
-          <tr><th scope="row">Recorded at</th><td>{{ outcome.created_at|date:"d M Y H:i" }}</td></tr>
-          <tr><th scope="row">Weight</th><td>{{ outcome.weight|floatformat:2 }} (inverse-probability)</td></tr>
-        </tbody>
-      </table>
+  <!-- Recorded Details & Evidence Breakdown -->
+  <div class="grid grid-2" style="gap:var(--space-6)">
+    
+    <!-- Recorded Summary -->
+    <div class="card" style="padding:var(--space-6); border-radius:var(--radius-xl)">
+      <div class="card-header">
+        <div>
+          <span class="filter-label">MILESTONE TELEMETRY</span>
+          <h3 style="margin-top:2px">Recorded Data Points</h3>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><th scope="row">Status</th><td><strong>{{ outcome.get_status_display }}</strong></td></tr>
+            <tr><th scope="row">Job Role</th><td>{{ outcome.role_code|default:"—" }}</td></tr>
+            <tr><th scope="row">Start Date</th><td>{{ outcome.start_date|default:"—"|date:"d M Y" }}</td></tr>
+            <tr><th scope="row">Wage Band</th><td><strong>{{ outcome.wage_band|default:"—" }}</strong></td></tr>
+            <tr><th scope="row">Employer</th><td>{{ outcome.employer_name|default:"—" }}</td></tr>
+            <tr><th scope="row">Recorded By</th><td>{{ outcome.created_by }}</td></tr>
+            <tr><th scope="row">Timestamp</th><td style="font-size:var(--fs-xs)">{{ outcome.created_at|date:"d M Y, H:i" }}</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="card">
-      <h3>How it was checked</h3>
-      {% if reasons %}
-        <p>Reasons given:</p>
-        <ul>
-          {% for reason in reasons %}
-            <li>{{ reason.label }}{% if reason.text %} — {{ reason.text }}{% endif %}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="helptext">No reason codes recorded.</p>
-      {% endif %}
+    <!-- Verification & Audit Checks -->
+    <div class="card" style="padding:var(--space-6); border-radius:var(--radius-xl)">
+      <div class="card-header">
+        <div>
+          <span class="filter-label">VERIFICATION CHECKS</span>
+          <h3 style="margin-top:2px">Evidence Ladder Verification</h3>
+        </div>
+      </div>
 
       {% if employer %}
-        <h4>Employer check</h4>
-        <p>
-          {{ employer.employer_name }}:
-          {% if employer.verified %}confirmed{% else %}not yet confirmed{% endif %}.
+        <div style="background:var(--surface-subtle); padding:12px; border-radius:var(--radius-md); border:1px solid var(--border); margin-bottom:12px">
+          <strong style="font-size:var(--fs-xs); color:var(--primary-dark); display:block">Employer Validation Status:</strong>
+          <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:4px">
+            {{ employer.employer_name }}: 
+            {% if employer.verified %}
+              <span class="badge badge-SANDBOX" style="font-weight:700">VERIFIED (E2)</span>
+            {% else %}
+              <span class="badge">Pending Confirmation</span>
+            {% endif %}
+          </div>
           {% if employer.has_wage_mismatch %}
-            <br><span style="color:var(--warning)">
-              Wage disagreement kept on record: trainee said {{ employer.wage_claimed }},
-              employer said {{ employer.wage_verified }}.
-            </span>
-          {% elif employer.wage_verified %}
-            Wage band agreed: {{ employer.wage_verified }}.
+            <div style="font-size:var(--fs-2xs); color:var(--amber-dark); margin-top:4px">
+              Wage difference noted: Trainee reported {{ employer.wage_claimed }}, employer reported {{ employer.wage_verified }}. Both values preserved in ledger.
+            </div>
           {% endif %}
-        </p>
+        </div>
       {% endif %}
 
-      {% if evidence %}
-        <h4>Evidence records</h4>
-        <ul>
-          {% for record in evidence %}
-            <li>{{ record.get_kind_display }} → grade {{ record.level|default:"—" }}
-              {% if record.result_verified %}(verified){% endif %}</li>
+      {% if reasons %}
+        <strong style="font-size:var(--fs-xs); color:var(--primary-dark); display:block; margin-bottom:6px">Reasons Reported:</strong>
+        <ul style="font-size:var(--fs-xs); color:var(--text-secondary); padding-left:16px; margin:0">
+          {% for reason in reasons %}
+            <li>{{ reason.label }}{% if reason.text %} ({{ reason.text }}){% endif %}</li>
           {% endfor %}
         </ul>
       {% endif %}
+
+      <p class="helptext" style="margin-top:16px">
+        This record is append-only. Submitting future updates appends a new verified milestone without modifying historical records.
+      </p>
     </div>
+
   </div>
 
-  {% if attempts %}
-  <div class="card">
-    <h3>Contact attempts for this round</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th scope="col">#</th><th scope="col">Channel</th><th scope="col">Result</th><th scope="col">Badge</th><th scope="col">When</th></tr></thead>
-        <tbody>
-          {% for attempt in attempts %}
-            <tr>
-              <th scope="row">{{ attempt.attempt_number }}</th>
-              <td>{{ attempt.get_channel_display }}</td>
-              <td>{{ attempt.get_result_display }}</td>
-              <td><span class="badge badge-{{ attempt.demo_label }}">{{ attempt.demo_label }}</span></td>
-              <td>{{ attempt.created_at|date:"d M Y H:i" }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div class="cluster">
+    <a class="btn btn-outline" href="{% url 'trainees:dashboard' %}">← Back to Dashboard</a>
+    <a class="btn btn-secondary" href="{% url 'trainees:outcome_capture' %}">+ Add Newer Milestone</a>
   </div>
-  {% endif %}
+
 </div>
 {% endblock %}

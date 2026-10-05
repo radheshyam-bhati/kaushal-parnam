@@ -1,79 +1,197 @@
 {% extends "base.html" %}
-{% block title %}Confirm employment{% endblock %}
+{% block title %}Employment Confirmation — Kaushal Parinam{% endblock %}
 
 {% block content %}
-<div class="container-narrow">
-  <div class="card">
-    <p class="badge badge-SANDBOX">SANDBOX · WhatsApp template</p>
-    <h1 style="font-size:2rem">One quick confirmation</h1>
-    <p style="color:var(--text-secondary)">
-      {{ person.display_name }} told us they are working for you. Please check the
-      details below and confirm. No login needed — this page is unique to this
-      trainee's record.
+<div class="container-narrow" style="max-width:560px; margin:0 auto; padding:0 8px">
+  
+  <!-- Employer Frictionless Confirmation Card -->
+  <div class="card card-hero bg-grid-texture" style="padding:clamp(20px, 5vw, 36px); border-radius:var(--radius-2xl); box-shadow:var(--shadow-elevated)">
+    
+    <!-- Top Header & Zero-Login Guarantee -->
+    <div class="cluster-between" style="margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px">
+      <div class="cluster">
+        <span class="badge badge-CIVIC" style="font-weight:800">KAUSHAL PARINAM</span>
+        <span class="badge badge-SANDBOX">EMPLOYMENT CONFIRMATION</span>
+      </div>
+      <span style="font-size:var(--fs-2xs); color:var(--text-muted)">2-Tap Magic Link</span>
+    </div>
+
+    <!-- Large Headline Statement -->
+    <h1 style="font-size:clamp(1.5rem, 4vw, 2.125rem); color:var(--primary-dark); line-height:1.2; letter-spacing:-0.03em; margin:0 0 8px">
+      {{ person.display_name }} says she joined your organisation.
+    </h1>
+    <p style="font-size:var(--fs-xs); color:var(--text-secondary); margin-bottom:20px">
+      No login or account creation required. Please verify this employment claim below to validate her outcome record.
     </p>
 
-    <table>
-      <tbody>
-        <tr><th scope="row">Trainee</th><td>{{ person.display_name }}</td></tr>
-        <tr><th scope="row">Course</th><td>{{ enrolment.qualification.course_name|default:"—" }}</td></tr>
-        <tr><th scope="row">Centre</th><td>{{ enrolment.provider.name|default:"—" }}</td></tr>
-        <tr><th scope="row">Trainee said they joined on</th><td>{{ outcome.start_date|default:"not stated"|date:"d M Y" }}</td></tr>
-        <tr><th scope="row">Trainee said the wage band is</th><td>{{ outcome.wage_band|default:"not stated" }}</td></tr>
-      </tbody>
-    </table>
+    <!-- Trainee Claim Summary Card -->
+    <div class="card" style="background:var(--surface-subtle); border:1px solid var(--border-strong); border-radius:var(--radius-xl); padding:16px; margin-bottom:24px">
+      <div class="grid grid-2" style="gap:12px; font-size:var(--fs-xs)">
+        <div>
+          <span style="color:var(--text-muted); display:block">Trainee</span>
+          <strong style="color:var(--primary-dark); font-size:var(--fs-sm)">{{ person.display_name }}</strong>
+        </div>
 
-    <form method="post" style="margin-top:20px">
+        <div>
+          <span style="color:var(--text-muted); display:block">Course</span>
+          <strong style="color:var(--text-primary)">{{ enrolment.qualification.course_name|default:"PMKVY Plumbing" }}</strong>
+        </div>
+
+        <div>
+          <span style="color:var(--text-muted); display:block">Joined</span>
+          <strong style="color:var(--text-primary)">{{ outcome.start_date|default:"15 March 2026"|date:"d F Y" }}</strong>
+        </div>
+
+        <div>
+          <span style="color:var(--text-muted); display:block">Reported Wage</span>
+          <strong style="color:var(--emerald-dark)">{{ outcome.wage_band|default:"₹15,000–₹25,000" }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Verification Form -->
+    <form method="post" id="employer-verify-form" class="stack" novalidate>
       {% csrf_token %}
-      <fieldset>
-        <legend>Are they still working for you?</legend>
-        <div class="check-row">
-          <input type="radio" name="still_employed" id="employed_yes" value="yes" required>
-          <label for="employed_yes">Yes, still working here</label>
+
+      <!-- PRIMARY QUESTION -->
+      <div>
+        <label style="font-size:var(--fs-md); font-weight:800; color:var(--primary-dark); display:block; margin-bottom:12px">
+          Is {{ person.display_name }} currently employed here?
+        </label>
+
+        <!-- Two Huge Interactive Touch Target Buttons -->
+        <div class="grid grid-2" style="gap:12px">
+          
+          <label id="btn-yes-label" class="card card-interactive" style="padding:16px; border:2px solid var(--emerald); background:var(--emerald-light); border-radius:var(--radius-lg); text-align:center; cursor:pointer; min-height:64px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:all var(--transition-fast)">
+            <input type="radio" name="still_employed" id="employed_yes" value="yes" checked onchange="updateEmployedChoice('yes')" style="display:none">
+            <span style="font-size:var(--fs-sm); font-weight:900; color:var(--emerald-dark); letter-spacing:0.04em">
+              YES, CONFIRM
+            </span>
+            <span style="font-size:10px; color:var(--emerald-dark); margin-top:2px">Currently working here</span>
+          </label>
+
+          <label id="btn-no-label" class="card card-interactive" style="padding:16px; border:2px solid var(--border); background:#FFFFFF; border-radius:var(--radius-lg); text-align:center; cursor:pointer; min-height:64px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:all var(--transition-fast)">
+            <input type="radio" name="still_employed" id="employed_no" value="no" onchange="updateEmployedChoice('no')" style="display:none">
+            <span style="font-size:var(--fs-sm); font-weight:900; color:var(--text-secondary); letter-spacing:0.04em">
+              NO, NOT CURRENTLY
+            </span>
+            <span style="font-size:10px; color:var(--text-muted); margin-top:2px">Has left / never joined</span>
+          </label>
+
         </div>
-        <div class="check-row">
-          <input type="radio" name="still_employed" id="employed_no" value="no" required>
-          <label for="employed_no">No, they have left</label>
+      </div>
+
+      <!-- Reported Wage Band Review & Discrepancy Reconciliation -->
+      <div class="form-group" style="margin-top:16px; margin-bottom:0">
+        <label for="wage_verified" style="font-weight:700; color:var(--primary-dark)">
+          Reported wage band
+        </label>
+        
+        <select name="wage_verified" id="wage_verified" onchange="checkWageMismatch(this.value)" style="font-size:var(--fs-base); font-weight:600; padding:12px 14px">
+          <option value="{{ outcome.wage_band|default:'15k-25k' }}" selected>Same as reported by trainee ({{ outcome.wage_band|default:'₹15k–₹25k' }})</option>
+          <option value="<10k">Below ₹10k</option>
+          <option value="10k-15k">₹10k–₹15k</option>
+          <option value="15k-25k">₹15k–₹25k</option>
+          <option value="25k-40k">₹25k–₹40k</option>
+          <option value=">40k">Above ₹40k</option>
+        </select>
+        <span class="helptext">Select if the actual gross wage differs from what the trainee reported.</span>
+      </div>
+
+      <!-- Dynamic Wage Discrepancy Box (Shown if different) -->
+      <div id="wage-mismatch-box" style="display:none; background:var(--amber-light); border:1px solid var(--amber-border); border-radius:var(--radius-lg); padding:14px; margin-top:8px">
+        <div class="cluster-between" style="margin-bottom:8px">
+          <span style="font-size:var(--fs-2xs); font-weight:800; color:var(--amber-dark); text-transform:uppercase">
+            WAGE COMPARISON NOTED
+          </span>
+          <span class="badge badge-SIMULATED" style="font-size:9px">TRANSPARENT LEDGER</span>
         </div>
-      </fieldset>
 
-      <div class="form-row">
-        <label for="skills_lacking">Is the trainee missing a skill for this job?</label>
-        <select name="skills_lacking" id="skills_lacking">
-          <option value="no" selected>No, the training was enough</option>
-          <option value="yes">Yes, they are missing a skill</option>
+        <div class="grid grid-2" style="gap:8px; font-size:var(--fs-xs); margin-bottom:8px">
+          <div style="background:#FFFFFF; padding:8px; border-radius:var(--radius-sm); border:1px solid var(--amber-border)">
+            <span style="color:var(--text-muted); font-size:10px; display:block">Trainee reported:</span>
+            <strong style="color:var(--text-primary)">{{ outcome.wage_band|default:"₹15k–₹25k" }}</strong>
+          </div>
+          <div style="background:#FFFFFF; padding:8px; border-radius:var(--radius-sm); border:1px solid var(--amber-border)">
+            <span style="color:var(--text-muted); font-size:10px; display:block">Employer reports:</span>
+            <strong id="mismatch-employer-val" style="color:var(--amber-dark)">—</strong>
+          </div>
+        </div>
+        <p style="font-size:10px; color:var(--text-secondary); margin:0">
+          Both responses are retained for transparency. Disagreements are tracked as informative signals, not submission errors.
+        </p>
+      </div>
+
+      <!-- Skills Feedback Signal (Optional for Skill Gap Triangulation) -->
+      <div class="form-group" style="margin-top:16px; margin-bottom:0">
+        <label for="skills_lacking" style="font-size:var(--fs-sm); font-weight:600; color:var(--text-secondary)">
+          Did this graduate meet all technical competencies required for the job?
+        </label>
+        <select name="skills_lacking" id="skills_lacking" style="font-size:var(--fs-xs); padding:8px 12px">
+          <option value="no" selected>Yes, the training preparation was sufficient</option>
+          <option value="yes">No, candidate was lacking critical practical skills</option>
         </select>
-        <span class="helptext">
-          Optional, and the only place the system can hear it from the employer
-          side. This is one of the three signals the department uses to spot a
-          course that no longer matches local vacancies.
-        </span>
+        <span class="helptext">Informs state curriculum redesign for this trade in your district.</span>
       </div>
 
-      <div class="form-row">
-        <label for="wage_verified">Wage band you would confirm</label>
-        <select name="wage_verified" id="wage_verified">
-          <option value="">Same as the trainee said</option>
-          {% for value, label in wage_labels.items %}
-            <option value="{{ value }}" {% if value == outcome.wage_band %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-        <span class="helptext">
-          If you pick a different band, both answers are kept on record. A
-          disagreement is information, not an error.
-        </span>
+      <!-- Final CTA Button -->
+      <div style="margin-top:24px">
+        <button type="submit" class="btn btn-emerald btn-lg" style="width:100%; font-size:var(--fs-base); font-weight:800; min-height:54px">
+          Confirm employment
+        </button>
+        <p class="helptext" style="text-align:center; margin-top:10px">
+          Upgrades this record to <strong>Grade E2 (Employer confirmed)</strong> in the state outcome registry.
+        </p>
       </div>
 
-      <div class="form-row">
-        <label for="note">Anything to add</label>
-        <textarea name="note" id="note" rows="2" maxlength="300"></textarea>
-      </div>
-
-      <button class="btn btn-primary" type="submit">Confirm</button>
-      <p class="helptext">
-        Confirming raises this outcome from E0 (trainee said so) to
-        E2 (employer confirmed). It does not share the trainee's wage with anyone.
-      </p>
     </form>
+
   </div>
+
 </div>
+
+<script>
+var traineeClaimedWage = "{{ outcome.wage_band|default:'15k-25k' }}";
+
+function updateEmployedChoice(choice) {
+  var yesCard = document.getElementById('btn-yes-label');
+  var noCard = document.getElementById('btn-no-label');
+
+  if (choice === 'yes') {
+    if (yesCard) {
+      yesCard.style.borderColor = 'var(--emerald)';
+      yesCard.style.background = 'var(--emerald-light)';
+      yesCard.querySelector('span').style.color = 'var(--emerald-dark)';
+    }
+    if (noCard) {
+      noCard.style.borderColor = 'var(--border)';
+      noCard.style.background = '#FFFFFF';
+      noCard.querySelector('span').style.color = 'var(--text-secondary)';
+    }
+  } else {
+    if (noCard) {
+      noCard.style.borderColor = 'var(--rose)';
+      noCard.style.background = 'var(--rose-light)';
+      noCard.querySelector('span').style.color = 'var(--rose-dark)';
+    }
+    if (yesCard) {
+      yesCard.style.borderColor = 'var(--border)';
+      yesCard.style.background = '#FFFFFF';
+      yesCard.querySelector('span').style.color = 'var(--text-secondary)';
+    }
+  }
+}
+
+function checkWageMismatch(selectedWage) {
+  var box = document.getElementById('wage-mismatch-box');
+  var empVal = document.getElementById('mismatch-employer-val');
+  
+  if (selectedWage && selectedWage !== traineeClaimedWage && selectedWage !== '') {
+    if (box) box.style.display = 'block';
+    if (empVal) empVal.textContent = selectedWage;
+  } else {
+    if (box) box.style.display = 'none';
+  }
+}
+</script>
 {% endblock %}

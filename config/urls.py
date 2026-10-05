@@ -9,13 +9,14 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from core.views import health, role_home
+from core.views import design_system, health, role_home
 from trainees import views as trainee_views
 
 urlpatterns = [
     # P-01 landing
     path('', trainee_views.home, name='home'),
     path('dashboard/', role_home, name='role_home'),
+    path('design-system/', design_system, name='design_system'),
 
     # P-13 / P-14 / P-15 auth
     path('login/', trainee_views.login_view, name='login'),

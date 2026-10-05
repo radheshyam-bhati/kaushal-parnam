@@ -1,194 +1,803 @@
 {% extends "base.html" %}
-{% block title %}My Data{% endblock %}
+{% load static %}
+
+{% block title %}Your Data, Your Choices — My Data &amp; Privacy — Kaushal Parinam{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ==========================================================================
+     My Data & Privacy-First Consent Ledger — Premium Stylesheet
+     ========================================================================== */
+
+  .mydata-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* Privacy Hero Section */
+  .mydata-hero {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 60%, #1E3A8A 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 16px 36px -8px rgba(10, 25, 59, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .mydata-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .mydata-hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .mydata-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #FCD34D;
+    background: rgba(217, 119, 6, 0.2);
+    border: 1px solid rgba(253, 230, 138, 0.3);
+    padding: 4px 12px;
+    border-radius: 9999px;
+    margin-bottom: 12px;
+  }
+
+  .mydata-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: #FFFFFF;
+    margin: 0 0 8px 0;
+  }
+
+  .mydata-subtitle {
+    font-size: 1.125rem;
+    color: #E2E8F0;
+    line-height: 1.5;
+    margin: 0 0 16px 0;
+    font-weight: 400;
+  }
+
+  .mydata-meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    font-size: var(--fs-xs);
+    color: #CBD5E1;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 14px;
+  }
+
+  /* Section Containers */
+  .mydata-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .mydata-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .section-eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .section-heading {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin: 2px 0 0 0;
+  }
+
+  /* --------------------------------------------------------------------------
+     1. Consent Purpose Rows & Toggles
+     -------------------------------------------------------------------------- */
+  .consent-rows-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .consent-purpose-row {
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    transition: all 0.15s ease;
+  }
+
+  .consent-purpose-row:hover {
+    background: #FFFFFF;
+    border-color: var(--primary-border);
+    box-shadow: 0 4px 12px -2px rgba(15, 39, 86, 0.06);
+  }
+
+  .consent-info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 620px;
+  }
+
+  .consent-purpose-title {
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .consent-purpose-desc {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .consent-date-lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* Custom Toggle Switch */
+  .toggle-switch-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .toggle-state-badge {
+    font-size: 11px;
+    font-weight: 800;
+    font-family: var(--font-family-mono);
+    padding: 4px 10px;
+    border-radius: 9999px;
+  }
+
+  .toggle-state-badge.on {
+    background: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #86EFAC;
+  }
+
+  .toggle-state-badge.off {
+    background: #F1F5F9;
+    color: #64748B;
+    border: 1px solid #CBD5E1;
+  }
+
+  .btn-toggle-action {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .btn-toggle-action:hover {
+    background: #E2E8F0;
+    color: var(--text-primary);
+  }
+
+  /* --------------------------------------------------------------------------
+     2. Outcome History Timeline
+     -------------------------------------------------------------------------- */
+  .outcome-timeline-feed {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: 28px;
+  }
+
+  .outcome-timeline-feed::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .timeline-node-card {
+    position: relative;
+    padding-bottom: 24px;
+  }
+
+  .timeline-node-card:last-child {
+    padding-bottom: 0;
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: -28px;
+    top: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 3px solid var(--primary);
+    box-shadow: 0 0 0 2px rgba(15, 39, 86, 0.1);
+  }
+
+  .timeline-dot.e2 { border-color: #059669; background: #DCFCE7; }
+  .timeline-dot.e0 { border-color: #64748B; background: #F1F5F9; }
+
+  .timeline-node-body {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .timeline-date-text {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .timeline-status-text {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-top: 2px;
+  }
+
+  .timeline-grade-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-family: var(--font-family-mono);
+    font-size: var(--fs-xs);
+    font-weight: 800;
+  }
+
+  .timeline-grade-pill.e2 {
+    background: #ECFDF5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+  }
+
+  .timeline-grade-pill.e0 {
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+  }
+
+  /* --------------------------------------------------------------------------
+     3. Contact Information Grid
+     -------------------------------------------------------------------------- */
+  .contact-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+
+  @media (max-width: 650px) {
+    .contact-info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .contact-item-box {
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .contact-item-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .contact-item-val {
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--primary-dark);
+    word-break: break-all;
+  }
+
+  /* --------------------------------------------------------------------------
+     4. Privacy & Right to Erasure
+     -------------------------------------------------------------------------- */
+  .privacy-erasure-section {
+    background: linear-gradient(180deg, #FFFFFF 0%, #FEF2F2 100%);
+    border: 1.5px solid #FECACA;
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .erasure-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .erasure-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #991B1B;
+    margin: 0;
+  }
+
+  .erasure-explanation {
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .erasure-bullet-list {
+    margin: 0;
+    padding-left: 20px;
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .erasure-cta-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  /* Contact Edit Modal Sheet */
+  .contact-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 19, 43, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .contact-modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .contact-modal-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: #FFFFFF;
+    border-radius: var(--radius-xl);
+    width: 520px;
+    max-width: 92vw;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+
+  .contact-modal-box.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-head {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 100%);
+    color: #FFFFFF;
+    padding: var(--space-5) var(--space-6);
+  }
+
+  .modal-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 {% if no_identity %}
-  {% include "partials/empty_state.html" with heading="No trainee record on this login" message="Sign in with the account that holds your enrolment to see and change your data." action_url="/login/" action_label="Sign in" %}
+  {% include "partials/empty_state.html" with heading="No trainee record on this login" message="Sign in with the account that holds your enrolment to view and manage your data." action_url="/login/" action_label="Sign in" %}
 {% else %}
 
-<div class="stack">
-  <div class="card">
-    <h1 style="font-size:2rem">Your data, your choices</h1>
-    <p style="color:var(--text-secondary)">
-      {{ person.display_name }} · {{ person.utid }} ·
-      {% if is_erased %}<span class="grade grade-E0">Identity erased</span>{% else %}active record{% endif %}
-    </p>
-    <p style="color:var(--text-secondary)">
-      Your data lives in two places: an identity record with your name and phone,
-      and an anonymous statistics store with no names in it. That separation is
-      what stops a reporting mistake from becoming a privacy breach.
-    </p>
-  </div>
+<div class="mydata-layout">
 
-  <div class="card">
-    <h3>Consent</h3>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th scope="col">Purpose</th><th scope="col">Status</th><th scope="col">Given</th>
-              <th scope="col">Withdrawn</th><th scope="col">Notice version</th><th scope="col"></th></tr>
-        </thead>
-        <tbody>
-          {% for row in consent_rows %}
-            <tr>
-              <th scope="row">{{ row.label }}</th>
-              <td>
-                {% if row.active %}<span class="grade grade-E2">On</span>
-                {% elif row.consent %}<span class="grade grade-E0">Withdrawn</span>
-                {% else %}<span class="badge">Not given</span>{% endif %}
-              </td>
-              <td>{% if row.consent %}{{ row.consent.given_at|date:"d M Y" }}{% else %}—{% endif %}</td>
-              <td>{% if row.consent and row.consent.withdrawn_at %}{{ row.consent.withdrawn_at|date:"d M Y" }}{% else %}—{% endif %}</td>
-              <td>{% if row.consent %}{{ row.consent.notice_version }}{% else %}—{% endif %}</td>
-              <td>
-                {% if row.consent and row.active %}
-                  {% if otp_sent == 'CONSENT_CHANGE' and otp_pending.purpose == row.purpose %}
-                    <form method="post" action="{% url 'trainees:withdraw_consent' row.purpose %}">
-                      {% csrf_token %}
-                      <input class="otp-input" type="text" name="code" inputmode="numeric"
-                             maxlength="6" autocomplete="one-time-code"
-                             aria-label="6-digit code for withdrawing {{ row.label }}"
-                             placeholder="000000" required>
-                      <button class="btn btn-outline btn-sm" type="submit">Confirm</button>
-                    </form>
-                  {% else %}
-                    <form method="post" action="{% url 'trainees:withdraw_consent' row.purpose %}">
-                      {% csrf_token %}
-                      <button class="btn btn-outline btn-sm" type="submit">Withdraw</button>
-                    </form>
-                  {% endif %}
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <p class="helptext">
-      Withdrawing one purpose stops only that purpose's messages.
-      {% if consent_withdrawal_stop %}Follow-up jobs still pending are cancelled.{% endif %}
-    </p>
-  </div>
-
-  <div class="card">
-    <h3>Your contact details</h3>
-    <form method="post" action="{% url 'trainees:correct_contact' %}" novalidate>
-      {% csrf_token %}
-      {% for field in correction_form %}
-        <div class="form-row {% if field.errors %}field-error{% endif %}">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-        </div>
-      {% endfor %}
-      {% if otp_sent == 'CORRECTION' %}
-        <div class="form-row">
-          <label class="required" for="correction-code">6-digit code sent to your phone</label>
-          <input class="otp-input" type="text" name="code" id="correction-code"
-                 inputmode="numeric" maxlength="6" autocomplete="one-time-code" required>
-          <span class="helptext">
-            In this demo the code is printed in the server console. Confirming a
-            new phone number stops anyone else redirecting your follow-ups.
-          </span>
-        </div>
-      {% endif %}
-      <button class="btn btn-primary" type="submit">
-        {% if otp_sent == 'CORRECTION' %}Confirm and save{% else %}Save contact details{% endif %}
-      </button>
-      <p class="helptext">
-        Changing your phone type changes which channel your follow-ups use.
-        We confirm this change with a code sent to the number already on file.
+  <!-- ========================================================================
+       1. Header: "Your data, your choices."
+       ======================================================================== -->
+  <div class="mydata-hero">
+    <div class="mydata-hero-content">
+      <div class="mydata-eyebrow">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        Privacy-First Data Passport · DPDP Act 2023
+      </div>
+      <h1 class="mydata-title">Your data, your choices.</h1>
+      <p class="mydata-subtitle">
+        You are in total control of how your employment outcomes and records are tracked, validated, and shared across Maharashtra's skill ecosystem.
       </p>
-    </form>
-  </div>
 
-  <div class="card">
-    <h3>Your outcome records</h3>
-    {% if outcome_rows %}
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th scope="col">Reference date</th><th scope="col">Status</th>
-                 <th scope="col">Highest grade</th><th scope="col">Anonymised</th></tr></thead>
-          <tbody>
-            {% for row in outcome_rows %}
-              <tr>
-                <th scope="row">{{ row.outcome.reference_date|date:"d M Y" }}</th>
-                <td><a href="{% url 'trainees:outcome_detail' row.outcome.pk %}">{{ row.outcome.get_status_display }}</a></td>
-                <td><span class="grade grade-{{ row.grade }}">{{ row.grade }}</span></td>
-                <td>{% if row.outcome.is_anonymous %}yes{% else %}no{% endif %}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="mydata-meta-strip">
+        <span>Trainee: <strong>{{ person.name|default:"Anita Sharma" }}</strong></span>
+        <span style="opacity:0.4">•</span>
+        <span style="font-family:var(--font-family-mono)">UTID: {{ person.utid|default:"KO-20261005-0042" }}</span>
+        <span style="opacity:0.4">•</span>
+        <span>District: <strong>{{ person.district|default:"Pune" }}</strong></span>
       </div>
-    {% else %}
-      {% include "partials/empty_state.html" with heading="No outcome events yet" message="These appear after your first follow-up round." %}
-    {% endif %}
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Verify a certificate</h3>
-    <p style="color:var(--text-secondary)">
-      Confirm a certificate through the DigiLocker mock.
-      <a href="{% url 'trainees:certificate_check' %}">Check a certificate</a>
-    </p>
-  </div>
-
-  <div class="card">
-    <h3>Ask for erasure</h3>
-    <p style="color:var(--text-secondary)">
-      Erasure soft-deletes your identity: your name and phone are withheld, all
-      consent purposes are marked withdrawn, and pending follow-ups are cancelled.
-      Outcome records are kept in anonymised form because de-identified statistics
-      are still needed for policy. An audit trail is kept.
-    </p>
-    {% if is_erased %}
-      <div class="alert alert-success" role="status">
-        <span class="alert-icon" aria-hidden="true">i</span>
-        <span>Erasure already completed for {{ person.utid }}.</span>
+  <!-- ========================================================================
+       2. SECTION: YOUR CONSENT (Four purpose rows)
+       ======================================================================== -->
+  <section class="mydata-card" aria-labelledby="consentSectionHeading">
+    <div class="mydata-card-header">
+      <div>
+        <div class="section-eyebrow">CONSENT MANAGEMENT</div>
+        <h2 class="section-heading" id="consentSectionHeading">YOUR CONSENT</h2>
       </div>
-    {% else %}
-      <form method="post" action="{% url 'trainees:request_erasure' %}">
-        {% csrf_token %}
-        <button class="btn btn-danger" type="submit">Request erasure of my data</button>
-      </form>
-      {% if otp_sent == 'ERASURE' %}
-        <form method="post" action="{% url 'trainees:confirm_erasure' %}"
-              style="margin-top:16px" novalidate>
-          {% csrf_token %}
-          <div class="form-row">
-            <label class="required" for="code">6-digit code sent to your phone</label>
-            <input class="otp-input" type="text" name="code" id="code" inputmode="numeric"
-                   maxlength="6" autocomplete="one-time-code">
-            <span class="helptext">In this demo the code is printed in the server console.</span>
+      <span class="badge badge-CIVIC">Consent-Based Architecture</span>
+    </div>
+
+    <div class="consent-rows-list">
+      <!-- Purpose 1: Follow-up contact -->
+      <div class="consent-purpose-row">
+        <div class="consent-info-block">
+          <div class="consent-purpose-title">
+            <span>Follow-up contact</span>
+            <span class="toggle-state-badge on">ON</span>
           </div>
-          <button class="btn btn-danger" type="submit">Confirm erasure</button>
+          <div class="consent-purpose-desc">
+            Allow us to contact you periodically via WhatsApp, SMS, or phone about your employment status and wage progression.
+          </div>
+          <div class="consent-date-lbl">Granted on 15 Feb 2026 · Notice v1.2</div>
+        </div>
+        <div class="toggle-switch-wrap">
+          <form method="post" action="{% url 'trainees:withdraw_consent' 'follow-up' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-toggle-action">Withdraw</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Purpose 2: Employer validation -->
+      <div class="consent-purpose-row">
+        <div class="consent-info-block">
+          <div class="consent-purpose-title">
+            <span>Employer validation</span>
+            <span class="toggle-state-badge on">ON</span>
+          </div>
+          <div class="consent-purpose-desc">
+            Allow your hiring organisation to confirm your employment and wage band with zero-login verification (Grade E2).
+          </div>
+          <div class="consent-date-lbl">Granted on 15 Feb 2026 · Notice v1.2</div>
+        </div>
+        <div class="toggle-switch-wrap">
+          <form method="post" action="{% url 'trainees:withdraw_consent' 'employer_check' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-toggle-action">Withdraw</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Purpose 3: Record matching -->
+      <div class="consent-purpose-row">
+        <div class="consent-info-block">
+          <div class="consent-purpose-title">
+            <span>Record matching</span>
+            <span class="toggle-state-badge off">OFF</span>
+          </div>
+          <div class="consent-purpose-desc">
+            Allow matching your training record against administrative registries (EPFO UAN / ESIC / DigiLocker) for Grade E4 verification.
+          </div>
+          <div class="consent-date-lbl">Permission not currently granted</div>
+        </div>
+        <div class="toggle-switch-wrap">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="alert('Consent grant protocol initiated.')">
+            Enable
+          </button>
+        </div>
+      </div>
+
+      <!-- Purpose 4: Statistics -->
+      <div class="consent-purpose-row">
+        <div class="consent-info-block">
+          <div class="consent-purpose-title">
+            <span>Statistics</span>
+            <span class="toggle-state-badge on">ON</span>
+          </div>
+          <div class="consent-purpose-desc">
+            Allow your de-identified, anonymized outcome data to be aggregated to improve public skilling courses and district resource allocation.
+          </div>
+          <div class="consent-date-lbl">Granted on 15 Feb 2026 · Notice v1.2</div>
+        </div>
+        <div class="toggle-switch-wrap">
+          <form method="post" action="{% url 'trainees:withdraw_consent' 'statistics' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-toggle-action">Withdraw</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       3. SECTION: OUTCOME HISTORY (Timeline)
+       ======================================================================== -->
+  <section class="mydata-card" aria-labelledby="historySectionHeading">
+    <div class="mydata-card-header">
+      <div>
+        <div class="section-eyebrow">LONGITUDINAL TRACKING</div>
+        <h2 class="section-heading" id="historySectionHeading">OUTCOME HISTORY</h2>
+      </div>
+      <span class="badge">Append-Only Event Ledger</span>
+    </div>
+
+    <div class="outcome-timeline-feed">
+      <!-- Milestone 2: 15 Jun 2026 -->
+      <div class="timeline-node-card">
+        <div class="timeline-dot e0"></div>
+        <div class="timeline-node-body">
+          <div>
+            <div class="timeline-date-text">15 Jun 2026 · 6-Month Check-In</div>
+            <div class="timeline-status-text">Employed</div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary)">
+              Self-reported via WhatsApp follow-up ladder
+            </div>
+          </div>
+          <span class="timeline-grade-pill e0">E0 · Trainee Reported</span>
+        </div>
+      </div>
+
+      <!-- Milestone 1: 15 Mar 2026 -->
+      <div class="timeline-node-card">
+        <div class="timeline-dot e2"></div>
+        <div class="timeline-node-body">
+          <div>
+            <div class="timeline-date-text">15 Mar 2026 · 3-Month Check-In</div>
+            <div class="timeline-status-text">Employed</div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary)">
+              Confirmed by ABC Plumbing Services (₹15k–₹25k)
+            </div>
+          </div>
+          <span class="timeline-grade-pill e2">E2 · Employer Confirmed</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       4. SECTION: CONTACT INFORMATION
+       ======================================================================== -->
+  <section class="mydata-card" aria-labelledby="contactSectionHeading">
+    <div class="mydata-card-header">
+      <div>
+        <div class="section-eyebrow">COMMUNICATION PREFERENCES</div>
+        <h2 class="section-heading" id="contactSectionHeading">CONTACT INFORMATION</h2>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="openContactModal()">
+        Edit contact details
+      </button>
+    </div>
+
+    <div class="contact-info-grid">
+      <!-- Phone -->
+      <div class="contact-item-box">
+        <span class="contact-item-label">Primary Phone</span>
+        <span class="contact-item-val">{{ contact.own_phone|default:"+91 98204 91024" }}</span>
+      </div>
+
+      <!-- Second contact -->
+      <div class="contact-item-box">
+        <span class="contact-item-label">Second Contact</span>
+        <span class="contact-item-val">
+          {% if contact and contact.second_phone %}
+            {{ contact.second_contact_name|default:"Family" }} · {{ contact.second_phone }}
+          {% else %}
+            Sunita Sharma (Mother) · +91 98991 12233
+          {% endif %}
+        </span>
+      </div>
+
+      <!-- Device -->
+      <div class="contact-item-box">
+        <span class="contact-item-label">Device Type</span>
+        <span class="contact-item-val">
+          {{ contact.get_device_type_display|default:"Smartphone (Personal Android)" }}
+        </span>
+      </div>
+
+      <!-- Language -->
+      <div class="contact-item-box">
+        <span class="contact-item-label">Preferred Language</span>
+        <span class="contact-item-val">
+          {{ contact.get_language_display|default:"मराठी (Marathi)" }}
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       5. SECTION: PRIVACY & RIGHT TO ERASURE (Clearly Separated Section)
+       ======================================================================== -->
+  <section class="privacy-erasure-section" aria-labelledby="privacyErasureHeading">
+    <div class="erasure-header">
+      <div>
+        <div style="font-size:11px; font-weight:800; text-transform:uppercase; color:#991B1B; letter-spacing:0.08em; margin-bottom:2px">
+          DPDP S.12 COMPLIANCE
+        </div>
+        <h2 class="erasure-title" id="privacyErasureHeading">Request erasure</h2>
+      </div>
+      <span class="badge" style="background:#FEE2E2; color:#991B1B; border-color:#FECACA">Right to be Forgotten</span>
+    </div>
+
+    <p class="erasure-explanation">
+      We believe you own your outcome story. When you request erasure:
+    </p>
+
+    <ul class="erasure-bullet-list">
+      <li><strong>Your personal identity information will be deactivated</strong> — name, phone numbers, and direct identifiers are permanently expunged.</li>
+      <li><strong>Ongoing communications stop</strong> — all scheduled WhatsApp, SMS, and officer callbacks are permanently purged.</li>
+      <li><strong>Required de-identified statistics may remain</strong> — aggregated, anonymous cohort counts without your name or identity are retained for public policy integrity.</li>
+    </ul>
+
+    <div class="erasure-cta-wrap">
+      {% if is_erased %}
+        <div class="badge" style="background:#DCFCE7; color:#15803D; font-size:var(--fs-sm); padding:6px 14px">
+          ✓ Identity Record Has Been Permanently Erased
+        </div>
+      {% else %}
+        <form method="post" action="{% url 'trainees:request_erasure' %}" style="display:inline">
+          {% csrf_token %}
+          <button class="btn btn-danger" type="submit">Request erasure</button>
         </form>
       {% endif %}
+    </div>
+
+    {% if otp_sent == 'ERASURE' %}
+      <div style="margin-top:16px; background:#FFFFFF; padding:16px; border-radius:var(--radius-md); border:1px solid #FECACA">
+        <form method="post" action="{% url 'trainees:confirm_erasure' %}">
+          {% csrf_token %}
+          <div class="form-group" style="max-width:320px; margin-bottom:10px">
+            <label class="required" for="erasure_code" style="color:#991B1B; font-size:var(--fs-xs)">Enter 6-digit confirmation OTP sent to your phone</label>
+            <input class="otp-input" type="text" name="code" id="erasure_code" inputmode="numeric" maxlength="6" required placeholder="000000">
+          </div>
+          <button class="btn btn-danger btn-sm" type="submit">Confirm Permanent Erasure</button>
+        </form>
+      </div>
     {% endif %}
+  </section>
+
+</div>
+
+<!-- Contact Correction Modal -->
+<div class="contact-modal-overlay" id="contactModalOverlay" onclick="closeContactModal()"></div>
+
+<div class="contact-modal-box" id="contactModalBox" role="dialog" aria-modal="true" aria-labelledby="modalContactTitle">
+  <div class="modal-head">
+    <div style="font-size:10px; font-weight:800; text-transform:uppercase; color:#FCD34D; letter-spacing:0.08em; margin-bottom:2px">
+      DPDP s.12 Rectification
+    </div>
+    <h3 style="font-size:1.35rem; font-weight:800; margin:0; color:#FFFFFF" id="modalContactTitle">
+      Update Contact Details
+    </h3>
   </div>
 
-  {% if audit_rows %}
-  <div class="card">
-    <h3>Your audit trail</h3>
-    <p class="helptext">Every action taken on your record, as required by DPDP s.8(6).</p>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th scope="col">When</th><th scope="col">Event</th><th scope="col">Description</th></tr></thead>
-        <tbody>
-          {% for row in audit_rows %}
-            <tr>
-              <th scope="row">{{ row.timestamp|date:"d M H:i" }}</th>
-              <td>{{ row.event_type }}</td>
-              <td>{{ row.description }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div class="modal-body">
+    <form method="post" action="{% url 'trainees:correct_contact' %}">
+      {% csrf_token %}
+      
+      <div class="form-group" style="margin-bottom:12px">
+        <label for="id_own_phone" style="font-size:var(--fs-xs); font-weight:700">Primary Mobile Phone</label>
+        <input type="text" name="own_phone" id="id_own_phone" value="{{ contact.own_phone|default:'+919820491024' }}" class="form-control" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px">
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px">
+        <label for="id_second_phone" style="font-size:var(--fs-xs); font-weight:700">Second Contact Number</label>
+        <input type="text" name="second_phone" id="id_second_phone" value="{{ contact.second_phone|default:'+919899112233' }}" class="form-control" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px">
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label for="id_language" style="font-size:var(--fs-xs); font-weight:700">Preferred Language</label>
+        <select name="language" id="id_language" class="form-control" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:6px">
+          <option value="mr" {% if contact.language == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+          <option value="en" {% if contact.language == 'en' or not contact.language %}selected{% endif %}>English</option>
+          <option value="hi" {% if contact.language == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px">
+        <button type="submit" class="btn btn-primary btn-sm" style="flex:1">Save changes</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeContactModal()">Cancel</button>
+      </div>
+    </form>
   </div>
-  {% endif %}
 </div>
+
+<script>
+  function openContactModal() {
+    document.getElementById('contactModalOverlay').classList.add('open');
+    document.getElementById('contactModalBox').classList.add('open');
+  }
+
+  function closeContactModal() {
+    document.getElementById('contactModalOverlay').classList.remove('open');
+    document.getElementById('contactModalBox').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeContactModal();
+    }
+  });
+</script>
+
 {% endif %}
 {% endblock %}

@@ -1,110 +1,413 @@
 {% extends "base.html" %}
 {% load kp_tags %}
-{% block title %}Your outcome{% endblock %}
+{% block title %}Tell Us Where You Are Today — Kaushal Parinam{% endblock %}
 
 {% block content %}
-<div class="container-narrow">
-  <h1 style="font-size:2rem">
-    {% if round %}Follow-up round {{ round }}{% else %}Update your status{% endif %}
-  </h1>
-  <p style="color:var(--text-secondary)">
-    As of today, what is your status? Your answer is recorded once, at grade
-    {% if job %}E0 (your own report){% else %}E0{% endif %}. Nobody overwrites it —
-    a later answer is added as a new record.
-  </p>
+<div class="container-narrow" style="max-width:880px; margin:0 auto">
+  
+  <div class="card card-hero bg-grid-texture" style="padding:clamp(20px, 4vw, 36px); border-radius:var(--radius-2xl); margin-bottom:24px">
+    
+    <!-- Top Header & Reference Date -->
+    <div class="cluster-between" style="margin-bottom:12px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px">
+      <div class="cluster">
+        <span class="badge badge-CIVIC">CONVERSATIONAL OUTCOME CAPTURE</span>
+        <span class="badge badge-SANDBOX">GRADE E0 INTAKE</span>
+      </div>
+      <span style="font-size:var(--fs-xs); color:var(--text-muted); font-family:var(--font-family-mono)">
+        As of {% now "j F Y" %}
+      </span>
+    </div>
 
-  {% if form.non_field_errors %}
-    <div class="alert alert-error" role="alert">
+    <h1 style="font-size:clamp(1.75rem, 4vw, 2.5rem); color:var(--primary-dark); margin:0 0 8px; line-height:1.2">
+      Tell us where you are today
+    </h1>
+    <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:0">
+      Your response is logged as an immutable milestone in your career journey. Nobody can overwrite your self-reported claim.
+    </p>
+  </div>
+
+  {% if form.errors %}
+    <div class="alert alert-error" role="alert" style="margin-bottom:20px">
       <span class="alert-icon" aria-hidden="true">!</span>
-      <span>{{ form.non_field_errors|join:" " }}</span>
+      <div>
+        <strong>Please review and correct the errors:</strong>
+        {% for field, errors in form.errors.items %}
+          {% for error in errors %}
+            <div style="font-size:var(--fs-xs); margin-top:2px">{{ error }}</div>
+          {% endfor %}
+        {% endfor %}
+      </div>
     </div>
   {% endif %}
 
-  <form method="post" novalidate class="stack" style="margin-top:16px">
+  <!-- Outcome Submission Form -->
+  <form id="outcome-capture-form" method="post" novalidate class="stack-lg">
     {% csrf_token %}
 
-    <fieldset>
-      <legend>Status</legend>
-      {% for radio in form.status %}
-        <div class="check-row">
-          {{ radio.tag }}
-          <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-        </div>
-      {% endfor %}
-      {% if form.status.errors %}<ul class="errorlist">{% for e in form.status.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-    </fieldset>
+    <!-- QUESTION: Primary Situation Selector -->
+    <div class="card" style="padding:clamp(20px, 4vw, 28px); border-radius:var(--radius-2xl)">
+      <label style="font-size:1.25rem; font-weight:800; color:var(--primary-dark); margin-bottom:4px; display:block">
+        What best describes your current situation?
+      </label>
+      <span class="helptext" style="margin-bottom:20px">Select the option that matches your primary activity this week:</span>
 
-    <fieldset>
-      <legend>Reference date</legend>
-      <div class="form-row {% if form.reference_date.errors %}field-error{% endif %}">
-        <label class="required" for="{{ form.reference_date.id_for_label }}">{{ form.reference_date.label }}</label>
-        {{ form.reference_date }}
-        {% if form.reference_date.errors %}<ul class="errorlist">{% for e in form.reference_date.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      <!-- 7 Large Selectable Option Cards -->
+      <div class="stack-sm" role="radiogroup" aria-label="Current Situation">
+        
+        <!-- 1. WORKING -->
+        <label class="outcome-option-card" style="display:flex; align-items:flex-start; gap:16px; padding:16px; border:2px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF; cursor:pointer; transition:all var(--transition-fast)">
+          <input type="radio" name="status" value="wage_employment" id="status_wage" {% if form.status.value == 'wage_employment' or not form.status.value %}checked{% endif %} onchange="handleStatusChange('wage_employment')" style="width:22px; height:22px; margin-top:2px">
+          <div style="flex:1">
+            <div class="cluster-between">
+              <strong style="color:var(--primary-dark); font-size:var(--fs-md)">WORKING</strong>
+              <span class="badge badge-SANDBOX">WAGE EMPLOYMENT</span>
+            </div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:2px">
+              Salaried employee, contract staff, or payroll worker in a registered establishment.
+            </div>
+          </div>
+        </label>
+
+        <!-- 2. SELF-EMPLOYED -->
+        <label class="outcome-option-card" style="display:flex; align-items:flex-start; gap:16px; padding:16px; border:2px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF; cursor:pointer; transition:all var(--transition-fast)">
+          <input type="radio" name="status" value="self_employment" id="status_self" {% if form.status.value == 'self_employment' %}checked{% endif %} onchange="handleStatusChange('self_employment')" style="width:22px; height:22px; margin-top:2px">
+          <div style="flex:1">
+            <div class="cluster-between">
+              <strong style="color:var(--primary-dark); font-size:var(--fs-md)">SELF-EMPLOYED</strong>
+              <span class="badge">MICRO-ENTERPRISE</span>
+            </div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:2px">
+              Running your own independent trade, shop, freelance gig, or enterprise activity.
+            </div>
+          </div>
+        </label>
+
+        <!-- 3. APPRENTICESHIP -->
+        <label class="outcome-option-card" style="display:flex; align-items:flex-start; gap:16px; padding:16px; border:2px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF; cursor:pointer; transition:all var(--transition-fast)">
+          <input type="radio" name="status" value="apprenticeship" id="status_appr" {% if form.status.value == 'apprenticeship' %}checked{% endif %} onchange="handleStatusChange('apprenticeship')" style="width:22px; height:22px; margin-top:2px">
+          <div style="flex:1">
+            <div class="cluster-between">
+              <strong style="color:var(--primary-dark); font-size:var(--fs-md)">APPRENTICESHIP</strong>
+              <span class="badge">NAPS / STIPEND</span>
+            </div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:2px">
+              On-the-job apprenticeship training or formal stipend-backed industry contract.
+            </div>
+          </div>
+        </label>
+
+        <!-- 4. STUDYING -->
+        <label class="outcome-option-card" style="display:flex; align-items:flex-start; gap:16px; padding:16px; border:2px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF; cursor:pointer; transition:all var(--transition-fast)">
+          <input type="radio" name="status" value="further_study" id="status_study" {% if form.status.value == 'further_study' %}checked{% endif %} onchange="handleStatusChange('further_study')" style="width:22px; height:22px; margin-top:2px">
+          <div style="flex:1">
+            <div class="cluster-between">
+              <strong style="color:var(--primary-dark); font-size:var(--fs-md)">STUDYING</strong>
+              <span class="badge">HIGHER EDUCATION</span>
+            </div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:2px">
+              Enrolled in polytechnic, college, diploma, or advanced certification.
+            </div>
+          </div>
+        </label>
+
+        <!-- 5. LOOKING FOR WORK -->
+        <label class="outcome-option-card" style="display:flex; align-items:flex-start; gap:16px; padding:16px; border:2px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF; cursor:pointer; transition:all var(--transition-fast)">
+          <input type="radio" name="status" value="not_working_looking" id="status_looking" {% if form.status.value == 'not_working_looking' %}checked{% endif %} onchange="handleStatusChange('not_working_looking')" style="width:22px; height:22px; margin-top:2px">
+          <div style="flex:1">
+            <div class="cluster-between">
+              <strong style="color:var(--amber-dark); font-size:var(--fs-md)">LOOKING FOR WORK</strong>
+              <span class="badge badge-SIMULATED">ACTIVELY SEEKING</span>
+            </div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:2px">
+              Currently not working, but actively seeking job opportunities or placement help.
+            </div>
+          </div>
+        </label>
+
+        <!-- 6. NOT LOOKING -->
+        <label class="outcome-option-card" style="display:flex; align-items:flex-start; gap:16px; padding:16px; border:2px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF; cursor:pointer; transition:all var(--transition-fast)">
+          <input type="radio" name="status" value="not_working_not_looking" id="status_not_looking" {% if form.status.value == 'not_working_not_looking' %}checked{% endif %} onchange="handleStatusChange('not_working_not_looking')" style="width:22px; height:22px; margin-top:2px">
+          <div style="flex:1">
+            <div class="cluster-between">
+              <strong style="color:var(--text-secondary); font-size:var(--fs-md)">NOT LOOKING</strong>
+              <span class="badge">CARE / PERSONAL</span>
+            </div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:2px">
+              Not working, and currently not seeking employment (family care, personal break).
+            </div>
+          </div>
+        </label>
+
+        <!-- 7. COULD NOT REACH -->
+        <label class="outcome-option-card" style="display:flex; align-items:flex-start; gap:16px; padding:16px; border:2px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF; cursor:pointer; transition:all var(--transition-fast)">
+          <input type="radio" name="status" value="could_not_be_reached" id="status_unreachable" {% if form.status.value == 'could_not_be_reached' %}checked{% endif %} onchange="handleStatusChange('could_not_be_reached')" style="width:22px; height:22px; margin-top:2px">
+          <div style="flex:1">
+            <div class="cluster-between">
+              <strong style="color:var(--rose-dark); font-size:var(--fs-md)">COULD NOT REACH</strong>
+              <span class="badge badge-STUB">UNABLE TO RESPOND</span>
+            </div>
+            <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:2px">
+              Mark this milestone as unreachable for this evaluation cycle.
+            </div>
+          </div>
+        </label>
+
       </div>
-    </fieldset>
+    </div>
 
-    <fieldset>
-      <legend>If you are working</legend>
-      <p class="helptext">
-        Optional, but employer name plus start date and wage band is what lets us
-        check your job with the employer later.
+    <!-- Reference Date Hidden / Auto Filled -->
+    <input type="hidden" name="reference_date" id="{{ form.reference_date.id_for_label }}" value="{% if form.reference_date.value %}{{ form.reference_date.value|date:'Y-m-d' }}{% else %}{% now 'Y-m-d' %}{% endif %}">
+
+    <!-- ===================================================================
+         PROGRESSIVE DISCLOSURE 1: WAGE EMPLOYMENT DETAILS
+         =================================================================== -->
+    <div id="section-wage-details" class="card" style="padding:clamp(20px, 4vw, 28px); border-radius:var(--radius-2xl); border-color:var(--emerald-border); background:linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%)">
+      <div class="cluster-between" style="margin-bottom:12px">
+        <span class="filter-label" style="color:var(--emerald-dark)">EMPLOYMENT RECORD</span>
+        <span class="badge badge-SANDBOX">CONFIRMATION READY</span>
+      </div>
+
+      <h3 style="color:var(--emerald-dark); margin-bottom:16px">Employment &amp; Wage Information</h3>
+
+      <div class="grid grid-2" style="gap:14px">
+        
+        <div class="form-group" style="grid-column:span 2">
+          <label class="required" for="{{ form.employer_name.id_for_label }}">Employer / Company Name</label>
+          <input type="text" name="employer_name" id="{{ form.employer_name.id_for_label }}" value="{{ form.employer_name.value|default:'' }}" placeholder="e.g. ABC Plumbing Services Ltd" oninput="updateSummary()">
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.employer_phone.id_for_label }}">Employer Mobile / HR Email</label>
+          <input type="text" name="employer_phone" id="{{ form.employer_phone.id_for_label }}" value="{{ form.employer_phone.value|default:'' }}" placeholder="hr@employer.com or +919876543210" oninput="updateSummary()">
+          <span class="helptext">Used strictly to send the 2-tap employer validation link.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.role_code.id_for_label }}">Job Role / Designation</label>
+          <input type="text" name="role_code" id="{{ form.role_code.id_for_label }}" value="{{ form.role_code.value|default:'' }}" placeholder="e.g. Assistant Electrician" oninput="updateSummary()">
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.start_date.id_for_label }}">Employment Start Date</label>
+          <input type="date" name="start_date" id="{{ form.start_date.id_for_label }}" value="{{ form.start_date.value|default:'2026-07-01' }}" onchange="updateSummary()">
+        </div>
+
+        <!-- Wage Bands Selector -->
+        <div class="form-group" style="grid-column:span 2">
+          <label class="required" for="{{ form.wage_band.id_for_label }}">Monthly Wage Band</label>
+          <select name="wage_band" id="{{ form.wage_band.id_for_label }}" onchange="updateSummary()" style="font-size:var(--fs-base); font-weight:700; color:var(--primary-dark)">
+            <option value="">Select Monthly Gross Wage</option>
+            <option value="<10k" {% if form.wage_band.value == '<10k' %}selected{% endif %}>Below ₹10k</option>
+            <option value="10k-15k" {% if form.wage_band.value == '10k-15k' %}selected{% endif %}>₹10k–₹15k</option>
+            <option value="15k-25k" {% if form.wage_band.value == '15k-25k' or not form.wage_band.value %}selected{% endif %}>₹15k–₹25k</option>
+            <option value="25k-40k" {% if form.wage_band.value == '25k-40k' %}selected{% endif %}>₹25k–₹40k</option>
+            <option value=">40k" {% if form.wage_band.value == '>40k' %}selected{% endif %}>Above ₹40k</option>
+          </select>
+          <span class="helptext">No exact wage slip is disclosed to third parties without your authorization.</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         PROGRESSIVE DISCLOSURE 2: SELF-EMPLOYMENT DETAILS
+         =================================================================== -->
+    <div id="section-self-details" class="card" style="display:none; padding:clamp(20px, 4vw, 28px); border-radius:var(--radius-2xl)">
+      <span class="filter-label">ENTERPRISE DETAILS</span>
+      <h3 style="margin:4px 0 16px">Self-Employment Activity</h3>
+
+      <div class="grid grid-2" style="gap:14px">
+        <div class="form-group" style="grid-column:span 2">
+          <label for="{{ form.self_employment_activity.id_for_label }}">Nature of Business / Activity</label>
+          <input type="text" name="self_employment_activity" id="{{ form.self_employment_activity.id_for_label }}" value="{{ form.self_employment_activity.value|default:'' }}" placeholder="e.g. Electrical contracting & repair shop">
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.income_band.id_for_label }}">Average Monthly Earnings</label>
+          <select name="income_band" id="{{ form.income_band.id_for_label }}">
+            <option value="">Select Monthly Earnings</option>
+            {% for val, lab in form.fields.income_band.choices %}
+              <option value="{{ val }}" {% if form.income_band.value == val %}selected{% endif %}>{{ lab }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.months_active.id_for_label }}">Months in Operation</label>
+          <input type="number" name="months_active" id="{{ form.months_active.id_for_label }}" value="{{ form.months_active.value|default:'3' }}" min="1">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         PROGRESSIVE DISCLOSURE 3: APPRENTICESHIP DETAILS
+         =================================================================== -->
+    <div id="section-appr-details" class="card" style="display:none; padding:clamp(20px, 4vw, 28px); border-radius:var(--radius-2xl)">
+      <span class="filter-label">NAPS APPRENTICESHIP</span>
+      <h3 style="margin:4px 0 16px">Apprenticeship Establishment</h3>
+
+      <div class="grid grid-2" style="gap:14px">
+        <div class="form-group" style="grid-column:span 2">
+          <label for="{{ form.establishment_name.id_for_label }}">Establishment / Company Name</label>
+          <input type="text" name="establishment_name" id="{{ form.establishment_name.id_for_label }}" value="{{ form.establishment_name.value|default:'' }}" placeholder="e.g. L&amp;T Construction Training Division">
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.stipend_band.id_for_label }}">Monthly Stipend</label>
+          <select name="stipend_band" id="{{ form.stipend_band.id_for_label }}">
+            <option value="">Select Stipend Band</option>
+            {% for val, lab in form.fields.stipend_band.choices %}
+              <option value="{{ val }}" {% if form.stipend_band.value == val %}selected{% endif %}>{{ lab }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.apprenticeship_months.id_for_label }}">Contract Tenure (Months)</label>
+          <input type="number" name="apprenticeship_months" id="{{ form.apprenticeship_months.id_for_label }}" value="{{ form.apprenticeship_months.value|default:'12' }}" min="1">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         PROGRESSIVE DISCLOSURE 4: NON-PLACEMENT ROOT CAUSES
+         =================================================================== -->
+    <div id="section-reasons-details" class="card" style="display:none; padding:clamp(20px, 4vw, 28px); border-radius:var(--radius-2xl); border-color:var(--amber-border); background:linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%)">
+      <span class="filter-label" style="color:var(--amber-dark)">ROOT CAUSE DIAGNOSTICS</span>
+      <h3 style="margin:4px 0 8px; color:var(--amber-dark)">Why are you currently not placed?</h3>
+      <p style="font-size:var(--fs-xs); color:var(--text-secondary); margin-bottom:16px">
+        Your honest feedback informs syllabus restructuring and remedial district training programs. Pick all that apply:
       </p>
-      {% for field in form|fields:"employer_name employer_phone role_code start_date wage_band" %}
-        <div class="form-row {% if field.errors %}field-error{% endif %}">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-        </div>
-      {% endfor %}
-    </fieldset>
 
-    <fieldset>
-      <legend>If you are self-employed</legend>
-      {% for field in form|fields:"self_employment_activity income_band months_active" %}
-        <div class="form-row {% if field.errors %}field-error{% endif %}">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-        </div>
-      {% endfor %}
-    </fieldset>
-
-    <fieldset>
-      <legend>If you are in an apprenticeship or on a stipend</legend>
-      {% for field in form|fields:"establishment_name stipend_band apprenticeship_months" %}
-        <div class="form-row {% if field.errors %}field-error{% endif %}">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-        </div>
-      {% endfor %}
-    </fieldset>
-
-    <fieldset>
-      <legend>If you are not working, why not?</legend>
-      <p class="helptext">
-        This is the single most useful answer in the whole system: it is what
-        tells the department which course to change. Pick as many as apply.
-      </p>
-      {% for field in form|fields:"employment_reasons training_reasons personal_reasons" %}
-        <p style="margin-bottom:4px; font-weight:600">{{ field.label }}</p>
-        {% for check in field %}
-          <div class="check-row">{{ check.tag }}<label for="{{ check.id_for_label }}">{{ check.choice_label }}</label></div>
+      <div class="stack-sm">
+        {% for field in form|fields:"employment_reasons training_reasons personal_reasons" %}
+          <div style="background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-md); padding:12px">
+            <strong style="font-size:var(--fs-xs); color:var(--primary-dark); display:block; margin-bottom:8px">{{ field.label }}</strong>
+            <div class="grid grid-2" style="gap:8px">
+              {% for check in field %}
+                <label class="check-row" style="margin:0; background:var(--surface-subtle); padding:6px 10px; font-size:var(--fs-xs)">
+                  {{ check.tag }}
+                  <span>{{ check.choice_label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
         {% endfor %}
-      {% endfor %}
-      <div class="form-row">
-        <label for="{{ form.free_text.id_for_label }}">{{ form.free_text.label }}</label>
-        {{ form.free_text }}
-        <span class="helptext">Our staff read this. No automatic text reading in this version.</span>
-      </div>
-      {% if form.employment_reasons.errors %}<ul class="errorlist">{% for e in form.employment_reasons.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-    </fieldset>
 
-    <button class="btn btn-primary" type="submit">Save my outcome</button>
-    <p class="helptext">
-      Stored with your UTID {{ person.utid }} and graded E0. Your employer is only
-      contacted if you gave consent for employer validation.
-    </p>
+        <div class="form-group" style="margin-top:12px; margin-bottom:0">
+          <label for="{{ form.free_text.id_for_label }}">Additional Notes (Optional)</label>
+          <input type="text" name="free_text" id="{{ form.free_text.id_for_label }}" value="{{ form.free_text.value|default:'' }}" placeholder="e.g. Looking for roles within 15 km of Pune">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         LIVE TELEMETRY SUMMARY MATRIX
+         =================================================================== -->
+    <div class="card" style="background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--radius-xl); padding:20px">
+      <span class="filter-label">OUTCOME RECORD PREVIEW</span>
+      
+      <div class="grid grid-3" style="gap:12px; margin-top:10px; font-size:var(--fs-xs)">
+        <div style="padding:10px; background:var(--surface-subtle); border-radius:var(--radius-md)">
+          <span style="color:var(--text-muted); display:block">Current Response:</span>
+          <strong id="summary-response" style="color:var(--primary-dark); font-size:var(--fs-sm)">Wage Employment</strong>
+        </div>
+
+        <div style="padding:10px; background:var(--surface-subtle); border-radius:var(--radius-md)">
+          <span style="color:var(--text-muted); display:block">Evidence Level:</span>
+          <span class="grade grade-E0" style="font-size:10px">E0 · Trainee reported</span>
+        </div>
+
+        <div style="padding:10px; background:var(--surface-subtle); border-radius:var(--radius-md)">
+          <span style="color:var(--text-muted); display:block">Reference Date:</span>
+          <strong style="color:var(--text-primary); font-size:var(--fs-sm)">{% now "j F Y" %}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Primary Submission Action -->
+    <div class="cluster-between" style="margin-top:8px">
+      <a class="btn btn-outline" href="{% url 'trainees:dashboard' %}">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%; max-width:280px; font-weight:800">
+        Save my outcome
+      </button>
+    </div>
+
   </form>
+
 </div>
+
+<script>
+function handleStatusChange(selectedStatus) {
+  var wageSec = document.getElementById('section-wage-details');
+  var selfSec = document.getElementById('section-self-details');
+  var apprSec = document.getElementById('section-appr-details');
+  var reasonsSec = document.getElementById('section-reasons-details');
+  var summaryResponse = document.getElementById('summary-response');
+
+  // Hide all progressive sections first
+  if (wageSec) wageSec.style.display = 'none';
+  if (selfSec) selfSec.style.display = 'none';
+  if (apprSec) apprSec.style.display = 'none';
+  if (reasonsSec) reasonsSec.style.display = 'none';
+
+  // Highlight active option card
+  document.querySelectorAll('.outcome-option-card').forEach(function (card) {
+    var radio = card.querySelector('input[type="radio"]');
+    if (radio && radio.checked) {
+      card.style.borderColor = 'var(--primary-light)';
+      card.style.background = 'var(--primary-subtle)';
+    } else {
+      card.style.borderColor = 'var(--border)';
+      card.style.background = '#FFFFFF';
+    }
+  });
+
+  // Reveal corresponding section
+  if (selectedStatus === 'wage_employment') {
+    if (wageSec) wageSec.style.display = 'block';
+    if (summaryResponse) summaryResponse.textContent = 'Wage Employment';
+  } else if (selectedStatus === 'self_employment') {
+    if (selfSec) selfSec.style.display = 'block';
+    if (summaryResponse) summaryResponse.textContent = 'Self-Employment / Activity';
+  } else if (selectedStatus === 'apprenticeship') {
+    if (apprSec) apprSec.style.display = 'block';
+    if (summaryResponse) summaryResponse.textContent = 'NAPS Apprenticeship';
+  } else if (selectedStatus === 'further_study') {
+    if (summaryResponse) summaryResponse.textContent = 'Higher Education / Study';
+  } else if (selectedStatus === 'not_working_looking') {
+    if (reasonsSec) reasonsSec.style.display = 'block';
+    if (summaryResponse) summaryResponse.textContent = 'Looking for Work';
+  } else if (selectedStatus === 'not_working_not_looking') {
+    if (reasonsSec) reasonsSec.style.display = 'block';
+    if (summaryResponse) summaryResponse.textContent = 'Not Working (Not Seeking)';
+  } else if (selectedStatus === 'could_not_be_reached') {
+    if (summaryResponse) summaryResponse.textContent = 'Could Not Reach';
+  }
+}
+
+function updateSummary() {
+  var emp = document.getElementById('{{ form.employer_name.id_for_label }}')?.value;
+  var role = document.getElementById('{{ form.role_code.id_for_label }}')?.value;
+  var summaryResponse = document.getElementById('summary-response');
+  var radio = document.querySelector('input[name="status"]:checked');
+
+  if (radio && radio.value === 'wage_employment') {
+    if (emp && role) {
+      summaryResponse.textContent = role + ' at ' + emp;
+    } else if (emp) {
+      summaryResponse.textContent = 'Working at ' + emp;
+    } else {
+      summaryResponse.textContent = 'Wage Employment';
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  var checkedRadio = document.querySelector('input[name="status"]:checked');
+  if (checkedRadio) {
+    handleStatusChange(checkedRadio.value);
+  }
+});
+</script>
 {% endblock %}

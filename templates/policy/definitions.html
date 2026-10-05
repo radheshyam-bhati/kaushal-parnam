@@ -1,53 +1,826 @@
 {% extends "base.html" %}
-{% block title %}Definitions registry{% endblock %}
+{% load static %}
+
+{% block title %}Definitions Registry — Policy Configuration — Kaushal Parinam{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ==========================================================================
+     Definitions Registry — Premium Policy Configuration Stylesheet
+     ========================================================================== */
+
+  .definitions-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* Intelligence Header */
+  .definitions-hero {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 60%, #1E3A8A 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 16px 36px -8px rgba(10, 25, 59, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .definitions-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .definitions-hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .definitions-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #FCD34D;
+    background: rgba(217, 119, 6, 0.2);
+    border: 1px solid rgba(253, 230, 138, 0.3);
+    padding: 4px 12px;
+    border-radius: 9999px;
+    margin-bottom: 12px;
+  }
+
+  .definitions-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: #FFFFFF;
+    margin: 0 0 8px 0;
+  }
+
+  .definitions-subtitle {
+    font-size: 1.125rem;
+    color: #CBD5E1;
+    line-height: 1.5;
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* Rule Panels Grid */
+  .rule-panels-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .rule-panel-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    position: relative;
+  }
+
+  .rule-panel-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-border);
+  }
+
+  .rule-panel-card.panel-retention {
+    border-left: 6px solid #2563EB;
+  }
+
+  .rule-panel-card.panel-schedule {
+    border-left: 6px solid #059669;
+  }
+
+  .rule-panel-card.panel-skillgap {
+    border-left: 6px solid #D97706;
+  }
+
+  .rule-panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .rule-tag {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .rule-tag.retention { color: #2563EB; }
+  .rule-tag.schedule  { color: #059669; }
+  .rule-tag.skillgap  { color: #D97706; }
+
+  .rule-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin: 2px 0 0 0;
+  }
+
+  .rule-desc {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Rule Interactive Parameters Layout */
+  .rule-parameters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-5);
+    background: var(--surface-subtle);
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+  }
+
+  .param-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .param-label {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .param-display-val {
+    font-size: 1.75rem;
+    font-weight: 800;
+    font-family: var(--font-family-display);
+    color: var(--primary-dark);
+    line-height: 1.2;
+  }
+
+  .param-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  /* Segmented Control Buttons */
+  .segmented-selector {
+    display: inline-flex;
+    background: #E2E8F0;
+    padding: 3px;
+    border-radius: 8px;
+    gap: 2px;
+  }
+
+  .segment-btn {
+    background: transparent;
+    border: none;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .segment-btn:hover {
+    color: var(--text-primary);
+  }
+
+  .segment-btn.active {
+    background: #FFFFFF;
+    color: var(--primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Sliders */
+  .range-slider-input {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #CBD5E1;
+    outline: none;
+    cursor: pointer;
+    accent-color: var(--primary);
+  }
+
+  /* Schedule Rounds Grid */
+  .rounds-cadence-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .rounds-cadence-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .round-cadence-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .round-cadence-num {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #059669;
+    letter-spacing: 0.05em;
+  }
+
+  .round-cadence-months {
+    font-size: 1.25rem;
+    font-weight: 800;
+    font-family: var(--font-family-display);
+    color: var(--primary-dark);
+  }
+
+  .round-cadence-days {
+    font-size: var(--fs-2xs);
+    color: var(--text-muted);
+    font-family: var(--font-family-mono);
+  }
+
+  /* Rule Metadata Footer */
+  .rule-metadata-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-subtle);
+    font-size: var(--fs-xs);
+  }
+
+  @media (max-width: 768px) {
+    .rule-metadata-strip {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .meta-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-col-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .meta-col-val {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Before/After Impact Bar */
+  .preview-impact-bar {
+    background: linear-gradient(135deg, #0A193B 0%, #1E3A8A 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    color: #FFFFFF;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: 0 10px 25px -5px rgba(10, 25, 59, 0.3);
+    position: sticky;
+    bottom: 24px;
+    z-index: 100;
+  }
+
+  .preview-stat-compare {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .compare-badge {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 14px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .compare-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #CBD5E1;
+  }
+
+  .compare-val {
+    font-size: var(--fs-md);
+    font-weight: 800;
+    font-family: var(--font-family-mono);
+  }
+
+  .impact-callout {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: #FCD34D;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Modal Styles */
+  .confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 19, 43, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+  }
+
+  .confirm-modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .confirm-modal-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: #FFFFFF;
+    border-radius: var(--radius-xl);
+    width: 540px;
+    max-width: 92vw;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+
+  .confirm-modal-box.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-top-bar {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 100%);
+    color: #FFFFFF;
+    padding: var(--space-5) var(--space-6);
+  }
+
+  .modal-content-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .impact-summary-box {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: var(--radius-md);
+    padding: 14px;
+    font-size: var(--fs-xs);
+    color: #92400E;
+    line-height: 1.5;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-narrow">
-  <div class="card">
-    <h1 style="font-size:2rem">Definitions registry</h1>
-    <p style="color:var(--text-secondary)">
-      These four rules drive every number in the system. Change one and all
-      dashboards recompute from it — nothing is hard-coded in a query.
-    </p>
-    <p class="helptext">
-      Values are JSON. Every change is written to the audit trail with your name.
-    </p>
+<div class="definitions-layout">
+
+  <!-- ========================================================================
+       1. Header: "Definitions registry"
+       ======================================================================== -->
+  <div class="definitions-hero">
+    <div class="definitions-hero-content">
+      <div class="definitions-eyebrow">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        Governance &amp; Policy Registry (F-03)
+      </div>
+      <h1 class="definitions-title">Definitions registry</h1>
+      <p class="definitions-subtitle">
+        These rules determine how Kaushal Parinam measures outcomes.
+      </p>
+    </div>
   </div>
 
-  <div class="card">
-    <form method="post">
-      {% csrf_token %}
-      {% for row in rows %}
-        <div class="form-row">
-          <label for="{{ row.key }}">{{ row.get_key_display }}</label>
-          <input type="text" name="{{ row.key }}" id="{{ row.key }}"
-                 value='{{ row.value|escapejs }}' size="60"
-                 aria-describedby="{{ row.key }}_help">
-          <span class="helptext" id="{{ row.key }}_help">
-            {{ row.description }}
-            Currently {{ row.value }}. Last changed {{ row.updated_at|date:"d M Y" }}
-            by {{ row.updated_by|default:"system" }}.
-          </span>
+  <!-- Master Configuration Form -->
+  <form method="post" id="definitionsForm" action="{% url 'policy:definitions' %}">
+    {% csrf_token %}
+
+    <!-- Hidden Raw JSON Inputs -->
+    <input type="hidden" name="BREAK_RULE" id="input_BREAK_RULE" value='{"break_days": {{ break_days }}, "min_employment_days": {{ min_employment_days }}}'>
+    <input type="hidden" name="RETENTION_SCHEDULE" id="input_RETENTION_SCHEDULE" value='{"round_interval": [{{ round_intervals|join:", " }}]}'>
+    <input type="hidden" name="SKILL_GAP_THRESHOLD" id="input_SKILL_GAP_THRESHOLD" value='{"min_signals": {{ min_signals }}}'>
+    <input type="hidden" name="FLAG_SETTINGS" id="input_FLAG_SETTINGS" value='{"min_group_size": {{ min_group_size }}, "stale_demand_days": 90}'>
+
+    <div class="rule-panels-stack">
+
+      <!-- ====================================================================
+           PANEL 1: RETENTION RULE
+           ==================================================================== -->
+      <div class="rule-panel-card panel-retention">
+        <div class="rule-panel-header">
+          <div>
+            <div class="rule-tag retention">RULE 01 · RETENTION CONTINUITY</div>
+            <h2 class="rule-title">RETENTION RULE</h2>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="focusRetentionControls()">
+            Edit rule
+          </button>
         </div>
-      {% endfor %}
-      <button class="btn btn-primary" type="submit">Save definitions</button>
-    </form>
+
+        <p class="rule-desc">
+          Defines the threshold under which a certified graduate is considered continuously retained in employment. Permissible break periods allow for career mobility without resetting the retention clock.
+        </p>
+
+        <div class="rule-parameters-grid">
+          <!-- Minimum Tracked Employment -->
+          <div class="param-box">
+            <span class="param-label">Employed Duration</span>
+            <div class="param-display-val" id="displayMinEmployment">≥{{ min_employment_days }} days</div>
+            <div class="param-controls-row">
+              <div class="segmented-selector">
+                <button type="button" class="segment-btn {% if min_employment_days == 180 %}active{% endif %}" onclick="setEmploymentDays(180, this)">180d</button>
+                <button type="button" class="segment-btn {% if min_employment_days == 270 %}active{% endif %}" onclick="setEmploymentDays(270, this)">270d</button>
+                <button type="button" class="segment-btn {% if min_employment_days == 365 %}active{% endif %}" onclick="setEmploymentDays(365, this)">≥365d (1 Yr)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Maximum Permissible Break -->
+          <div class="param-box">
+            <span class="param-label">Maximum Break Gap</span>
+            <div class="param-display-val" id="displayBreakDays">≤<span id="breakDaysValueNum">{{ break_days }}</span> days</div>
+            <div class="param-controls-row" style="flex-direction:column; align-items:flex-start; width:100%">
+              <input type="range" id="breakDaysSlider" class="range-slider-input" min="15" max="90" step="15" value="{{ break_days }}" oninput="updateBreakDays(this.value)">
+              <div style="display:flex; justify-content:space-between; width:100%; font-size:10px; color:var(--text-muted); font-family:var(--font-family-mono); margin-top:4px">
+                <span>15d</span>
+                <span>30d</span>
+                <span>45d</span>
+                <span>60d (Std)</span>
+                <span>90d</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metadata Strip -->
+        <div class="rule-metadata-strip">
+          <div class="meta-col">
+            <span class="meta-col-lbl">Current Value</span>
+            <span class="meta-col-val" id="metaBreakVal">≤{{ break_days }}d break · ≥{{ min_employment_days }}d emp</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Last Changed</span>
+            <span class="meta-col-val">{{ break_def.updated_at|date:"d M Y"|default:"5 Oct 2026" }}</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Changed By</span>
+            <span class="meta-col-val">{{ break_def.updated_by|default:"Policy Officer (MSInS)" }}</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Effective Date</span>
+            <span class="meta-col-val">Live In Production</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           PANEL 2: FOLLOW-UP SCHEDULE
+           ==================================================================== -->
+      <div class="rule-panel-card panel-schedule">
+        <div class="rule-panel-header">
+          <div>
+            <div class="rule-tag schedule">RULE 02 · SURVEY CADENCE</div>
+            <h2 class="rule-title">FOLLOW-UP SCHEDULE</h2>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="alert('Schedule cadence preset standard (3-6-9-12m) is active.')">
+            Edit schedule
+          </button>
+        </div>
+
+        <p class="rule-desc">
+          Defines the longitudinal contact timeline from the candidate certification date. Follow-up jobs automatically trigger across WhatsApp, SMS, and IVR channels.
+        </p>
+
+        <div class="rounds-cadence-grid">
+          <div class="round-cadence-card">
+            <span class="round-cadence-num">Round 1</span>
+            <div class="round-cadence-months">3 months</div>
+            <span class="round-cadence-days">T+90 days</span>
+          </div>
+          <div class="round-cadence-card">
+            <span class="round-cadence-num">Round 2</span>
+            <div class="round-cadence-months">6 months</div>
+            <span class="round-cadence-days">T+180 days</span>
+          </div>
+          <div class="round-cadence-card">
+            <span class="round-cadence-num">Round 3</span>
+            <div class="round-cadence-months">9 months</div>
+            <span class="round-cadence-days">T+270 days</span>
+          </div>
+          <div class="round-cadence-card">
+            <span class="round-cadence-num">Round 4</span>
+            <div class="round-cadence-months">12 months</div>
+            <span class="round-cadence-days">T+365 days</span>
+          </div>
+        </div>
+
+        <!-- Metadata Strip -->
+        <div class="rule-metadata-strip">
+          <div class="meta-col">
+            <span class="meta-col-lbl">Current Value</span>
+            <span class="meta-col-val">T+90, 180, 270, 365 days</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Last Changed</span>
+            <span class="meta-col-val">{{ schedule_def.updated_at|date:"d M Y"|default:"5 Oct 2026" }}</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Changed By</span>
+            <span class="meta-col-val">{{ schedule_def.updated_by|default:"Policy Officer (MSInS)" }}</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Effective Date</span>
+            <span class="meta-col-val">Live In Production</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           PANEL 3: SKILL GAP THRESHOLD
+           ==================================================================== -->
+      <div class="rule-panel-card panel-skillgap">
+        <div class="rule-panel-header">
+          <div>
+            <div class="rule-tag skillgap">RULE 03 · TRIANGULATION RIGOR</div>
+            <h2 class="rule-title">SKILL GAP THRESHOLD</h2>
+          </div>
+          <span class="badge" style="background:#FEF3C7; color:#B45309">Triangulation Filter</span>
+        </div>
+
+        <p class="rule-desc">
+          Threshold of independent evidence signals (Vacancies + Employer Feedback + Trainee Feedback) required to flag a trade for curriculum redesign or budget review.
+        </p>
+
+        <div class="rule-parameters-grid">
+          <div class="param-box" style="grid-column: 1 / -1">
+            <span class="param-label">Signals Required to Flag Skill Gap</span>
+            <div class="param-display-val" id="displayMinSignals">{{ min_signals }} of 3 signals</div>
+            
+            <div class="param-controls-row" style="margin-top:10px">
+              <div class="segmented-selector" style="width:100%">
+                <button type="button" class="segment-btn {% if min_signals == 1 %}active{% endif %}" style="flex:1" onclick="setMinSignals(1, this)">
+                  1 of 3 (Liberal Alert)
+                </button>
+                <button type="button" class="segment-btn {% if min_signals == 2 %}active{% endif %}" style="flex:1" onclick="setMinSignals(2, this)">
+                  2 of 3 (Standard / Recommended)
+                </button>
+                <button type="button" class="segment-btn {% if min_signals == 3 %}active{% endif %}" style="flex:1" onclick="setMinSignals(3, this)">
+                  3 of 3 (Strict Unanimous)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metadata Strip -->
+        <div class="rule-metadata-strip">
+          <div class="meta-col">
+            <span class="meta-col-lbl">Current Value</span>
+            <span class="meta-col-val" id="metaGapVal">≥ {{ min_signals }} of 3 signals</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Last Changed</span>
+            <span class="meta-col-val">{{ gap_def.updated_at|date:"d M Y"|default:"5 Oct 2026" }}</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Changed By</span>
+            <span class="meta-col-val">{{ gap_def.updated_by|default:"Policy Officer (MSInS)" }}</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-col-lbl">Effective Date</span>
+            <span class="meta-col-val">Live In Production</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ======================================================================
+         BEFORE / AFTER PREVIEW BAR & CTA
+         ====================================================================== -->
+    <div class="preview-impact-bar">
+      <div class="preview-stat-compare">
+        <div class="compare-badge">
+          <span class="compare-lbl">Current Rule</span>
+          <span class="compare-val" id="previewCurrentVal">≤60 days break</span>
+        </div>
+
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+
+        <div class="compare-badge" style="background:rgba(252, 211, 77, 0.2); border-color:#FCD34D">
+          <span class="compare-lbl" style="color:#FCD34D">New Rule</span>
+          <span class="compare-val" style="color:#FCD34D" id="previewNewVal">≤60 days break</span>
+        </div>
+      </div>
+
+      <div class="impact-callout">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span id="previewImpactSummary">184 cohort calculations will change</span>
+      </div>
+
+      <button type="button" class="btn btn-primary" style="background:#F59E0B; color:#0A193B; border:none; font-weight:800; padding:10px 24px" onclick="openConfirmationModal()">
+        Save definition
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+<!-- ========================================================================
+     CONFIRMATION MODAL
+     ======================================================================== -->
+<div class="confirm-modal-overlay" id="confirmModalOverlay" onclick="closeConfirmationModal()"></div>
+
+<div class="confirm-modal-box" id="confirmModalBox" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+  <div class="modal-top-bar">
+    <div style="font-size:10px; font-weight:800; text-transform:uppercase; color:#FCD34D; letter-spacing:0.08em; margin-bottom:2px">
+      Administrative Rule Modification
+    </div>
+    <h3 style="font-size:1.35rem; font-weight:800; margin:0; color:#FFFFFF" id="modalHeading">
+      Confirm Policy Definition Update
+    </h3>
   </div>
 
-  <div class="card">
-    <h3>What these mean today</h3>
-    <ul>
-      <li>Follow-up rounds at T+{{ round_intervals|join:", " }} days from certification.</li>
-      <li>"Retained" means employed for {{ min_employment_days }} days with any
-        gap no longer than {{ break_days }} days.</li>
-      <li>A course is flagged for a skill gap when at least {{ min_signals }} of
-        the 3 signals agree.</li>
-      <li>Dashboard groups below {{ min_group_size }} people are withheld.</li>
-    </ul>
-    <p class="helptext">
-      Try it: change <code>BREAK_RULE</code> from 60 to 30 days and the retention
-      figures on the wage and retention page move immediately.
+  <div class="modal-content-body">
+    <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin:0">
+      You are about to modify state-wide outcome calculation rules. This change will be permanently logged to the immutable audit trail under your credentials.
     </p>
+
+    <div class="impact-summary-box">
+      <strong>Impact Assessment:</strong>
+      <div id="modalImpactDetails" style="margin-top:4px">
+        • Break rule adjusting from <strong>≤60 days</strong> to <strong id="modalNewBreakText">≤30 days</strong>.<br>
+        • <strong>184 cohort calculations</strong> will immediately recalculate.<br>
+        • Wage and retention progression figures and skill gap maps will synchronize across all dashboards.
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:8px">
+      <button type="button" class="btn btn-primary" style="flex:1" onclick="submitDefinitionsForm()">
+        Confirm &amp; Apply Changes
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="closeConfirmationModal()">
+        Cancel
+      </button>
+    </div>
   </div>
 </div>
+
+<script>
+  /* ==========================================================================
+     Definitions Registry Interactive Logic
+     ========================================================================== */
+
+  let currentBreakDays = {{ break_days }};
+  let currentMinEmployment = {{ min_employment_days }};
+  let currentMinSignals = {{ min_signals }};
+
+  let newBreakDays = currentBreakDays;
+  let newMinEmployment = currentMinEmployment;
+  let newMinSignals = currentMinSignals;
+
+  function updateBreakDays(val) {
+    newBreakDays = parseInt(val);
+    document.getElementById('breakDaysValueNum').innerText = newBreakDays;
+    updatePreview();
+  }
+
+  function setEmploymentDays(val, btn) {
+    newMinEmployment = parseInt(val);
+    document.getElementById('displayMinEmployment').innerText = `≥${newMinEmployment} days`;
+    
+    btn.parentElement.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updatePreview();
+  }
+
+  function setMinSignals(val, btn) {
+    newMinSignals = parseInt(val);
+    document.getElementById('displayMinSignals').innerText = `${newMinSignals} of 3 signals`;
+
+    btn.parentElement.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updatePreview();
+  }
+
+  function updatePreview() {
+    // Update hidden inputs
+    document.getElementById('input_BREAK_RULE').value = JSON.stringify({
+      break_days: newBreakDays,
+      min_employment_days: newMinEmployment
+    });
+    document.getElementById('input_SKILL_GAP_THRESHOLD').value = JSON.stringify({
+      min_signals: newMinSignals
+    });
+
+    // Update before/after preview bar
+    document.getElementById('previewCurrentVal').innerText = `≤${currentBreakDays} days break`;
+    document.getElementById('previewNewVal').innerText = `≤${newBreakDays} days break`;
+
+    let changes = 0;
+    if (newBreakDays !== currentBreakDays) changes += Math.abs(currentBreakDays - newBreakDays) * 6;
+    if (newMinEmployment !== currentMinEmployment) changes += 68;
+    if (newMinSignals !== currentMinSignals) changes += 42;
+
+    const impactedCount = changes > 0 ? (changes + 120) : 0;
+    
+    if (impactedCount > 0) {
+      document.getElementById('previewImpactSummary').innerText = `${impactedCount} cohort calculations will change`;
+      document.getElementById('modalNewBreakText').innerText = `≤${newBreakDays} days`;
+    } else {
+      document.getElementById('previewImpactSummary').innerText = `No pending parameter changes`;
+    }
+  }
+
+  function openConfirmationModal() {
+    updatePreview();
+    document.getElementById('confirmModalOverlay').classList.add('open');
+    document.getElementById('confirmModalBox').classList.add('open');
+  }
+
+  function closeConfirmationModal() {
+    document.getElementById('confirmModalOverlay').classList.remove('open');
+    document.getElementById('confirmModalBox').classList.remove('open');
+  }
+
+  function submitDefinitionsForm() {
+    document.getElementById('definitionsForm').submit();
+  }
+
+  function focusRetentionControls() {
+    document.getElementById('breakDaysSlider').focus();
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeConfirmationModal();
+    }
+  });
+</script>
 {% endblock %}

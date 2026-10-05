@@ -1,13 +1,18 @@
-{# Minimum-grade filter (F-07). Plain GET so the URL is bookmarkable. #}
-<form method="get" class="cluster" style="margin-bottom:16px">
-  {% for key, value in request.GET.items %}
-    {% if key != 'min_grade' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}
-  {% endfor %}
-  <label for="min_grade" style="margin:0">Show outcomes graded</label>
-  <select name="min_grade" id="min_grade" data-auto-submit>
-    {% for key, label in grade_floors.items %}
-      <option value="{{ key }}" {% if key == floor %}selected{% endif %}>{{ label }}</option>
+{# Minimum Evidence Grade Filter #}
+<div class="filter-bar" style="margin-bottom:16px">
+  <form method="get" class="filter-group" style="width:100%; justify-content:space-between">
+    {% for key, value in request.GET.items %}
+      {% if key != 'min_grade' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}
     {% endfor %}
-  </select>
-  <noscript><button class="btn btn-secondary btn-sm" type="submit">Apply</button></noscript>
-</form>
+    <div class="filter-group">
+      <span class="filter-label">Evidence Cutoff:</span>
+      <select name="min_grade" id="min_grade" data-auto-submit style="max-width:260px; padding:6px 12px; font-size:var(--fs-sm)">
+        {% for key, label in grade_floors.items %}
+          <option value="{{ key }}" {% if key == floor %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <span class="helptext" style="margin:0">Filters dashboard calculations strictly to selected verification depth</span>
+    <noscript><button class="btn btn-secondary btn-sm" type="submit">Apply Floor</button></noscript>
+  </form>
+</div>

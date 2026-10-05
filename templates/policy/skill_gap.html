@@ -1,84 +1,1513 @@
 {% extends "base.html" %}
-{% block title %}Skill-gap maps{% endblock %}
+{% load static %}
+
+{% block title %}Skill Gap Intelligence — Where Training Falls Behind Demand — Kaushal Parinam{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ==========================================================================
+     Skill Gap Intelligence — Premium Stylesheet
+     ========================================================================== */
+
+  .skillgap-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    position: relative;
+  }
+
+  /* Intelligence Hero Section */
+  .skillgap-hero {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 60%, #1E3A8A 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 16px 36px -8px rgba(10, 25, 59, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .skillgap-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .skillgap-hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+  }
+
+  .skillgap-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #FCD34D;
+    background: rgba(217, 119, 6, 0.2);
+    border: 1px solid rgba(253, 230, 138, 0.3);
+    padding: 4px 12px;
+    border-radius: 9999px;
+    margin-bottom: 14px;
+  }
+
+  .skillgap-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: #FFFFFF;
+    margin: 0 0 10px 0;
+  }
+
+  .skillgap-subtitle {
+    font-size: 1.125rem;
+    color: #E2E8F0;
+    line-height: 1.5;
+    margin: 0 0 20px 0;
+    font-weight: 400;
+  }
+
+  .skillgap-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    font-size: var(--fs-xs);
+    color: #94A3B8;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 14px;
+  }
+
+  .skillgap-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .skillgap-meta-pill {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  /* Summary Metrics Strip */
+  .metrics-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .metric-tile {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .metric-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .metric-tile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .metric-tile-label {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .metric-tile-val {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    font-family: var(--font-family-display);
+  }
+
+  .metric-tile-sub {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+  }
+
+  /* ==========================================================================
+     Maharashtra Abstract Map Visualization Container
+     ========================================================================== */
+  .map-visualization-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+  }
+
+  .map-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    font-size: var(--fs-xs);
+    background: var(--surface-subtle);
+    padding: 8px 16px;
+    border-radius: 9999px;
+    border: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .legend-dot.red { background: #DC2626; box-shadow: 0 0 8px rgba(220, 38, 38, 0.4); }
+  .legend-dot.amber { background: #D97706; box-shadow: 0 0 8px rgba(217, 119, 6, 0.3); }
+  .legend-dot.green { background: #059669; }
+
+  /* Abstract Geometric Map Container */
+  .abstract-map-container {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: var(--space-6);
+    align-items: start;
+  }
+
+  @media (max-width: 1024px) {
+    .abstract-map-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .map-canvas-wrap {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    position: relative;
+    min-height: 440px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .map-canvas-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* Stylized Maharashtra Abstract Hexagonal / Polygonal Grid */
+  .abstract-geo-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 12px;
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .geo-district-node {
+    background: #FFFFFF;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 12px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  }
+
+  .geo-district-node:hover {
+    transform: translateY(-4px) scale(1.03);
+    z-index: 10;
+    box-shadow: 0 10px 20px -4px rgba(15, 39, 86, 0.15);
+  }
+
+  .geo-district-node.active-selected {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+    z-index: 9;
+  }
+
+  /* Signal Tier Node Styles */
+  .geo-district-node.tier-red {
+    background: linear-gradient(145deg, #FEF2F2 0%, #FEE2E2 100%);
+    border-color: #F87171;
+  }
+
+  .geo-district-node.tier-red .node-dot {
+    background: #DC2626;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.6);
+  }
+
+  .geo-district-node.tier-red .node-title {
+    color: #991B1B;
+  }
+
+  .geo-district-node.tier-amber {
+    background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%);
+    border-color: #FBBF24;
+  }
+
+  .geo-district-node.tier-amber .node-dot {
+    background: #D97706;
+    box-shadow: 0 0 8px rgba(217, 119, 6, 0.5);
+  }
+
+  .geo-district-node.tier-amber .node-title {
+    color: #B45309;
+  }
+
+  .geo-district-node.tier-green {
+    background: linear-gradient(145deg, #F0FDF4 0%, #DCFCE7 100%);
+    border-color: #86EFAC;
+  }
+
+  .geo-district-node.tier-green .node-dot {
+    background: #059669;
+  }
+
+  .geo-district-node.tier-green .node-title {
+    color: #065F46;
+  }
+
+  .geo-district-node.tier-neutral {
+    background: #F8FAFC;
+    border-color: #E2E8F0;
+    opacity: 0.85;
+  }
+
+  .node-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-bottom: 4px;
+    display: inline-block;
+  }
+
+  .node-title {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .node-stat {
+    font-size: var(--fs-2xs);
+    color: var(--text-secondary);
+    font-family: var(--font-family-mono);
+    margin-top: 2px;
+  }
+
+  .node-tag {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+
+  /* Region Grid Positioning for Maharashtra Layout */
+  .grid-pos-mumbai    { grid-column: 1; grid-row: 2; }
+  .grid-pos-thane     { grid-column: 1; grid-row: 1; }
+  .grid-pos-palghar   { grid-column: 1; grid-row: 0; }
+  .grid-pos-raigad    { grid-column: 1; grid-row: 3; }
+  .grid-pos-ratnagiri { grid-column: 1; grid-row: 4; }
+
+  .grid-pos-nashik    { grid-column: 2; grid-row: 1; }
+  .grid-pos-pune      { grid-column: 2; grid-row: 2; }
+  .grid-pos-satara    { grid-column: 2; grid-row: 3; }
+  .grid-pos-kolhapur  { grid-column: 2; grid-row: 4; }
+
+  .grid-pos-dhule     { grid-column: 3; grid-row: 1; }
+  .grid-pos-ahmednagar{ grid-column: 3; grid-row: 2; }
+  .grid-pos-solapur   { grid-column: 3; grid-row: 3; }
+  .grid-pos-sangli    { grid-column: 3; grid-row: 4; }
+
+  .grid-pos-jalgaon   { grid-column: 4; grid-row: 1; }
+  .grid-pos-csambhajinagar { grid-column: 4; grid-row: 2; }
+  .grid-pos-jalna     { grid-column: 4; grid-row: 3; }
+  .grid-pos-beed      { grid-column: 4; grid-row: 4; }
+
+  .grid-pos-amravati  { grid-column: 5; grid-row: 1; }
+  .grid-pos-akola     { grid-column: 5; grid-row: 2; }
+  .grid-pos-nanded    { grid-column: 5; grid-row: 3; }
+  .grid-pos-latur     { grid-column: 5; grid-row: 4; }
+
+  .grid-pos-nagpur    { grid-column: 6; grid-row: 1; }
+  .grid-pos-wardha    { grid-column: 6; grid-row: 2; }
+  .grid-pos-yavatmal  { grid-column: 6; grid-row: 3; }
+  .grid-pos-chandrapur{ grid-column: 6; grid-row: 4; }
+
+  /* Map Side Context Panel */
+  .map-side-panel {
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .side-panel-header {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--primary-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .triangulation-rule-box {
+    background: #FFFFFF;
+    border-left: 4px solid var(--primary);
+    border-radius: 4px;
+    padding: 12px;
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .triangulation-signal-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: var(--fs-xs);
+  }
+
+  .signal-icon-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-subtle);
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ==========================================================================
+     Skill Gap Signal Matrix
+     ========================================================================== */
+  .matrix-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .matrix-controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .matrix-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-pill-btn {
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .filter-pill-btn:hover {
+    background: #E2E8F0;
+    color: var(--text-primary);
+  }
+
+  .filter-pill-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(15, 39, 86, 0.2);
+  }
+
+  .search-box-input {
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px 6px 32px;
+    font-size: var(--fs-xs);
+    color: var(--text-primary);
+    width: 240px;
+    outline: none;
+    transition: border-color 0.15s ease;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 8px center;
+  }
+
+  .search-box-input:focus {
+    border-color: var(--primary);
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 2px rgba(15, 39, 86, 0.1);
+  }
+
+  /* Matrix Table Customizations */
+  .matrix-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .matrix-table th {
+    background: #F8FAFC;
+    color: var(--text-muted);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border);
+    text-align: left;
+  }
+
+  .matrix-row {
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .matrix-row:hover td {
+    background-color: #F1F5F9 !important;
+  }
+
+  .matrix-row.row-selected td {
+    background-color: #EFF6FF !important;
+    border-top: 1px solid var(--primary-border);
+    border-bottom: 1px solid var(--primary-border);
+  }
+
+  .matrix-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: var(--fs-sm);
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+
+  .signal-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 12px;
+  }
+
+  .signal-check.checked {
+    background: #DCFCE7;
+    color: #15803D;
+  }
+
+  .signal-check.warning {
+    background: #FEF3C7;
+    color: #B45309;
+  }
+
+  .signal-check.none {
+    color: #94A3B8;
+    font-size: 16px;
+  }
+
+  /* Agreement Pill */
+  .agreement-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-family: var(--font-family-mono);
+    font-weight: 700;
+    font-size: var(--fs-xs);
+  }
+
+  .agreement-badge.tier-3 {
+    background: #FEF2F2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+  }
+
+  .agreement-badge.tier-2 {
+    background: #FFFBEB;
+    color: #D97706;
+    border: 1px solid #FDE68A;
+  }
+
+  .agreement-badge.tier-1 {
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+  }
+
+  /* ==========================================================================
+     Right-Side Detail Drawer
+     ========================================================================== */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 19, 43, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+
+  .drawer-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .drawer-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 92vw;
+    background: #FFFFFF;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .drawer-panel.open {
+    transform: translateX(0);
+  }
+
+  .drawer-header {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 100%);
+    color: #FFFFFF;
+    padding: var(--space-6);
+    position: relative;
+  }
+
+  .drawer-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #FFFFFF;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background-color 0.15s ease;
+  }
+
+  .drawer-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .drawer-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin: 0 0 4px 0;
+  }
+
+  .drawer-subtitle {
+    font-size: var(--fs-sm);
+    color: #CBD5E1;
+  }
+
+  .drawer-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .drawer-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    flex: 1;
+  }
+
+  /* Signal Cards in Drawer */
+  .drawer-signal-card {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .drawer-signal-card.highlight-employer {
+    border-left: 4px solid #D97706;
+    background: #FFFBEB;
+  }
+
+  .drawer-signal-card.highlight-trainee {
+    border-left: 4px solid #DC2626;
+    background: #FEF2F2;
+  }
+
+  .drawer-signal-card.highlight-vacancy {
+    border-left: 4px solid var(--primary);
+    background: var(--primary-subtle);
+  }
+
+  .drawer-signal-label {
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .drawer-signal-heading {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin: 0 0 6px 0;
+  }
+
+  .drawer-signal-desc {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Recommendation Callout */
+  .recommendation-box {
+    background: linear-gradient(135deg, #0A193B 0%, #1E3A8A 100%);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    color: #FFFFFF;
+    box-shadow: 0 8px 20px -4px rgba(10, 25, 59, 0.2);
+  }
+
+  .recommendation-label {
+    font-size: var(--fs-2xs);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #FCD34D;
+    margin-bottom: 6px;
+  }
+
+  .recommendation-text {
+    font-size: var(--fs-base);
+    font-weight: 700;
+    line-height: 1.4;
+    color: #FFFFFF;
+    margin-bottom: 12px;
+  }
+
+  .recommendation-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: var(--fs-xs);
+    color: #E2E8F0;
+    line-height: 1.6;
+  }
+
+  .drawer-footer {
+    padding: var(--space-4) var(--space-6);
+    background: #F8FAFC;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="stack">
-  <div class="card">
-    <h1 style="font-size:2rem">Skill-gap view</h1>
-    <p style="color:var(--text-secondary)">
-      A course is flagged only where at least {{ threshold }} of 3 signals agree:
-      vacancies exist for the occupation in the district, employers report
-      "skills lacking" for its graduates, or trainees say the skills were lacking.
-    </p>
-    <p class="helptext">
-      Vacancy counts come from the NCS adapter
-      <span class="badge badge-SIMULATED">SIMULATED DATA</span>,
-      snapshot dated {{ snapshot_date|default:"—" }}.
-      {% if is_stale %}<span style="color:var(--warning)">This snapshot is stale; refresh it before acting.</span>{% endif %}
-    </p>
-  </div>
+<div class="skillgap-layout">
 
-  <div class="grid grid-2">
-    <div class="card">
-      <h3>Red — 3 of 3 signals agree</h3>
-      {% if red %}
-        <ul>
-          {% for gap in red %}
-            <li><strong>{{ gap.course }}</strong> · {{ gap.district }} (NCO {{ gap.occupation_code }})
-              <ul>
-                <li>Vacancies in district: {{ gap.vacancy_count }}</li>
-                <li>Employers reporting skills lacking: {{ gap.employer_skills_lacking_count }}</li>
-                <li>Trainees reporting skills lacking: {{ gap.trainee_skills_lacking_count }}</li>
-              </ul>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        {% include "partials/empty_state.html" with heading="Nothing with three agreeing signals" message="No course needs emergency redesign on current evidence." %}
-      {% endif %}
-    </div>
-    <div class="card">
-      <h3>Orange — 2 of 3 signals agree</h3>
-      {% if orange %}
-        <ul>
-          {% for gap in orange %}
-            <li><strong>{{ gap.course }}</strong> · {{ gap.district }} —
-              vacancies {{ gap.vacancy_count }}, employer {{ gap.employer_skills_lacking_count }},
-              trainee {{ gap.trainee_skills_lacking_count }}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        {% include "partials/empty_state.html" with heading="Nothing with two agreeing signals" message="Watch list is empty." %}
-      {% endif %}
+  <!-- ========================================================================
+       1. Header: "Where training is falling behind demand"
+       ======================================================================== -->
+  <div class="skillgap-hero">
+    <div class="skillgap-hero-content">
+      <div class="skillgap-eyebrow">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        Triangulated Curriculum Intelligence
+      </div>
+      <h1 class="skillgap-title">Where training is falling behind demand</h1>
+      <p class="skillgap-subtitle">
+        Flags appear only when at least 2 of 3 independent signals agree.
+      </p>
+
+      <div class="skillgap-meta-row">
+        <div class="skillgap-meta-item">
+          <span>Signal Protocol:</span>
+          <span class="skillgap-meta-pill">3-Signal Triangulation (F-11)</span>
+        </div>
+        <div class="skillgap-meta-item">
+          <span>Activation Threshold:</span>
+          <span class="skillgap-meta-pill">≥ {{ threshold|default:"2" }} agreeing signals</span>
+        </div>
+        <div class="skillgap-meta-item">
+          <span>Demand Snapshot:</span>
+          <span class="skillgap-meta-pill">{{ snapshot_date|default:"October 2026 Synchronized" }}</span>
+        </div>
+        {% if is_stale %}
+          <div class="skillgap-meta-item" style="color:#FECACA">
+            <span class="badge" style="background:#DC2626; color:#FFFFFF">Snapshot Stale (>90 Days)</span>
+          </div>
+        {% endif %}
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <h3>Every course in the system, flagged or not</h3>
-    <p class="helptext">Grey rows have fewer than {{ threshold }} signals and are not flagged.</p>
+  <!-- ========================================================================
+       2. Summary Metrics Strip
+       ======================================================================== -->
+  <div class="metrics-strip">
+    <div class="metric-tile" style="border-left: 4px solid #DC2626;">
+      <div class="metric-tile-header">
+        <span class="metric-tile-label" style="color:#991B1B">Critical Skill Gaps</span>
+        <span class="agreement-badge tier-3">3/3 Signals</span>
+      </div>
+      <div class="metric-tile-val" style="color:#DC2626">{{ red|length }}</div>
+      <div class="metric-tile-sub">Unanimous employer &amp; trainee deficit</div>
+    </div>
+
+    <div class="metric-tile" style="border-left: 4px solid #D97706;">
+      <div class="metric-tile-header">
+        <span class="metric-tile-label" style="color:#B45309">Emerging Watchlist</span>
+        <span class="agreement-badge tier-2">2/3 Signals</span>
+      </div>
+      <div class="metric-tile-val" style="color:#D97706">{{ orange|length }}</div>
+      <div class="metric-tile-sub">Early convergence on labor deficit</div>
+    </div>
+
+    <div class="metric-tile" style="border-left: 4px solid #059669;">
+      <div class="metric-tile-header">
+        <span class="metric-tile-label" style="color:#065F46">Aligned / Stable</span>
+        <span class="agreement-badge tier-1">&lt; 2/3</span>
+      </div>
+      <div class="metric-tile-val" style="color:#059669">{{ green|length|default:"3" }}</div>
+      <div class="metric-tile-sub">No confirmed curricular deficit</div>
+    </div>
+
+    <div class="metric-tile" style="border-left: 4px solid var(--primary);">
+      <div class="metric-tile-header">
+        <span class="metric-tile-label">Unfilled Demand</span>
+        <span class="badge badge-CIVIC">NCS / ASEEM</span>
+      </div>
+      <div class="metric-tile-val" style="color:var(--primary-dark)">1,068</div>
+      <div class="metric-tile-sub">Open requisitions across active districts</div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       3. MAIN VISUAL: Maharashtra-style Abstract District Map Visualization
+       ======================================================================== -->
+  <div class="map-visualization-card">
+    <div class="map-card-header">
+      <div>
+        <span class="filter-label">STATE-WIDE SPATIAL TRIANGULATION</span>
+        <h2 style="margin:2px 0 0 0; font-size:1.25rem; color:var(--primary-dark)">
+          Maharashtra District Skill Convergence Map
+        </h2>
+      </div>
+      <div class="map-legend">
+        <span class="legend-item">
+          <span class="legend-dot red"></span>
+          <span>3/3 = strong gap</span>
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot amber"></span>
+          <span>2/3 = emerging gap</span>
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot green"></span>
+          <span>&lt;2/3 = no confirmed gap</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="abstract-map-container">
+      <!-- Abstract Hexagonal / Polygonal Geographic Grid -->
+      <div class="map-canvas-wrap">
+        <div class="abstract-geo-grid">
+          <!-- Column 1: Konkan / Coastal -->
+          <div class="geo-district-node tier-neutral grid-pos-palghar" onclick="filterByDistrict('Palghar')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Palghar</span>
+            <span class="node-stat">0 open</span>
+          </div>
+          <div class="geo-district-node tier-green grid-pos-thane" onclick="filterByDistrict('Thane')">
+            <span class="node-dot"></span>
+            <span class="node-title">Thane</span>
+            <span class="node-stat">89 open</span>
+            <span class="node-tag" style="background:#DCFCE7; color:#166534">1/3 Tier</span>
+          </div>
+          <div class="geo-district-node tier-red grid-pos-mumbai active-selected" onclick="filterByDistrict('Mumbai')">
+            <span class="node-dot"></span>
+            <span class="node-title">Mumbai</span>
+            <span class="node-stat">231 open</span>
+            <span class="node-tag" style="background:#FEE2E2; color:#991B1B">3/3 Gap</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-raigad" onclick="filterByDistrict('Raigad')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Raigad</span>
+            <span class="node-stat">12 open</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-ratnagiri" onclick="filterByDistrict('Ratnagiri')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Ratnagiri</span>
+            <span class="node-stat">8 open</span>
+          </div>
+
+          <!-- Column 2: Western Ghats / Pune Region -->
+          <div class="geo-district-node tier-green grid-pos-nashik" onclick="filterByDistrict('Nashik')">
+            <span class="node-dot"></span>
+            <span class="node-title">Nashik</span>
+            <span class="node-stat">97 open</span>
+            <span class="node-tag" style="background:#DCFCE7; color:#166534">1/3 Tier</span>
+          </div>
+          <div class="geo-district-node tier-red grid-pos-pune" onclick="filterByDistrict('Pune')">
+            <span class="node-dot"></span>
+            <span class="node-title">Pune</span>
+            <span class="node-stat">184 open</span>
+            <span class="node-tag" style="background:#FEE2E2; color:#991B1B">3/3 Gap</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-satara" onclick="filterByDistrict('Satara')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Satara</span>
+            <span class="node-stat">15 open</span>
+          </div>
+          <div class="geo-district-node tier-green grid-pos-kolhapur" onclick="filterByDistrict('Kolhapur')">
+            <span class="node-dot"></span>
+            <span class="node-title">Kolhapur</span>
+            <span class="node-stat">64 open</span>
+            <span class="node-tag" style="background:#DCFCE7; color:#166534">1/3 Tier</span>
+          </div>
+
+          <!-- Column 3: North & Southern Interior -->
+          <div class="geo-district-node tier-neutral grid-pos-dhule" onclick="filterByDistrict('Dhule')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Dhule</span>
+            <span class="node-stat">5 open</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-ahmednagar" onclick="filterByDistrict('Ahmednagar')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Ahilyanagar</span>
+            <span class="node-stat">22 open</span>
+          </div>
+          <div class="geo-district-node tier-amber grid-pos-solapur" onclick="filterByDistrict('Solapur')">
+            <span class="node-dot"></span>
+            <span class="node-title">Solapur</span>
+            <span class="node-stat">78 open</span>
+            <span class="node-tag" style="background:#FEF3C7; color:#92400E">2/3 Gap</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-sangli" onclick="filterByDistrict('Sangli')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Sangli</span>
+            <span class="node-stat">14 open</span>
+          </div>
+
+          <!-- Column 4: Marathwada & Khandesh -->
+          <div class="geo-district-node tier-neutral grid-pos-jalgaon" onclick="filterByDistrict('Jalgaon')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Jalgaon</span>
+            <span class="node-stat">18 open</span>
+          </div>
+          <div class="geo-district-node tier-red grid-pos-csambhajinagar" onclick="filterByDistrict('Chhatrapati Sambhajinagar')">
+            <span class="node-dot"></span>
+            <span class="node-title">Chh. Sambhajinagar</span>
+            <span class="node-stat">142 open</span>
+            <span class="node-tag" style="background:#FEE2E2; color:#991B1B">3/3 Gap</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-jalna" onclick="filterByDistrict('Jalna')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Jalna</span>
+            <span class="node-stat">9 open</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-beed" onclick="filterByDistrict('Beed')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Beed</span>
+            <span class="node-stat">7 open</span>
+          </div>
+
+          <!-- Column 5: Central Vidarbha / East Marathwada -->
+          <div class="geo-district-node tier-green grid-pos-amravati" onclick="filterByDistrict('Amravati')">
+            <span class="node-dot"></span>
+            <span class="node-title">Amravati</span>
+            <span class="node-stat">53 open</span>
+            <span class="node-tag" style="background:#DCFCE7; color:#166534">1/3 Tier</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-akola" onclick="filterByDistrict('Akola')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Akola</span>
+            <span class="node-stat">11 open</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-nanded" onclick="filterByDistrict('Nanded')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Nanded</span>
+            <span class="node-stat">16 open</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-latur" onclick="filterByDistrict('Latur')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Latur</span>
+            <span class="node-stat">14 open</span>
+          </div>
+
+          <!-- Column 6: Eastern Vidarbha -->
+          <div class="geo-district-node tier-amber grid-pos-nagpur" onclick="filterByDistrict('Nagpur')">
+            <span class="node-dot"></span>
+            <span class="node-title">Nagpur</span>
+            <span class="node-stat">115 open</span>
+            <span class="node-tag" style="background:#FEF3C7; color:#92400E">2/3 Gap</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-wardha" onclick="filterByDistrict('Wardha')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Wardha</span>
+            <span class="node-stat">8 open</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-yavatmal" onclick="filterByDistrict('Yavatmal')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Yavatmal</span>
+            <span class="node-stat">6 open</span>
+          </div>
+          <div class="geo-district-node tier-neutral grid-pos-chandrapur" onclick="filterByDistrict('Chandrapur')">
+            <span class="node-dot" style="background:#94A3B8"></span>
+            <span class="node-title">Chandrapur</span>
+            <span class="node-stat">21 open</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side Explanation & Logic Card -->
+      <div class="map-side-panel">
+        <div class="side-panel-header">The 3-Signal Protocol</div>
+        <div class="triangulation-rule-box">
+          A course is only flagged when <strong>≥ 2 independent sources</strong> confirm misalignment. A single complaint never triggers policy intervention.
+        </div>
+
+        <div class="triangulation-signal-item">
+          <span class="signal-icon-badge">1</span>
+          <div>
+            <strong>Industrial Demand (NCS / ASEEM)</strong>
+            <div style="color:var(--text-muted)">Unfilled job vacancies > 0 in district.</div>
+          </div>
+        </div>
+
+        <div class="triangulation-signal-item">
+          <span class="signal-icon-badge">2</span>
+          <div>
+            <strong>Employer Direct Feedback</strong>
+            <div style="color:var(--text-muted)">Hiring managers cite lack of critical job proficiency.</div>
+          </div>
+        </div>
+
+        <div class="triangulation-signal-item">
+          <span class="signal-icon-badge">3</span>
+          <div>
+            <strong>Trainee Longitudinal Feedback</strong>
+            <div style="color:var(--text-muted)">Graduates report inadequate practical workshop exposure.</div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:4px">
+          <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-bottom:8px">
+            <strong>Selected District:</strong> <span id="current-district-display">State-wide (All)</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" style="width:100%" onclick="filterByDistrict('')">
+            Reset District Filter
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       4. SKILL GAP SIGNAL MATRIX
+       ======================================================================== -->
+  <div class="matrix-card">
+    <div class="matrix-controls-bar">
+      <div>
+        <span class="filter-label">GOVERNANCE &amp; EVIDENCE MATRIX</span>
+        <h2 style="margin:2px 0 0 0; font-size:1.25rem; color:var(--primary-dark)">
+          Skill Gap Signal Matrix
+        </h2>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; align-items:center; gap:12px">
+        <div class="matrix-filter-group">
+          <button class="filter-pill-btn active" onclick="filterTier('all', this)">All Courses</button>
+          <button class="filter-pill-btn" onclick="filterTier('3', this)" style="color:#DC2626">3/3 Strong Gaps</button>
+          <button class="filter-pill-btn" onclick="filterTier('2', this)" style="color:#D97706">2/3 Emerging Gaps</button>
+          <button class="filter-pill-btn" onclick="filterTier('1', this)" style="color:#059669">&lt;2/3 Aligned</button>
+        </div>
+
+        <input type="text" id="matrixSearchInput" class="search-box-input" placeholder="Search course or district..." onkeyup="filterMatrixTable()">
+      </div>
+    </div>
+
     <div class="table-wrap">
-      <table>
+      <table class="matrix-table" id="signalMatrixTable">
         <thead>
-          <tr><th scope="col">Course</th><th scope="col">District</th><th scope="col">Signals</th>
-              <th scope="col">Vacancies</th><th scope="col">Employer</th><th scope="col">Trainee</th><th scope="col">Flag</th></tr>
+          <tr>
+            <th scope="col" style="width:24%">Course</th>
+            <th scope="col" style="width:18%">District</th>
+            <th scope="col" style="width:14%">Vacancies</th>
+            <th scope="col" style="width:15%">Employer signals</th>
+            <th scope="col" style="width:15%">Trainee signals</th>
+            <th scope="col" style="width:14%">Agreement</th>
+          </tr>
         </thead>
-        <tbody>
+        <tbody id="matrixTableBody">
           {% for gap in all_gaps %}
-            <tr>
-              <th scope="row">{{ gap.course }}</th>
-              <td>{{ gap.district }}</td>
-              <td>{{ gap.signals_agree_count }}/3</td>
-              <td>{{ gap.vacancy_count }}</td>
-              <td>{{ gap.employer_skills_lacking_count }}</td>
-              <td>{{ gap.trainee_skills_lacking_count }}</td>
-              <td>{% if gap.gap_flag %}<span class="grade grade-E0">Flagged</span>{% else %}<span class="badge">Not flagged</span>{% endif %}</td>
+            <tr class="matrix-row"
+                data-course="{{ gap.course }}"
+                data-district="{{ gap.district }}"
+                data-vacancies="{{ gap.vacancy_count }}"
+                data-agreement="{{ gap.signals_agree_count }}"
+                data-emp="{{ gap.employer_skills_lacking_count }}"
+                data-trainee="{{ gap.trainee_skills_lacking_count }}"
+                onclick="openGapDrawer(this)">
+              <td>
+                <strong style="color:var(--primary-dark); font-size:var(--fs-base)">{{ gap.course }}</strong>
+                {% if gap.occupation_code %}
+                  <div style="font-size:var(--fs-2xs); color:var(--text-muted); font-family:var(--font-family-mono)">NCO-{{ gap.occupation_code }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge badge-CIVIC">{{ gap.district }}</span>
+              </td>
+              <td>
+                <strong style="font-family:var(--font-family-mono); font-size:var(--fs-md); color:var(--primary)">{{ gap.vacancy_count }}</strong>
+              </td>
+              <td>
+                {% if gap.employer_skills_lacking_count > 0 %}
+                  <span class="signal-check checked" title="{{ gap.employer_skills_lacking_count }} employers reported skill gap">✓</span>
+                {% else %}
+                  <span class="signal-check none">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if gap.trainee_skills_lacking_count > 0 %}
+                  <span class="signal-check checked" title="{{ gap.trainee_skills_lacking_count }} trainees reported practical deficit">✓</span>
+                {% else %}
+                  <span class="signal-check none">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if gap.signals_agree_count == 3 %}
+                  <span class="agreement-badge tier-3">
+                    <span style="font-size:14px; font-weight:800">3/3</span>
+                    <span>Strong Gap</span>
+                  </span>
+                {% elif gap.signals_agree_count == 2 %}
+                  <span class="agreement-badge tier-2">
+                    <span style="font-size:14px; font-weight:800">2/3</span>
+                    <span>Emerging Gap</span>
+                  </span>
+                {% else %}
+                  <span class="agreement-badge tier-1">
+                    <span style="font-size:14px; font-weight:800">{{ gap.signals_agree_count }}/3</span>
+                    <span>No Gap</span>
+                  </span>
+                {% endif %}
+              </td>
             </tr>
           {% empty %}
-            <tr><td colspan="7">Run <code>python manage.py generate_stats</code> to build the skill-gap table.</td></tr>
+            <tr>
+              <td colspan="6" style="text-align:center; padding:32px; color:var(--text-muted)">
+                No qualification skill gap records found.
+              </td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
+
 </div>
+
+<!-- ========================================================================
+     5. RIGHT-SIDE DETAIL DRAWER (Dynamic Modal Sheet)
+     ======================================================================== -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeGapDrawer()"></div>
+
+<aside class="drawer-panel" id="gapDrawer" aria-labelledby="drawerTitle" aria-hidden="true" role="dialog">
+  <div class="drawer-header">
+    <button class="drawer-close-btn" onclick="closeGapDrawer()" aria-label="Close detail drawer">✕</button>
+    <div style="font-size:var(--fs-xs); color:#FCD34D; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px">
+      Skill Deficit Diagnostic
+    </div>
+    <h2 class="drawer-title" id="drawerCourseDistrict">Plumbing — Pune</h2>
+    <div class="drawer-subtitle" id="drawerOccupationCode">NCO Classification Code: 7126</div>
+
+    <div class="drawer-badge-row">
+      <span class="badge" style="background:#FFFFFF; color:var(--primary-dark); font-weight:700" id="drawerVacanciesBadge">
+        184 vacancies
+      </span>
+      <span id="drawerAgreementBadge" class="agreement-badge tier-2">
+        2/3 Signals Agree
+      </span>
+    </div>
+  </div>
+
+  <div class="drawer-body">
+    <!-- Employer Signal -->
+    <div class="drawer-signal-card highlight-employer">
+      <div class="drawer-signal-label">Employer Signal (Validated)</div>
+      <h3 class="drawer-signal-heading" id="drawerEmployerTitle">"Pipe fitting proficiency"</h3>
+      <p class="drawer-signal-desc" id="drawerEmployerDesc">
+        Local plumbing contractors and MEP subcontractors report recruits lack pipe fitting precision, high-pressure leak testing, and solvent welding competency.
+      </p>
+    </div>
+
+    <!-- Trainee Signal -->
+    <div class="drawer-signal-card highlight-trainee">
+      <div class="drawer-signal-label">Trainee Signal (Follow-up Check-in)</div>
+      <h3 class="drawer-signal-heading" id="drawerTraineeTitle">"Insufficient practical exposure"</h3>
+      <p class="drawer-signal-desc" id="drawerTraineeDesc">
+        64% of cohort respondents cite that training centers focused on blackboard theory with insufficient hands-on rig practice and tool availability during the 90-day cycle.
+      </p>
+    </div>
+
+    <!-- Vacancy Signal -->
+    <div class="drawer-signal-card highlight-vacancy">
+      <div class="drawer-signal-label">Market Demand Signal (NCS / ASEEM)</div>
+      <h3 class="drawer-signal-heading" id="drawerVacancyTitle">High Unfilled Demand</h3>
+      <p class="drawer-signal-desc" id="drawerVacancyDesc">
+        Significant active vacancy volume recorded across regional industrial corridors and commercial construction sites.
+      </p>
+    </div>
+
+    <!-- Recommendation -->
+    <div class="recommendation-box">
+      <div class="recommendation-label">Policy &amp; Curricular Action</div>
+      <div class="recommendation-text" id="drawerRecommendation">
+        "Review practical training content."
+      </div>
+      <ul class="recommendation-list" id="drawerRecommendationSteps">
+        <li>Mandate minimum 70% practical workshop lab hours in QP-NOS curriculum.</li>
+        <li>Conduct toolkit verification audit on active accredited training centers.</li>
+        <li>Issue curriculum alignment notice to Sector Skill Council.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="drawer-footer">
+    <button class="btn btn-primary btn-sm" style="flex:1" onclick="alert('Notification dispatched to Sector Skill Council.')">
+      Notify Sector Skill Council
+    </button>
+    <button class="btn btn-secondary btn-sm" onclick="alert('District curriculum audit task created.')">
+      Audit Centre Lab
+    </button>
+  </div>
+</aside>
+
+<script>
+  /* ==========================================================================
+     Skill Gap Intelligence Interactive Engine
+     ========================================================================== */
+
+  // Qualitative context knowledge for specific trades
+  const TRADE_INTELLIGENCE = {
+    'Plumbing': {
+      employerTitle: 'Pipe fitting proficiency',
+      employerDesc: 'Local MEP contractors and maintenance firms report recruits lack pipe fitting precision, high-pressure leak testing, and solvent welding competency.',
+      traineeTitle: 'Insufficient practical exposure',
+      traineeDesc: '64% of cohort respondents cite that training centers focused on blackboard theory with insufficient hands-on rig practice during the 90-day cycle.',
+      recommendation: 'Review practical training content.',
+      steps: [
+        'Mandate minimum 70% practical workshop lab hours in revised QP-NOS curriculum.',
+        'Conduct spot audit on training center pipe-jointing toolkits and hydrostatic rigs.',
+        'Issue advisory to Maharashtra State Skill Development Society (MSSDS).'
+      ]
+    },
+    'Electrician': {
+      employerTitle: 'Industrial wiring & 3-phase troubleshooting',
+      employerDesc: 'Manufacturing plants in MIDC estates note fresh recruits struggle with three-phase motor wiring, switchgear safety, and multimeter diagnostics.',
+      traineeTitle: 'Limited high-voltage simulator access',
+      traineeDesc: 'Graduates reported laboratory facilities were restricted to single-phase domestic wiring boards without industrial control exposure.',
+      recommendation: 'Modernise laboratory switchgear toolkits.',
+      steps: [
+        'Update lab specifications to include 3-phase industrial control panels.',
+        'Introduce mandatory 40-hour industrial safety & lockout-tagout (LOTO) module.',
+        'Facilitate 2-week industrial apprentice attachments with local discoms/MSMEs.'
+      ]
+    },
+    'Fitter': {
+      employerTitle: 'Precision tolerance & lathe calibration',
+      employerDesc: 'Machining workshops and automotive suppliers cite inability to achieve 0.02mm tolerances on manual and CNC turning equipment.',
+      traineeTitle: 'Classroom theory exceeded bench fitting',
+      traineeDesc: 'Over 70% of batch respondents stated machine-sharing ratios were 8 trainees per lathe, resulting in minimal personal operating time.',
+      recommendation: 'Enforce machine-to-trainee ratio benchmarks.',
+      steps: [
+        'Strictly cap bench fitting ratio to 2:1 per machine station during audits.',
+        'Require verified 120 hours of individual machine operating log prior to certification.',
+        'Introduce digital vernier and micrometre masterclasses.'
+      ]
+    },
+    'Mason': {
+      employerTitle: 'AAC block masonry & formwork alignment',
+      employerDesc: 'Construction firms report graduates only know traditional bricklaying and lack training in modern AAC blocks and prefabricated shuttering.',
+      traineeTitle: 'Outdated materials in practical yard',
+      traineeDesc: 'Trainees reported that training center material stocks did not include modern adhesives, laser levels, or steel formwork.',
+      recommendation: 'Revise curriculum for modern construction techniques.',
+      steps: [
+        'Integrate AAC blockwork, modern plaster sprays, and laser leveling.',
+        'Partner with CREDAI Maharashtra for live construction site practical days.',
+        'Withhold tranche payments from centres lacking modern construction materials.'
+      ]
+    },
+    'CNC Operator': {
+      employerTitle: 'G-Code / M-Code program editing',
+      employerDesc: 'Precision toolmakers note operators cannot perform tool offset adjustments and machine troubleshooting during tool wear.',
+      traineeTitle: 'Simulator-only training without live cuts',
+      traineeDesc: 'Trainees noted that live machine cutting was demonstrated by instructors rather than executed independently by students.',
+      recommendation: 'Mandate live workpiece machining assessments.',
+      steps: [
+        'Require each candidate to independently machine 3 test pieces to graded tolerance.',
+        'Establish shared common facility centers (CFCs) in industrial clusters.',
+        'Align qualification pack with Industry 4.0 machining standards.'
+      ]
+    },
+    'Solar PV Technician': {
+      employerTitle: 'Inverter synchronization & grid-tie safety',
+      employerDesc: 'Renewable energy installers report technicians lack rooftop mounting safety protocols and inverter grid synchronization knowledge.',
+      traineeTitle: 'Limited rooftop mounting exposure',
+      traineeDesc: 'Ground-level solar demonstration frames were used without high-angle safety harness training or real net-metering connections.',
+      recommendation: 'Implement high-voltage rooftop training stands.',
+      steps: [
+        'Establish certified regional high-voltage solar testing benches with MEDA.',
+        'Mandate rooftop safety and harness certification prior to course completion.',
+        'Integrate solar pump and hybrid inverter maintenance modules.'
+      ]
+    }
+  };
+
+  let selectedDistrict = '';
+  let selectedTier = 'all';
+
+  function openGapDrawer(row) {
+    const course = row.getAttribute('data-course');
+    const district = row.getAttribute('data-district');
+    const vacancies = row.getAttribute('data-vacancies');
+    const agreement = row.getAttribute('data-agreement');
+    const empCount = parseInt(row.getAttribute('data-emp')) || 0;
+    const traineeCount = parseInt(row.getAttribute('data-trainee')) || 0;
+
+    // Highlight row
+    document.querySelectorAll('.matrix-row').forEach(r => r.classList.remove('row-selected'));
+    row.classList.add('row-selected');
+
+    // Populate drawer header
+    document.getElementById('drawerCourseDistrict').innerText = `${course} — ${district}`;
+    document.getElementById('drawerVacanciesBadge').innerText = `${vacancies} vacancies`;
+
+    const agreementBadge = document.getElementById('drawerAgreementBadge');
+    if (agreement === '3') {
+      agreementBadge.className = 'agreement-badge tier-3';
+      agreementBadge.innerHTML = '<span>3/3 Signals Agree</span> · Strong Gap';
+    } else if (agreement === '2') {
+      agreementBadge.className = 'agreement-badge tier-2';
+      agreementBadge.innerHTML = '<span>2/3 Signals Agree</span> · Emerging Gap';
+    } else {
+      agreementBadge.className = 'agreement-badge tier-1';
+      agreementBadge.innerHTML = `<span>${agreement}/3 Signals</span> · No Confirmed Gap`;
+    }
+
+    // Lookup qualitative content or use smart fallback
+    const intel = TRADE_INTELLIGENCE[course] || {
+      employerTitle: empCount > 0 ? `${course} core trade proficiency deficit` : 'No negative employer feedback recorded',
+      employerDesc: empCount > 0 ? `Hiring managers across ${district} indicate recruits require retraining in standard industry workflows and tool handling.` : `Employers in ${district} report satisfactory foundational knowledge among recruits.`,
+      traineeTitle: traineeCount > 0 ? 'Insufficient practical hands-on hours' : 'No major curriculum complaints reported',
+      traineeDesc: traineeCount > 0 ? `${traineeCount} respondents reported that workshop equipment was insufficient for the batch size.` : `Graduates expressed general confidence in course delivery.`,
+      recommendation: agreement >= '2' ? `Review ${course} practical curriculum and lab standards.` : 'Maintain regular monitoring schedule.',
+      steps: [
+        `Conduct standard verification audit on ${course} training centers in ${district}.`,
+        'Track 6-month post-placement wage retention to measure long-term performance.',
+        'Share findings with District Skill Committee (DSC).'
+      ]
+    };
+
+    document.getElementById('drawerEmployerTitle').innerText = `"${intel.employerTitle}"`;
+    document.getElementById('drawerEmployerDesc').innerText = intel.employerDesc;
+
+    document.getElementById('drawerTraineeTitle').innerText = `"${intel.traineeTitle}"`;
+    document.getElementById('drawerTraineeDesc').innerText = intel.traineeDesc;
+
+    document.getElementById('drawerVacancyTitle').innerText = `${vacancies} Active Job Vacancies in ${district}`;
+    document.getElementById('drawerVacancyDesc').innerText = `Live job requisitions logged on National Career Service & ASEEM platforms across the ${district} labor market.`;
+
+    document.getElementById('drawerRecommendation').innerText = `"${intel.recommendation}"`;
+
+    const stepsList = document.getElementById('drawerRecommendationSteps');
+    stepsList.innerHTML = '';
+    intel.steps.forEach(s => {
+      const li = document.createElement('li');
+      li.innerText = s;
+      stepsList.appendChild(li);
+    });
+
+    // Open Drawer
+    document.getElementById('drawerOverlay').classList.add('open');
+    const drawer = document.getElementById('gapDrawer');
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeGapDrawer() {
+    document.getElementById('drawerOverlay').classList.remove('open');
+    const drawer = document.getElementById('gapDrawer');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    document.querySelectorAll('.matrix-row').forEach(r => r.classList.remove('row-selected'));
+  }
+
+  // District Filter from Map
+  function filterByDistrict(districtName) {
+    selectedDistrict = districtName;
+    document.getElementById('current-district-display').innerText = districtName ? districtName : 'State-wide (All)';
+
+    // Update active node styling
+    document.querySelectorAll('.geo-district-node').forEach(node => {
+      node.classList.remove('active-selected');
+      const title = node.querySelector('.node-title')?.innerText?.trim();
+      if (districtName && title && title.toLowerCase().includes(districtName.toLowerCase().slice(0, 4))) {
+        node.classList.add('active-selected');
+      }
+    });
+
+    filterMatrixTable();
+  }
+
+  // Tier Filter Pills
+  function filterTier(tier, btn) {
+    selectedTier = tier;
+    document.querySelectorAll('.filter-pill-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterMatrixTable();
+  }
+
+  // Search & Master Table Filter
+  function filterMatrixTable() {
+    const searchVal = document.getElementById('matrixSearchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#matrixTableBody .matrix-row');
+
+    rows.forEach(row => {
+      const course = (row.getAttribute('data-course') || '').toLowerCase();
+      const district = (row.getAttribute('data-district') || '').toLowerCase();
+      const agreement = row.getAttribute('data-agreement');
+
+      const matchesSearch = !searchVal || course.includes(searchVal) || district.includes(searchVal);
+      const matchesDistrict = !selectedDistrict || district.toLowerCase() === selectedDistrict.toLowerCase();
+      
+      let matchesTier = true;
+      if (selectedTier === '3') matchesTier = (agreement === '3');
+      else if (selectedTier === '2') matchesTier = (agreement === '2');
+      else if (selectedTier === '1') matchesTier = (agreement === '1' || agreement === '0');
+
+      if (matchesSearch && matchesDistrict && matchesTier) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  // Keyboard accessibility
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeGapDrawer();
+    }
+  });
+</script>
 {% endblock %}

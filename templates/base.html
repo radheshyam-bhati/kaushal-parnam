@@ -3,50 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Kaushal Parinam{% endblock %} — Kaushal Parinam (Skill Outcomes)</title>
-  <meta name="description" content="Consent-based longitudinal outcome tracking for skilling programmes. A layer on top of SIDH and Mahaswayam.">
+  <title>{% block title %}Kaushal Parinam{% endblock %} — कौशल परिणाम · Employment Outcome Intelligence</title>
+  <meta name="description" content="Consent-based longitudinal outcome tracking for India's skilling ecosystem. A verified evidence layer connecting certification to genuine employment outcomes.">
+  <meta name="theme-color" content="#0F2756">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="{% static 'css/custom.css' %}">
   {% block head_extra %}{% endblock %}
 </head>
 <body class="language-{{ LANGUAGE_CODE|slice:':2' }}">
   <a class="skip-link" href="#main">Skip to main content</a>
 
+  <!-- Official Civic Infrastructure Topbar -->
+  <div class="civic-topbar no-print">
+    <div class="container civic-topbar-inner">
+      <div class="civic-emblem-wrap">
+        <span class="civic-tricolor-dot" aria-hidden="true"></span>
+        <span>महाराष्ट्र शासन · Government of Maharashtra</span>
+        <span style="opacity:0.4">|</span>
+        <span style="color:#CBD5E1">Maharashtra State Innovation Society (MSInS)</span>
+      </div>
+      <div class="civic-lang-switcher">
+        <span style="color:#94A3B8; margin-right:4px">Language:</span>
+        <button class="civic-lang-btn {% if LANGUAGE_CODE == 'en' or not LANGUAGE_CODE %}active{% endif %}" onclick="setLanguage('en')">English</button>
+        <button class="civic-lang-btn {% if LANGUAGE_CODE == 'mr' %}active{% endif %}" onclick="setLanguage('mr')">मराठी</button>
+        <button class="civic-lang-btn {% if LANGUAGE_CODE == 'hi' %}active{% endif %}" onclick="setLanguage('hi')">हिन्दी</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
   <header class="site-header no-print">
     <div class="container">
-      <a class="brand" href="{% url 'home' %}">
-        Kaushal Parinam
-        <small>कौशल परिणाम · Skill Outcomes</small>
+      <a class="brand-wrapper" href="{% url 'home' %}">
+        <div class="brand-logo-mark" aria-hidden="true">
+          <span>कP</span>
+        </div>
+        <div class="brand-text-block">
+          <span class="brand-title">Kaushal Parinam</span>
+          <span class="brand-subtitle">कौशल परिणाम · Outcome Intelligence</span>
+        </div>
       </a>
-      <nav class="site-nav" aria-label="Main">
+
+      <nav class="site-nav" aria-label="Main Navigation">
         {% if user.is_authenticated %}
-          <a href="{% url 'role_home' %}">My dashboard</a>
+          <a class="nav-link" href="{% url 'role_home' %}">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Dashboard
+          </a>
+
           {% if user.role == 'trainee' %}
-            <a href="{% url 'trainees:my_data' %}">My Data</a>
-            <a href="{% url 'trainees:certificate_check' %}">Certificate check</a>
+            <a class="nav-link" href="{% url 'trainees:my_data' %}">My Data &amp; Consent</a>
+            <a class="nav-link" href="{% url 'trainees:certificate_check' %}">Verify Certificate</a>
           {% endif %}
+
           {% if user.role == 'policy_officer' %}
-            <a href="{% url 'policy:provider_comparison' %}">Provider comparison</a>
-            <a href="{% url 'policy:skill_gap' %}">Skill gaps</a>
-            <a href="{% url 'policy:definitions' %}">Definitions</a>
+            <a class="nav-link" href="{% url 'policy:provider_comparison' %}">Fair Peer Comparison</a>
+            <a class="nav-link" href="{% url 'policy:skill_gap' %}">Skill Gaps</a>
+            <a class="nav-link" href="{% url 'policy:reasons_intelligence' %}">Why Outcomes Stall</a>
+            <a class="nav-link" href="{% url 'policy:funding_report' %}">Outcome Funding</a>
+            <a class="nav-link" href="{% url 'policy:definitions' %}">Registry</a>
           {% endif %}
+
           {% if user.role == 'provider' or user.role == 'provider_coordinator' %}
-            <a href="{% url 'providers:dashboard' %}">My cohorts</a>
+            <a class="nav-link" href="{% url 'providers:dashboard' %}">Cohort Analytics</a>
           {% endif %}
+
           {% if user.role == 'provider_coordinator' or user.role == 'policy_officer' %}
-            <a href="{% url 'trainees:csv_upload' %}">Upload CSV</a>
+            <a class="nav-link" href="{% url 'trainees:csv_upload' %}">Upload Intake CSV</a>
           {% endif %}
+
           {% if user.role == 'district_officer' or user.role == 'policy_officer' %}
-            <a href="{% url 'officers:task_list' %}">Tasks</a>
-            <a href="{% url 'officers:audit_sample' %}">Audit sample</a>
+            <a class="nav-link" href="{% url 'officers:task_list' %}">Field Tasks</a>
+            <a class="nav-link" href="{% url 'officers:audit_sample' %}">Call-back Sample</a>
           {% endif %}
-          <span class="badge">{{ user.get_role_display }}</span>
-          <form method="post" action="{% url 'logout' %}" style="display:inline">
+
+          <span class="user-role-badge">
+            <span class="role-dot" aria-hidden="true"></span>
+            {{ user.get_role_display }}
+          </span>
+
+          <form method="post" action="{% url 'logout' %}" style="display:inline; margin-left:6px">
             {% csrf_token %}
             <button class="btn btn-outline btn-sm" type="submit">Sign out</button>
           </form>
         {% else %}
-          <a href="{% url 'login' %}">Sign in</a>
-          <a class="btn btn-primary btn-sm" href="{% url 'trainees:enrol' %}">Enrol Now</a>
+          <a class="nav-link" href="{% url 'home' %}">Overview</a>
+          <a class="nav-link" href="{% url 'login' %}">Sign in</a>
+          <a class="btn btn-primary btn-sm" href="{% url 'trainees:enrol' %}">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            Enrol Trainee
+          </a>
         {% endif %}
       </nav>
     </div>
@@ -54,13 +101,14 @@
 
   <div id="request-error" class="alert alert-error container" role="alert" hidden></div>
 
-  <main id="main" class="container" style="padding-top:24px; padding-bottom:48px">
+  <!-- Main Content Viewport -->
+  <main id="main" class="container" style="padding-top:32px; padding-bottom:64px; flex:1">
     {% if messages %}
-      <div aria-live="polite">
+      <div aria-live="polite" class="stack-sm" style="margin-bottom:24px">
         {% for message in messages %}
           <div class="alert alert-{{ message.tags|default:'info' }}">
             <span class="alert-icon" aria-hidden="true">
-              {% if message.tags == 'error' %}!{% elif message.tags == 'warning' %}!{% else %}i{% endif %}
+              {% if message.tags == 'error' %}!{% elif message.tags == 'warning' %}!{% elif message.tags == 'success' %}✓{% else %}i{% endif %}
             </span>
             <span>{{ message }}</span>
           </div>
@@ -71,21 +119,48 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="container no-print" style="padding-bottom:24px">
-    {% include "partials/integration_badges.html" %}
-    <p class="helptext" style="margin-top:16px">
-      All demo data are synthetic. No real person is shown. Nothing here is production.
-      Consent can be withdrawn at any time from
-      {% if user.is_authenticated and user.role == 'trainee' %}<a href="{% url 'trainees:my_data' %}">My Data</a>{% else %}the "My Data" page{% endif %}.
-    </p>
+  <!-- Site Footer & Civic Accountability Disclosures -->
+  <footer class="site-footer no-print">
+    <div class="container">
+      {% include "partials/integration_badges.html" %}
+
+      <div class="footer-bottom-bar">
+        <div>
+          <strong style="color:var(--text-primary)">Kaushal Parinam (कौशल परिणाम)</strong>
+          <p style="margin:4px 0 0; font-size:var(--fs-xs); color:var(--text-muted)">
+            Public Employment Intelligence Infrastructure · Digital Personal Data Protection (DPDP) Act Compliant.
+            All demo dataset records are synthetically generated for demonstration.
+          </p>
+        </div>
+        <div class="cluster" style="font-size:var(--fs-xs)">
+          <a href="{% url 'trainees:my_data' %}" style="color:var(--text-secondary)">Data Governance &amp; Consent</a>
+          <span style="color:var(--border-strong)">•</span>
+          <a href="{% url 'trainees:enrol' %}#help" style="color:var(--text-secondary)">Scheme Documentation</a>
+          <span style="color:var(--border-strong)">•</span>
+          <span style="color:var(--text-muted)">SIH 26135 · MSInS Reference</span>
+        </div>
+      </div>
+    </div>
   </footer>
 
-  <nav class="bottom-nav no-print" aria-label="Main">
-    <a href="{% url 'home' %}"><span aria-hidden="true">&#8962;</span>Home</a>
-    <a href="{% url 'role_home' %}"><span aria-hidden="true">&#9638;</span>Dashboard</a>
-    <a href="{% url 'trainees:enrol' %}"><span aria-hidden="true">&#10003;</span>Enrol</a>
-    <a href="{% url 'trainees:my_data' %}"><span aria-hidden="true">&#128100;</span>My Data</a>
-    <a href="{% url 'trainees:enrol' %}#help"><span aria-hidden="true">?</span>Help</a>
+  <!-- Mobile Floating Bottom Navigation -->
+  <nav class="bottom-nav no-print" aria-label="Mobile Navigation">
+    <a href="{% url 'home' %}">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Home
+    </a>
+    <a href="{% url 'role_home' %}">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Dashboard
+    </a>
+    <a href="{% url 'trainees:enrol' %}">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Enrol
+    </a>
+    <a href="{% url 'trainees:my_data' %}">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      My Data
+    </a>
   </nav>
 
   <div id="live-region" class="skip-link" role="status" aria-live="polite"></div>

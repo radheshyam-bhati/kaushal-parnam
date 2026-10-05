@@ -1,18 +1,34 @@
 /* ==========================================================================
-   Kaushal Parinam front end.
-
-   HTMX gives interactivity without a framework bundle, which matters because
-   trainee and employer pages must work on a feature phone (docs/04-UI-UX-BRIEF.md
-   §3, docs/02-TRD.md §3). Charts are Chart.js, loaded only on dashboard pages.
-
-   docs/04-UI-UX-BRIEF.md §9: no infinite spinners. Loading uses skeleton
-   screens plus a timeout message instead.
+   Kaushal Parinam (कौशल परिणाम) — Front-End Controller
+   Modern civic intelligence interactions, accessible loading, HTMX integration
    ========================================================================== */
 
 (function () {
   'use strict';
 
-  var LOADING_TIMEOUT_MS = 5000;
+  var LOADING_TIMEOUT_MS = 6000;
+
+  /* ---------- Language Switching Helper ---------- */
+  window.setLanguage = function (langCode) {
+    document.body.classList.remove('language-en', 'language-mr', 'language-hi');
+    document.body.classList.add('language-' + langCode);
+    document.documentElement.lang = langCode;
+
+    // Update active states on switcher buttons
+    document.querySelectorAll('.civic-lang-btn').forEach(function (btn) {
+      if (btn.textContent.toLowerCase().includes(langCode) ||
+          (langCode === 'mr' && btn.textContent.includes('मराठी')) ||
+          (langCode === 'hi' && btn.textContent.includes('हिन्दी')) ||
+          (langCode === 'en' && btn.textContent.includes('English'))) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    // Announce for accessibility screen readers
+    announce('Language switched to ' + langCode);
+  };
 
   /* ---------- Skeleton screens with a timeout fallback (APP-FLOW J-11) -------- */
   function armLoading(el) {
@@ -21,12 +37,12 @@
     var timer = setTimeout(function () {
       var note = document.querySelector('[data-loading-timeout]');
       if (!note) {
-        note = document.createElement('p');
-        note.className = 'helptext';
+        note = document.createElement('div');
+        note.className = 'alert alert-warning';
         note.setAttribute('data-loading-timeout', '');
         note.setAttribute('role', 'status');
-        note.textContent = 'Data is taking a while. Refresh or try again?';
-        target.appendChild(note);
+        note.innerHTML = '<span class="alert-icon">!</span><span>Data query is taking longer than usual. Refresh or check connection.</span>';
+        target.prepend(note);
       }
     }, LOADING_TIMEOUT_MS);
     el.addEventListener('htmx:afterRequest', function () { clearTimeout(timer); });
@@ -43,11 +59,13 @@
 
   document.body.addEventListener('htmx:beforeRequest', function (evt) {
     var el = evt.detail.elt;
-    if (el.getAttribute('hx-boost') || el.classList.contains('needs-skeleton')) armLoading(el);
+    if (el && (el.getAttribute('hx-boost') || el.classList.contains('needs-skeleton'))) {
+      armLoading(el);
+    }
   });
 
   document.body.addEventListener('htmx:afterSwap', function (evt) {
-    announce('Updated.');
+    announce('View updated successfully.');
     var focusTarget = evt.detail.elt.getAttribute('data-focus-after-swap');
     if (focusTarget) {
       var el = document.querySelector(focusTarget);
@@ -56,17 +74,22 @@
   });
 
   document.body.addEventListener('htmx:responseError', function (evt) {
-    announce('That did not load. Try again.');
+    announce('Network request error.');
     var box = document.getElementById('request-error');
     if (box) {
       box.hidden = false;
-      box.textContent = 'We could not load that. Check your connection and try again.';
+      box.innerHTML = '<span class="alert-icon">!</span><span>Could not complete request. Please verify connection and retry.</span>';
     }
   });
 
-  /* ---------- Language class on <body> so Devanagari fonts load (§3) -------- */
-  var lang = document.documentElement.lang || 'en';
-  document.body.classList.add('language-' + lang.slice(0, 2));
+  /* ---------- Auto-submit on filter change (plain bookmarkable GET) ---------- */
+  document.querySelectorAll('[data-auto-submit]').forEach(function (field) {
+    field.addEventListener('change', function () {
+      if (field.form) {
+        field.form.submit();
+      }
+    });
+  });
 
   /* ---------- Minimum-group-size masking for small cells (F-10) ------------ */
   document.querySelectorAll('[data-k]').forEach(function (el) {
@@ -74,12 +97,16 @@
     var k = parseInt(el.getAttribute('data-k') || '5', 10);
     if (count < k) {
       el.textContent = 'Data withheld';
-      el.setAttribute('title', 'This group has fewer than ' + k + ' people, so it is not shown.');
+      el.setAttribute('title', 'This group has fewer than ' + k + ' people, so it is masked for statistical privacy.');
     }
   });
 
-  /* ---------- Grade filter is a plain GET so the URL is bookmarkable ------ */
-  document.querySelectorAll('[data-auto-submit]').forEach(function (field) {
-    field.addEventListener('change', function () { field.form.submit(); });
+  /* ---------- Close Details dropdowns when clicking outside ---------- */
+  document.addEventListener('click', function (e) {
+    document.querySelectorAll('details[open]').forEach(function (details) {
+      if (!details.contains(e.target) && !details.classList.contains('footer-disclosure-card')) {
+        details.removeAttribute('open');
+      }
+    });
   });
 })();

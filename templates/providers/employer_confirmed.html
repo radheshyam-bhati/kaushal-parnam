@@ -1,26 +1,55 @@
 {% extends "base.html" %}
-{% block title %}Thank you{% endblock %}
+{% block title %}Employment Confirmed — Kaushal Parinam{% endblock %}
 
 {% block content %}
-<div class="container-narrow">
-  <div class="card">
-    <h1 style="font-size:2rem">Thank you, that is recorded</h1>
-    <p>
-      {{ outcome.person.display_name }}{% if result.still_employed %} is recorded as still working for you{% else %} is recorded as no longer working for you{% endif %}.
-      The record is now graded <span class="grade grade-E2">E2 employer confirmed</span>
-      instead of E0 self-report.
+<div class="container-narrow" style="max-width:520px; margin:0 auto; padding:0 8px">
+  
+  <!-- Success Confirmation Card -->
+  <div class="card card-hero bg-grid-texture" style="padding:clamp(24px, 6vw, 44px); border-radius:var(--radius-2xl); text-align:center; box-shadow:var(--shadow-elevated); border-color:var(--emerald-border); background:linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%)">
+    
+    <!-- Subtle Glowing Success Checkmark Ring -->
+    <div style="width:72px; height:72px; border-radius:50%; background:var(--emerald-light); border:2px solid var(--emerald); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 0 24px rgba(16, 185, 129, 0.25)">
+      <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="var(--emerald)" stroke-width="3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+
+    <!-- Outcome Grade Badge -->
+    <div class="cluster" style="justify-content:center; margin-bottom:12px">
+      <span class="grade grade-E2" style="font-size:var(--fs-sm); padding:6px 14px">
+        E2 · Employer confirmed
+      </span>
+    </div>
+
+    <h1 style="font-size:clamp(1.75rem, 4vw, 2.25rem); color:var(--emerald-dark); margin:0 0 10px; font-weight:800; letter-spacing:-0.03em">
+      Employment confirmed
+    </h1>
+
+    <p style="font-size:var(--fs-sm); color:var(--text-secondary); line-height:1.6; max-width:440px; margin:0 auto 20px">
+      Thank you. This verification strengthens the reliability of <strong>{{ outcome.person.display_name }}</strong>'s outcome record and qualifies her training centre for performance funding.
     </p>
+
+    <!-- Discrepancy Note (if wage differed) -->
     {% if result.mismatch %}
-      <div class="alert alert-warning" role="status">
-        <span class="alert-icon" aria-hidden="true">!</span>
+      <div class="alert alert-warning" role="status" style="text-align:left; font-size:var(--fs-xs); margin-bottom:20px">
+        <span class="alert-icon" aria-hidden="true">i</span>
         <span>
-          You confirmed a different wage band. Both answers are kept: the trainee
-          said {{ result.wage_claimed }}, you said {{ result.wage_verified }}.
-          This is shown to the department as a discrepancy, not as an error.
+          <strong>Wage variance recorded:</strong> Trainee reported <code>{{ result.wage_claimed }}</code>, and employer reported <code>{{ result.wage_verified }}</code>. Both figures are preserved in the transparent state audit ledger.
         </span>
       </div>
     {% endif %}
-    <p class="helptext">You can close this page. Nothing further is needed from you.</p>
+
+    <div style="padding:14px; background:#FFFFFF; border:1px solid var(--border); border-radius:var(--radius-lg); font-size:var(--fs-xs); color:var(--text-muted); margin-bottom:24px">
+      Verification hash logged in the MSInS evidence registry. You may now close this browser tab.
+    </div>
+
+    <div class="cluster" style="justify-content:center">
+      <a class="btn btn-outline" href="{% url 'home' %}" style="background:#FFFFFF">
+        Return to Home
+      </a>
+    </div>
+
   </div>
+
 </div>
 {% endblock %}

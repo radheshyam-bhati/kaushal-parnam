@@ -1,71 +1,119 @@
-{% extends "base.html" %}
-{% block title %}Grade mix{% endblock %}
-{# Grade distribution. Chart.js 4.x doughnut, per docs/02-TRD.md §2 chart types.
-   Loaded only here, never on the trainee or employer pages, so those stay
-   usable on a feature phone. #}
-{% block head_extra %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
-{% endblock %}
-{% block content %}
-<div class="card">
-  <h3>Evidence grade mix</h3>
-  <p class="helptext">
-    Every rate on this dashboard is printed next to this. Grade mix is what tells
-    you whether a placement rate rests on self-reports or on employers who
-    actually picked up the phone.
-  </p>
-  <div style="max-width:420px">
-    <canvas id="grade-mix-chart" height="260"
-            aria-label="Doughnut chart of outcome counts by evidence grade"
-            role="img"></canvas>
+{# Evidence Grade Mix Doughnut Chart & Accessible Breakdown #}
+<div class="card bg-grid-texture">
+  <div class="card-header">
+    <div>
+      <span class="filter-label">VERIFICATION INTEGRITY</span>
+      <h3 style="margin-top:4px">Evidence Grade Distribution</h3>
+    </div>
+    <span class="badge badge-SANDBOX">E0 through E4</span>
   </div>
-  {# The same numbers in text, so a screen reader and a no-JS browser get them. #}
-  <table style="max-width:420px; margin-top:16px">
-    <thead><tr><th scope="col">Grade</th><th scope="col">Outcomes</th></tr></thead>
-    <tbody>
-      {% for grade, count in mix.items %}
-        <tr><th scope="row"><span class="grade grade-{{ grade }}">{{ grade }}</span></th><td>{{ count }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+
+  <p class="helptext" style="margin-bottom:20px">
+    Visual breakdown of outcome verification depth. A robust program shifts mass from self-reported (E0) to employer-verified (E2) and statutory matches (E4).
+  </p>
+
+  <div class="grid grid-2" style="align-items:center">
+    <div style="max-width:320px; margin:0 auto; width:100%">
+      <canvas id="grade-mix-chart" height="260"
+              aria-label="Doughnut chart of outcome counts by evidence grade"
+              role="img"></canvas>
+    </div>
+
+    <div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Grade</th>
+              <th scope="col">Verification Level</th>
+              <th scope="col" style="text-align:right">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for grade, count in mix.items %}
+              <tr>
+                <td><span class="grade grade-{{ grade }}">{{ grade }}</span></td>
+                <td>
+                  {% if grade == 'E0' %}Trainee self-reported
+                  {% elif grade == 'E1' %}District officer telephonic check
+                  {% elif grade == 'E2' %}Employer 2-tap verification
+                  {% elif grade == 'E3' %}Proof document (Pay slip / GSTIN)
+                  {% elif grade == 'E4' %}Statutory electronic record (EPFO)
+                  {% endif %}
+                </td>
+                <td style="text-align:right; font-weight:700; font-family:var(--font-family-mono)">{{ count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
-{% endblock %}
-{% block scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  if (typeof Chart === 'undefined') return;  // charts are an enhancement
-  var ctx = document.getElementById('grade-mix-chart');
-  if (!ctx) return;
-  var palette = {
-    E0: '#BBDEFB', E1: '#FFE0B2', E2: '#C8E6C9', E3: '#E1BEE7', E4: '#A5D6A7'
-  };
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['E0 trainee', 'E1 officer', 'E2 employer', 'E3 document', 'E4 record'],
-      datasets: [{
-        data: [{% for grade, count in mix.items %}{{ count }}{% if not forloop.last %},{% endif %}{% endfor %}],
-        backgroundColor: ['#BBDEFB', '#FFE0B2', '#C8E6C9', '#E1BEE7', '#A5D6A7'],
-        borderColor: '#FFFFFF',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#1A1A1A', boxWidth: 12 } },
-        tooltip: {
-          callbacks: {
-            label: function (item) {
-              var total = item.dataset.data.reduce(function (a, b) { return a + b; }, 0);
-              var share = total ? Math.round(100 * item.parsed / total) : 0;
-              return item.label + ': ' + item.parsed + ' (' + share + '%)';
+  function renderChart() {
+    if (typeof Chart === 'undefined') {
+      setTimeout(renderChart, 100);
+      return;
+    }
+    var ctx = document.getElementById('grade-mix-chart');
+    if (!ctx) return;
+
+    var palette = {
+      E0: '#94A3B8', // Neutral Slate
+      E1: '#3B82F6', // Sky Blue
+      E2: '#10B981', // Emerald
+      E3: '#8B5CF6', // Purple
+      E4: '#0F172A'  // Midnight Navy
+    };
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['E0 Trainee', 'E1 Officer', 'E2 Employer', 'E3 Document', 'E4 Record Match'],
+        datasets: [{
+          data: [{% for grade, count in mix.items %}{{ count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+          backgroundColor: [palette.E0, palette.E1, palette.E2, palette.E3, palette.E4],
+          borderColor: '#FFFFFF',
+          borderWidth: 3,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#334155',
+              font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' },
+              boxWidth: 10,
+              padding: 12
+            }
+          },
+          tooltip: {
+            backgroundColor: '#0F172A',
+            titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
+            bodyFont: { family: "'Plus Jakarta Sans', sans-serif" },
+            padding: 12,
+            cornerRadius: 8,
+            callbacks: {
+              label: function (item) {
+                var total = item.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                var share = total ? Math.round(100 * item.parsed / total) : 0;
+                return ' ' + item.label + ': ' + item.parsed + ' (' + share + '%)';
+              }
             }
           }
-        }
+        },
+        cutout: '68%'
       }
-    }
-  });
+    });
+  }
+  renderChart();
 });
 </script>
-{% endblock %}

@@ -41,7 +41,7 @@ from core.services.channel_router import record_reply
 from core.services.evidence import effective_grade
 from core.services.gatekeeper import check_csv
 from core.services.otp import apply_erasure, issue_otp, verify_otp
-from core.services.rls import assert_can_view_person, record_hidden_access
+from core.services.rls import assert_can_view_person, can_view_person, record_hidden_access
 from core.services.retention import retention_for, wage_progression
 from core.services.utid import generate_utid
 from trainees.forms import (
@@ -465,9 +465,17 @@ def outcome_detail(request, event_id):
         record_hidden_access(request.user, 'outcome', event_id)
         raise Http404('No such outcome record.')
 
-    # Reachable when the ORM scope and the database policy disagree, which would
-    # itself be a bug; kept so the denial is never silent.
-    assert_can_view_person(request.user, outcome.person)
+    if not can_view_person(request.user, outcome.person):
+        record_hidden_access(request.user, 'outcome', event_id)
+        from core.services.audit import log_event
+        log_event(
+            component='rls',
+            event_type='rls_violation_attempt',
+            description=f'{getattr(request.user, "role", "anonymous")} tried to read {outcome.person.pk}',
+            utid=outcome.person.pk,
+            user_role=getattr(request.user, 'role', 'anonymous'),
+        )
+        raise Http404('No such outcome record.')
     return render(request, 'trainees/outcome_detail.html', {
         'outcome': outcome,
         'person': outcome.person,
@@ -763,6 +771,16 @@ def csv_upload(request):
             'Only a provider coordinator can upload trainee batches. '
             'Ask your centre coordinator to do it, or ask a policy officer.'
         )
+
+    if request.GET.get('template') == '1':
+        import csv
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="kaushal_parinam_intake_template.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['name', 'dob', 'gender', 'category', 'phone', 'course', 'provider', 'enrolment_date', 'course_start_date', 'second_phone', 'second_contact_name', 'second_contact_relationship', 'device_type', 'language'])
+        writer.writerow(['Anita Sharma', '1998-05-12', 'F', 'General', '+919820491024', 'Plumbing', 'Centre-A', '2026-01-10', '2026-01-15', '+919899112233', 'Sunita Sharma', 'Mother', 'smartphone', 'mr'])
+        return response
 
     report = None
     if request.method == 'POST':

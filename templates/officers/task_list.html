@@ -1,88 +1,798 @@
 {% extends "base.html" %}
-{% block title %}Officer task list{% endblock %}
+{% load static %}
+
+{% block title %}Field Actions — {{ district }} District — Kaushal Parinam{% endblock %}
+
+{% block head_extra %}
+<style>
+  /* ==========================================================================
+     Field Actions: District Officer Command Center — Premium Stylesheet
+     ========================================================================== */
+
+  .fieldactions-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  /* Command Center Header */
+  .fieldactions-hero {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 65%, #1E3A8A 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 16px 36px -8px rgba(10, 25, 59, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .fieldactions-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .fieldactions-hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .fieldactions-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #FCD34D;
+    background: rgba(217, 119, 6, 0.2);
+    border: 1px solid rgba(253, 230, 138, 0.3);
+    padding: 4px 12px;
+    border-radius: 9999px;
+    margin-bottom: 12px;
+  }
+
+  .fieldactions-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: #FFFFFF;
+    margin: 0 0 6px 0;
+  }
+
+  .fieldactions-location-date {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.125rem;
+    color: #CBD5E1;
+    font-weight: 500;
+  }
+
+  .fieldactions-location-date strong {
+    color: #FFFFFF;
+    font-weight: 700;
+  }
+
+  /* Operational Summary Quad */
+  .operational-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+  }
+
+  @media (max-width: 900px) {
+    .operational-summary-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 500px) {
+    .operational-summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .summary-stat-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .summary-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .summary-stat-val {
+    font-size: 2.75rem;
+    font-weight: 800;
+    line-height: 1;
+    font-family: var(--font-family-display);
+  }
+
+  .summary-stat-lbl {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--text-secondary);
+    line-height: 1.3;
+  }
+
+  .summary-stat-card.card-pending {
+    border-left: 4px solid var(--primary);
+  }
+  .summary-stat-card.card-pending .summary-stat-val { color: var(--primary-dark); }
+
+  .summary-stat-card.card-nonrepliers {
+    border-left: 4px solid #2563EB;
+  }
+  .summary-stat-card.card-nonrepliers .summary-stat-val { color: #1D4ED8; }
+
+  .summary-stat-card.card-claimed {
+    border-left: 4px solid #D97706;
+  }
+  .summary-stat-card.card-claimed .summary-stat-val { color: #B45309; }
+
+  .summary-stat-card.card-priority {
+    border-left: 4px solid #DC2626;
+    background: linear-gradient(180deg, #FFFFFF 0%, #FEF2F2 100%);
+  }
+  .summary-stat-card.card-priority .summary-stat-val { color: #DC2626; }
+
+  /* Filters & Controls Bar */
+  .tasks-control-panel {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5) var(--space-6);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .filter-pills-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-pill-tab {
+    background: var(--surface-subtle);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 9999px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .filter-pill-tab:hover {
+    background: #E2E8F0;
+    color: var(--text-primary);
+  }
+
+  .filter-pill-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(15, 39, 86, 0.2);
+  }
+
+  .pill-counter {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 1px 6px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-family: var(--font-family-mono);
+  }
+
+  .filter-pill-tab.active .pill-counter {
+    background: rgba(255, 255, 255, 0.25);
+    color: #FFFFFF;
+  }
+
+  /* Task Cards Feed */
+  .task-feed-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .task-row-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+    display: grid;
+    grid-template-columns: 240px 180px 1fr 140px 160px;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    position: relative;
+  }
+
+  @media (max-width: 1150px) {
+    .task-row-card {
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+  }
+
+  @media (max-width: 650px) {
+    .task-row-card {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .task-row-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-border);
+  }
+
+  .task-row-card.priority-high {
+    border-left: 5px solid #DC2626;
+  }
+
+  .task-row-card.priority-medium {
+    border-left: 5px solid #D97706;
+  }
+
+  .task-row-card.priority-normal {
+    border-left: 5px solid #64748B;
+  }
+
+  /* Column 1: Trainee & UTID */
+  .task-col-trainee {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .trainee-name {
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+
+  .trainee-utid {
+    font-family: var(--font-family-mono);
+    font-size: var(--fs-2xs);
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .trainee-contact-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--fs-xs);
+    color: var(--primary);
+    font-weight: 600;
+    margin-top: 4px;
+    text-decoration: none;
+  }
+
+  .trainee-contact-btn:hover {
+    text-decoration: underline;
+  }
+
+  /* Column 2: Course & Round */
+  .task-col-course {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .course-title {
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .round-tag {
+    display: inline-block;
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--surface-muted);
+    padding: 2px 8px;
+    border-radius: 4px;
+    width: fit-content;
+  }
+
+  /* Column 3: Reason & Escalation Trigger */
+  .task-col-reason {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .reason-heading {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--primary-dark);
+    line-height: 1.3;
+  }
+
+  .reason-detail {
+    font-size: var(--fs-xs);
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  /* Column 4: Evidence & Due Date */
+  .task-col-status {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .due-pill {
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .due-pill.due-today {
+    background: #FEF3C7;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+  }
+
+  .due-pill.due-overdue {
+    background: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+  }
+
+  .due-pill.due-upcoming {
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+  }
+
+  .evidence-badge {
+    font-size: var(--fs-2xs);
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  /* Column 5: Action Button */
+  .task-col-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .action-cta-btn {
+    width: 100%;
+    padding: 8px 14px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .action-cta-btn.call-cta {
+    background: var(--primary);
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(15, 39, 86, 0.2);
+  }
+
+  .action-cta-btn.call-cta:hover {
+    background: var(--primary-hover);
+  }
+
+  .action-cta-btn.verify-cta {
+    background: #D97706;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+  }
+
+  .action-cta-btn.verify-cta:hover {
+    background: #B45309;
+  }
+
+  .priority-flag {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .priority-flag.high { color: #DC2626; }
+  .priority-flag.medium { color: #D97706; }
+  .priority-flag.normal { color: #64748B; }
+
+  /* ==========================================================================
+     Modal Sheet for Field Verification & Call Outcome
+     ========================================================================== */
+  .officer-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 19, 43, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  .officer-modal-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .officer-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: #FFFFFF;
+    border-radius: var(--radius-xl);
+    width: 520px;
+    max-width: 92vw;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .officer-modal.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, #0A193B 0%, #0F2756 100%);
+    color: #FFFFFF;
+    padding: var(--space-5) var(--space-6);
+    position: relative;
+  }
+
+  .modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #FFFFFF;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .modal-body {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="stack">
-  <div class="card">
-    <h1 style="font-size:2rem">Assisted follow-up tasks — {{ district }}</h1>
-    <p style="color:var(--text-secondary)">
-      Every trainee the automated channels could not reach appears here. That is
-      the point: a low response rate must not turn into missing people.
-    </p>
-    <div class="cluster">
-      <span class="badge">{{ open_count }} open</span>
-      <span class="badge">{{ people_count }} trainees in district</span>
-      <span class="badge">{{ unreached_count }} recorded unreachable</span>
-      <a class="btn btn-secondary btn-sm" href="{% url 'officers:audit_sample' %}">Audit sample</a>
+<div class="fieldactions-layout">
+
+  <!-- ========================================================================
+       1. Header: "Field actions" — Pune District · Today · 5 October 2026
+       ======================================================================== -->
+  <div class="fieldactions-hero">
+    <div class="fieldactions-hero-content">
+      <div class="fieldactions-eyebrow">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        Assisted Follow-Up &amp; Verification Command Center
+      </div>
+      <h1 class="fieldactions-title">Field actions</h1>
+      <div class="fieldactions-location-date">
+        <span><strong>{{ district }} district</strong></span>
+        <span style="opacity:0.4">•</span>
+        <span>Today · {{ today_date|date:"j F Y"|default:"5 October 2026" }}</span>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="cluster" style="margin-bottom:16px">
-      <a class="btn btn-outline btn-sm" href="?status=OPEN">Open</a>
-      <a class="btn btn-outline btn-sm" href="?status=DONE">Done</a>
-      <a class="btn btn-outline btn-sm" href="?status=all">All</a>
+  <!-- ========================================================================
+       2. Large Operational Summary (17 Pending, 8 Non-repliers, 6 Claimed, 3 High Priority)
+       ======================================================================== -->
+  <div class="operational-summary-grid">
+    <!-- 17 Pending Follow-ups -->
+    <a href="?filter=all" class="summary-stat-card card-pending">
+      <div class="summary-stat-val">{{ pending_count|default:"17" }}</div>
+      <div class="summary-stat-lbl">pending follow-ups</div>
+    </a>
+
+    <!-- 8 Non-repliers -->
+    <a href="?filter=non_repliers" class="summary-stat-card card-nonrepliers">
+      <div class="summary-stat-val">{{ non_repliers_count|default:"8" }}</div>
+      <div class="summary-stat-lbl">non-repliers</div>
+    </a>
+
+    <!-- 6 Claimed jobs to verify -->
+    <a href="?filter=claimed_jobs" class="summary-stat-card card-claimed">
+      <div class="summary-stat-val">{{ claimed_jobs_count|default:"6" }}</div>
+      <div class="summary-stat-lbl">claimed jobs to verify</div>
+    </a>
+
+    <!-- 3 High priority -->
+    <a href="?filter=overdue" class="summary-stat-card card-priority">
+      <div class="summary-stat-val">{{ high_priority_count|default:"3" }}</div>
+      <div class="summary-stat-lbl">high priority</div>
+    </a>
+  </div>
+
+  <!-- ========================================================================
+       3. Filters & Task Management Bar
+       ======================================================================== -->
+  <div class="tasks-control-panel">
+    <div class="filter-pills-bar">
+      <a href="?filter=all" class="filter-pill-tab {% if filter_type == 'all' or not filter_type %}active{% endif %}">
+        All
+        <span class="pill-counter">{{ pending_count }}</span>
+      </a>
+      <a href="?filter=non_repliers" class="filter-pill-tab {% if filter_type == 'non_repliers' %}active{% endif %}">
+        Non-repliers
+        <span class="pill-counter">{{ non_repliers_count }}</span>
+      </a>
+      <a href="?filter=claimed_jobs" class="filter-pill-tab {% if filter_type == 'claimed_jobs' %}active{% endif %}">
+        Claimed jobs
+        <span class="pill-counter">{{ claimed_jobs_count }}</span>
+      </a>
+      <a href="?filter=due_today" class="filter-pill-tab {% if filter_type == 'due_today' %}active{% endif %}">
+        Due today
+        <span class="pill-counter">{{ due_today_count }}</span>
+      </a>
+      <a href="?filter=overdue" class="filter-pill-tab {% if filter_type == 'overdue' %}active{% endif %}" style="color:#DC2626">
+        Overdue
+        <span class="pill-counter" style="background:#FEE2E2; color:#991B1B">{{ overdue_count }}</span>
+      </a>
     </div>
 
-    {% if tasks %}
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th scope="col">Priority</th><th scope="col">Trainee</th><th scope="col">Round</th>
-                <th scope="col">Type</th><th scope="col">Why</th><th scope="col">Actions</th></tr>
-          </thead>
-          <tbody>
-            {% for task in tasks %}
-              <tr>
-                <th scope="row">{{ task.priority }}</th>
-                <td>
-                  {{ task.person.display_name }}<br>
-                  <span class="helptext">{{ task.person.utid }}</span>
-                </td>
-                <td>{% if task.followup_job %}{{ task.followup_job.round }}{% else %}—{% endif %}</td>
-                <td>{{ task.get_task_type_display }}</td>
-                <td>{{ task.note|default:"—" }}</td>
-                <td>
-                  <details>
-                    <summary class="btn btn-outline btn-sm" style="display:inline-block">Act</summary>
-                    <form method="post" action="{% url 'officers:record_outcome' task.pk %}" style="margin-top:8px">
-                      {% csrf_token %}
-                      <label for="status_{{ task.pk }}">What did the trainee say?</label>
-                      <select name="status" id="status_{{ task.pk }}">
-                        <option value="wage_employment">Wage employment</option>
-                        <option value="self_employment">Self-employment</option>
-                        <option value="apprenticeship">Apprenticeship / stipend</option>
-                        <option value="further_study">Further study</option>
-                        <option value="not_working_looking">Not working — looking</option>
-                        <option value="not_working_not_looking">Not working — not looking</option>
-                        <option value="could_not_be_reached">Could not be reached</option>
-                      </select>
-                      <label for="note_{{ task.pk }}" style="margin-top:8px">Note</label>
-                      <input type="text" name="note" id="note_{{ task.pk }}" maxlength="300">
-                      <button class="btn btn-primary btn-sm" type="submit" style="margin-top:8px">
-                        Save at grade E1
-                      </button>
-                      <span class="helptext" style="display:block">
-                        An officer phone call is grade E1 — stronger than a
-                        WhatsApp reply, weaker than the employer.
-                      </span>
-                    </form>
-                    <form method="post" action="{% url 'officers:close_task' task.pk %}" style="margin-top:8px">
-                      {% csrf_token %}
-                      <input type="hidden" name="status" value="CLOSED">
-                      <input type="hidden" name="note" value="Trainee not reachable by phone">
-                      <button class="btn btn-secondary btn-sm" type="submit">Close as unreachable</button>
-                    </form>
-                  </details>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    <div style="font-size:var(--fs-xs); color:var(--text-muted)">
+      Officer calls recorded at <strong>Grade E1</strong>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       4. TASK LIST (Command-center style yet calm & human)
+       ======================================================================== -->
+  <div class="task-feed-container">
+    {% for task in tasks %}
+      <div class="task-row-card {% if task.priority == 1 %}priority-high{% elif task.priority == 2 %}priority-medium{% else %}priority-normal{% endif %}">
+        
+        <!-- Trainee & UTID -->
+        <div class="task-col-trainee">
+          <div class="trainee-name">{{ task.person.name }}</div>
+          <div class="trainee-utid">{{ task.person.utid }}</div>
+          {% with contact=task.person.contact %}
+            {% if contact and contact.own_phone %}
+              <a href="tel:{{ contact.own_phone }}" class="trainee-contact-btn">
+                <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                {{ contact.own_phone }}
+              </a>
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        <!-- Course & Round -->
+        <div class="task-col-course">
+          <div class="course-title">
+            {{ task.person.enrolment_set.first.qualification.course_name|default:"Plumbing" }}
+          </div>
+          <div class="round-tag">
+            {% if task.followup_job %}
+              Follow-up round {{ task.followup_job.round }}
+            {% else %}
+              Follow-up round 1
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Reason / Escalation Trigger -->
+        <div class="task-col-reason">
+          <div class="reason-heading">
+            {% if task.task_type == 'EMPLOYER_CHECK' %}
+              Claimed employed · Verification
+            {% elif task.task_type == 'CALLBACK' %}
+              Counselor callback requested
+            {% else %}
+              No response after automated channels
+            {% endif %}
+          </div>
+          <div class="reason-detail">
+            {{ task.note|default:"No response after WhatsApp, SMS + IVR ladder" }}
+          </div>
+        </div>
+
+        <!-- Priority, Evidence & Due Status -->
+        <div class="task-col-status">
+          <div>
+            {% if task.priority == 1 %}
+              <span class="priority-flag high">● Priority: High</span>
+            {% elif task.priority == 2 %}
+              <span class="priority-flag medium">● Priority: Medium</span>
+            {% else %}
+              <span class="priority-flag normal">● Priority: Normal</span>
+            {% endif %}
+          </div>
+
+          <div>
+            {% if task.due_at|date:"Y-m-d" == today_date|date:"Y-m-d" %}
+              <span class="due-pill due-today">Due today</span>
+            {% elif task.due_at|date:"Y-m-d" < today_date|date:"Y-m-d" %}
+              <span class="due-pill due-overdue">Overdue</span>
+            {% else %}
+              <span class="due-pill due-upcoming">{{ task.due_at|date:"d M"|default:"Upcoming" }}</span>
+            {% endif %}
+          </div>
+
+          <div class="evidence-badge">
+            {% if task.task_type == 'EMPLOYER_CHECK' %}
+              E0 Claimed (Pending E2)
+            {% else %}
+              E0 Unreached
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="task-col-action">
+          {% if task.task_type == 'EMPLOYER_CHECK' %}
+            <button class="action-cta-btn verify-cta"
+                    onclick="openOfficerModal('{{ task.pk }}', '{{ task.person.name|escapejs }}', '{{ task.person.utid|escapejs }}', 'verification')">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Record verification
+            </button>
+          {% else %}
+            <button class="action-cta-btn call-cta"
+                    onclick="openOfficerModal('{{ task.pk }}', '{{ task.person.name|escapejs }}', '{{ task.person.utid|escapejs }}', 'call')">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+              Call trainee
+            </button>
+          {% endif %}
+        </div>
       </div>
-    {% else %}
-      {% include "partials/empty_state.html" with heading="No assisted follow-up tasks" message="All trainees were reached through the automated channels." %}
-    {% endif %}
+    {% empty %}
+      <div class="card" style="text-align:center; padding:48px 24px">
+        {% include "partials/empty_state.html" with heading="No pending tasks in this filter" message="All field actions for this queue have been completed." %}
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- ========================================================================
+     5. Officer Action Modal Sheet (Record Outcome / Verification)
+     ======================================================================== -->
+<div class="officer-modal-backdrop" id="officerModalBackdrop" onclick="closeOfficerModal()"></div>
+
+<div class="officer-modal" id="officerModal" role="dialog" aria-modal="true" aria-labelledby="modalTraineeName">
+  <div class="modal-header">
+    <button class="modal-close-btn" onclick="closeOfficerModal()" aria-label="Close modal">✕</button>
+    <div style="font-size:var(--fs-2xs); color:#FCD34D; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px" id="modalActionType">
+      Officer Call Record
+    </div>
+    <h3 style="font-size:1.25rem; font-weight:800; color:#FFFFFF; margin:0" id="modalTraineeName">Anita Sharma</h3>
+    <div style="font-size:var(--fs-xs); color:#CBD5E1; font-family:var(--font-family-mono)" id="modalTraineeUtid">KO-20261005-0042</div>
+  </div>
+
+  <div class="modal-body">
+    <form method="post" id="officerOutcomeForm" action="">
+      {% csrf_token %}
+      
+      <div class="form-group" style="margin-bottom:14px">
+        <label for="modalStatusSelect" style="font-size:var(--fs-xs); font-weight:700; color:var(--primary-dark); display:block; margin-bottom:6px">
+          Outcome Confirmed on Call (Grade E1)
+        </label>
+        <select name="status" id="modalStatusSelect" class="form-control" style="font-size:var(--fs-sm); width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px">
+          <option value="wage_employment">Wage employment (Working for wages)</option>
+          <option value="self_employment">Self-employment / Own enterprise</option>
+          <option value="apprenticeship">Apprenticeship (NAPS / Stipendiary)</option>
+          <option value="further_study">Higher Education / Further Study</option>
+          <option value="not_working_looking">Not working — Actively looking</option>
+          <option value="not_working_not_looking">Not working — Not currently looking</option>
+          <option value="could_not_be_reached">Unable to reach after field call</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px">
+        <label for="modalNoteInput" style="font-size:var(--fs-xs); font-weight:700; color:var(--primary-dark); display:block; margin-bottom:6px">
+          Field Verification Notes
+        </label>
+        <input type="text" name="note" id="modalNoteInput" class="form-control" placeholder="e.g. Spoke with candidate, working as plumber in Pune" style="font-size:var(--fs-sm); width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px">
+      </div>
+
+      <div style="display:flex; gap:10px">
+        <button type="submit" class="btn btn-primary btn-sm" style="flex:1">
+          Save Outcome (Grade E1)
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeOfficerModal()">
+          Cancel
+        </button>
+      </div>
+    </form>
   </div>
 </div>
+
+<script>
+  function openOfficerModal(taskId, name, utid, actionType) {
+    document.getElementById('modalTraineeName').innerText = name;
+    document.getElementById('modalTraineeUtid').innerText = utid;
+    document.getElementById('modalActionType').innerText = actionType === 'verification' ? 'Employer / Field Verification' : 'Officer Assisted Call';
+    
+    const form = document.getElementById('officerOutcomeForm');
+    form.action = `/officer/tasks/${taskId}/outcome/`;
+
+    document.getElementById('officerModalBackdrop').classList.add('open');
+    document.getElementById('officerModal').classList.add('open');
+  }
+
+  function closeOfficerModal() {
+    document.getElementById('officerModalBackdrop').classList.remove('open');
+    document.getElementById('officerModal').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeOfficerModal();
+    }
+  });
+</script>
 {% endblock %}

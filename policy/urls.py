@@ -9,6 +9,7 @@ urlpatterns = [
     path('policy/definitions/', views.definitions, name='definitions'),
     path('policy/providers/', views.provider_view, name='provider_comparison'),
     path('policy/skill-gaps/', views.skill_gap_view, name='skill_gap'),
+    path('policy/reasons/', views.reasons_intelligence, name='reasons_intelligence'),
     path('policy/funding-report/', views.funding_report, name='funding_report'),
     path('policy/funding-report/export/', views.funding_export, name='funding_export'),
     path('policy/data-quality/', views.data_quality, name='data_quality'),

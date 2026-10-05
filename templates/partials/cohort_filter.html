@@ -1,63 +1,66 @@
-{# Cohort filter bar (F-10). Plain GET so the URL is bookmarkable and every
-   selection shows in the query string. Rendered next to the min-grade filter;
-   each dimension narrows the count, never the RLS scope. #}
-<form method="get" class="cluster" style="margin-bottom:16px">
-  {% for key, value in request.GET.items %}
-    {% if key != 'min_grade' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}
-  {% endfor %}
-
-  <label for="filter-district" style="margin:0">District</label>
-  <select name="district" id="filter-district" data-auto-submit>
-    <option value="">All</option>
-    {% for value in filter_options.districts %}
-      <option value="{{ value }}" {% if filters.district == value %}selected{% endif %}>{{ value }}</option>
+{# Cohort Multi-Dimensional Filter Bar #}
+<div class="filter-bar" style="margin-bottom:24px">
+  <form method="get" class="filter-group" style="width:100%">
+    {% for key, value in request.GET.items %}
+      {% if key != 'min_grade' and key != 'district' and key != 'course' and key != 'gender' and key != 'age_band' and key != 'provider' and key != 'category' %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+      {% endif %}
     {% endfor %}
-  </select>
+    {% if floor %}<input type="hidden" name="min_grade" value="{{ floor }}">{% endif %}
 
-  <label for="filter-course" style="margin:0">Course</label>
-  <select name="course" id="filter-course" data-auto-submit>
-    <option value="">All</option>
-    {% for value in filter_options.courses %}
-      <option value="{{ value }}" {% if filters.course == value %}selected{% endif %}>{{ value }}</option>
-    {% endfor %}
-  </select>
+    <div class="filter-group">
+      <span class="filter-label">Cohort Filters:</span>
 
-  <label for="filter-gender" style="margin:0">Gender</label>
-  <select name="gender" id="filter-gender" data-auto-submit>
-    <option value="">All</option>
-    {% for value, label in filter_options.genders %}
-      <option value="{{ value }}" {% if filters.gender == value %}selected{% endif %}>{{ label }}</option>
-    {% endfor %}
-  </select>
+      <select name="district" id="filter-district" data-auto-submit style="max-width:140px; padding:6px 10px; font-size:var(--fs-xs)">
+        <option value="">All Districts</option>
+        {% for value in filter_options.districts %}
+          <option value="{{ value }}" {% if filters.district == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
 
-  <label for="filter-age" style="margin:0">Age band</label>
-  <select name="age_band" id="filter-age" data-auto-submit>
-    <option value="">All</option>
-    {% for value in filter_options.age_bands %}
-      <option value="{{ value }}" {% if filters.age_band == value %}selected{% endif %}>{{ value }}</option>
-    {% endfor %}
-  </select>
+      <select name="course" id="filter-course" data-auto-submit style="max-width:160px; padding:6px 10px; font-size:var(--fs-xs)">
+        <option value="">All Courses</option>
+        {% for value in filter_options.courses %}
+          <option value="{{ value }}" {% if filters.course == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
 
-  {% if filter_options.providers|length > 1 %}
-    <label for="filter-provider" style="margin:0">Centre</label>
-    <select name="provider" id="filter-provider" data-auto-submit>
-      <option value="">All</option>
-      {% for value in filter_options.providers %}
-        <option value="{{ value }}" {% if filters.provider == value %}selected{% endif %}>{{ value }}</option>
-      {% endfor %}
-    </select>
-  {% endif %}
+      <select name="gender" id="filter-gender" data-auto-submit style="max-width:120px; padding:6px 10px; font-size:var(--fs-xs)">
+        <option value="">All Genders</option>
+        {% for value, label in filter_options.genders %}
+          <option value="{{ value }}" {% if filters.gender == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
 
-  <label for="filter-category" style="margin:0">Category</label>
-  <select name="category" id="filter-category" data-auto-submit>
-    <option value="">All</option>
-    {% for value, label in filter_options.categories %}
-      <option value="{{ value }}" {% if filters.category == value %}selected{% endif %}>{{ label }}</option>
-    {% endfor %}
-  </select>
+      <select name="age_band" id="filter-age" data-auto-submit style="max-width:120px; padding:6px 10px; font-size:var(--fs-xs)">
+        <option value="">All Ages</option>
+        {% for value in filter_options.age_bands %}
+          <option value="{{ value }}" {% if filters.age_band == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+      </select>
 
-  {% if filters %}
-    <a class="btn btn-secondary btn-sm" href="?min_grade={{ floor }}">Clear filters</a>
-  {% endif %}
-  <noscript><button class="btn btn-secondary btn-sm" type="submit">Apply</button></noscript>
-</form>
+      {% if filter_options.providers|length > 1 %}
+        <select name="provider" id="filter-provider" data-auto-submit style="max-width:140px; padding:6px 10px; font-size:var(--fs-xs)">
+          <option value="">All Centres</option>
+          {% for value in filter_options.providers %}
+            <option value="{{ value }}" {% if filters.provider == value %}selected{% endif %}>{{ value }}</option>
+          {% endfor %}
+        </select>
+      {% endif %}
+
+      <select name="category" id="filter-category" data-auto-submit style="max-width:130px; padding:6px 10px; font-size:var(--fs-xs)">
+        <option value="">All Categories</option>
+        {% for value, label in filter_options.categories %}
+          <option value="{{ value }}" {% if filters.category == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {% if filters %}
+      <div style="margin-left:auto">
+        <a class="btn btn-outline btn-sm" href="?{% if floor %}min_grade={{ floor }}{% endif %}">Clear filters</a>
+      </div>
+    {% endif %}
+    <noscript><button class="btn btn-secondary btn-sm" type="submit">Filter</button></noscript>
+  </form>
+</div>

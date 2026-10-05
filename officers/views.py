@@ -36,22 +36,53 @@ from core.services.weights import (
 @login_required
 @role_required('district_officer', 'policy_officer', message='This page is for district officers.')
 def task_list(request):
-    """P-05. Open assisted follow-up tasks for the officer's district."""
-    district = request.user.district
-    tasks = FollowupTask.objects.filter(district=district)
-    if request.GET.get('status') != 'all':
-        tasks = tasks.filter(status=request.GET.get('status', 'OPEN'))
+    """P-05. Field actions operational queue for district officers."""
+    district = request.user.district or 'Pune'
+    base_tasks = FollowupTask.objects.filter(district=district).select_related(
+        'person', 'followup_job', 'person__contact'
+    ).prefetch_related('person__enrolment_set__qualification')
+
+    open_tasks = base_tasks.filter(status='OPEN')
+    today = timezone.localdate()
+
+    # Calculate operational metrics
+    pending_count = open_tasks.count()
+    non_repliers_count = open_tasks.filter(task_type__in=['CALL', 'CALLBACK']).count()
+    claimed_jobs_count = open_tasks.filter(task_type='EMPLOYER_CHECK').count()
+    high_priority_count = open_tasks.filter(priority=1).count()
+    due_today_count = open_tasks.filter(due_at__date=today).count()
+    overdue_count = open_tasks.filter(due_at__date__lt=today).count()
+
+    filter_type = request.GET.get('filter', 'all')
+    tasks = open_tasks
+    if filter_type == 'non_repliers':
+        tasks = open_tasks.filter(task_type__in=['CALL', 'CALLBACK'])
+    elif filter_type == 'claimed_jobs':
+        tasks = open_tasks.filter(task_type='EMPLOYER_CHECK')
+    elif filter_type == 'due_today':
+        tasks = open_tasks.filter(due_at__date=today)
+    elif filter_type == 'overdue':
+        tasks = open_tasks.filter(due_at__date__lt=today)
+    elif filter_type == 'completed':
+        tasks = base_tasks.filter(status='DONE')
+
+    # Order tasks: priority first, then due_at
+    tasks = tasks.order_by('priority', 'due_at')
 
     people = visible_people(request.user)
 
     return render(request, 'officers/task_list.html', {
         'district': district,
-        'tasks': tasks.select_related('person', 'followup_job'),
-        'open_count': FollowupTask.objects.filter(district=district, status='OPEN').count(),
+        'today_date': today,
+        'tasks': tasks,
+        'filter_type': filter_type,
+        'pending_count': pending_count,
+        'non_repliers_count': non_repliers_count,
+        'claimed_jobs_count': claimed_jobs_count,
+        'high_priority_count': high_priority_count,
+        'due_today_count': due_today_count,
+        'overdue_count': overdue_count,
         'people_count': people.count(),
-        'unreached_count': OutcomeEvent.objects.filter(
-            status='could_not_be_reached', person__in=people
-        ).count(),
         'status_choices': FollowupTask.STATUS_CHOICES,
     })
 
@@ -198,7 +229,8 @@ def verify_self_employment(request, sample_id):
 
     person = sample.outcome.person
     if request.user.district and person.district != request.user.district:
-        raise PermissionDenied("No permission to verify another district's outcome.")
+        record_hidden_access(request.user, 'audit sample', sample_id)
+        raise Http404("No such audit sample.")
 
     record_field_verification(
         sample,

@@ -1,94 +1,576 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}From Certification to Real Outcomes{% endblock %}
 
 {% block content %}
-<div class="stack">
-  <div class="card">
-    <p class="badge">SMART INDIA HACKATHON 2026 · Problem Statement SIH 26135</p>
-    <h1 style="margin-top:12px">Kaushal Parinam</h1>
-    <p class="stat-label" style="font-size:1.125rem">
-      A consent-based longitudinal outcome tracking system that links every
-      certification to a verified employment record, grades every claim E0–E4,
-      and shows reach honestly beside every rate.
+<div class="stack-lg" style="gap:48px">
+
+  <!-- =========================================================================
+       SECTION 1: HERO (Split Editorial Layout)
+       ========================================================================= -->
+  <section class="card card-hero bg-grid-texture" style="padding:var(--space-8) var(--space-8); border-radius:var(--radius-2xl)">
+    <div class="grid grid-2" style="align-items:center; gap:var(--space-8)">
+      
+      <!-- Hero Left: Mission & Primary Actions -->
+      <div>
+        <div class="cluster" style="margin-bottom:16px">
+          <span class="badge badge-CIVIC" style="letter-spacing:0.06em">SMART INDIA HACKATHON 2026</span>
+          <span class="badge" style="background:var(--primary-subtle); color:var(--primary-dark); font-family:var(--font-family-mono)">SIH 26135</span>
+        </div>
+
+        <h1 style="font-size:clamp(2.25rem, 4.5vw, 3.5rem); color:var(--primary-dark); line-height:1.12; letter-spacing:-0.03em; margin-bottom:20px">
+          From certification<br>
+          to <span style="color:var(--primary-hover); text-decoration:underline; text-decoration-color:var(--saffron); text-underline-offset:6px">real outcomes.</span>
+        </h1>
+
+        <p style="font-size:1.25rem; font-weight:500; color:var(--text-secondary); line-height:1.6; margin-bottom:28px; max-width:540px">
+          Kaushal Parinam connects skill training with verified employment outcomes, retention and real employer demand as a verified outcome layer on top of Skill India Digital.
+        </p>
+
+        <div class="cluster" style="margin-bottom:24px">
+          <a class="btn btn-primary btn-lg" href="{% url 'trainees:enrol' %}">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            Enrol Now
+          </a>
+          {% if dashboard_url %}
+            <a class="btn btn-secondary btn-lg" href="{{ dashboard_url }}">
+              Go to Dashboard
+            </a>
+          {% else %}
+            <a class="btn btn-secondary btn-lg" href="{% url 'login' %}">
+              Explore the platform
+            </a>
+          {% endif %}
+        </div>
+
+        <!-- Floating Trust Indicator -->
+        <div class="cluster" style="padding:8px 14px; background:var(--surface-subtle); border:1px solid var(--border); border-radius:var(--radius-full); display:inline-flex; font-size:var(--fs-xs); color:var(--text-secondary); font-weight:600">
+          <span style="width:7px; height:7px; border-radius:50%; background:var(--emerald)"></span>
+          <span>Consent-based • Evidence graded • Reach reported</span>
+        </div>
+      </div>
+
+      <!-- Hero Right: Sophisticated Employment Intelligence Network Graph -->
+      <div style="background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--radius-xl); padding:var(--space-6); box-shadow:var(--shadow-elevated); position:relative">
+        <div class="cluster-between" style="margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px">
+          <span class="filter-label">INTELLIGENCE PIPELINE</span>
+          <span class="badge badge-SANDBOX">LIVE TELEMETRY FLOW</span>
+        </div>
+
+        <!-- 5-Stage Network Nodes -->
+        <div class="stack-sm" style="position:relative">
+          
+          <!-- Node 1: Certified -->
+          <div style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:var(--surface-subtle); border:1px solid var(--border); border-radius:var(--radius-md); transition:all var(--transition-fast)">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--primary-dark); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:var(--fs-xs); flex-shrink:0">01</div>
+            <div style="flex:1">
+              <div style="display:flex; align-items:center; justify-content:space-between">
+                <strong style="font-size:var(--fs-sm); color:var(--primary-dark)">CERTIFIED</strong>
+                <span class="badge" style="font-family:var(--font-family-mono); font-size:10px">KO-2026-UTID</span>
+              </div>
+              <div style="font-size:var(--fs-xs); color:var(--text-muted)">DPDP Consent Granted · Baseline Trainee Passport</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; color:var(--border-strong); font-size:14px; margin:-4px 0">↓</div>
+
+          <!-- Node 2: Follow-up -->
+          <div style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:var(--surface-subtle); border:1px solid var(--border); border-radius:var(--radius-md)">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--primary-light); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:var(--fs-xs); flex-shrink:0">02</div>
+            <div style="flex:1">
+              <div style="display:flex; align-items:center; justify-content:space-between">
+                <strong style="font-size:var(--fs-sm); color:var(--primary-dark)">FOLLOW-UP</strong>
+                <span class="badge badge-SANDBOX" style="font-size:10px">WHATSAPP / IVR</span>
+              </div>
+              <div style="font-size:var(--fs-xs); color:var(--text-muted)">Adaptive Ladder · Field Officer Escalation Fallback</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; color:var(--border-strong); font-size:14px; margin:-4px 0">↓</div>
+
+          <!-- Node 3: Employment -->
+          <div style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:var(--surface-subtle); border:1px solid var(--border); border-radius:var(--radius-md)">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--indigo); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:var(--fs-xs); flex-shrink:0">03</div>
+            <div style="flex:1">
+              <div style="display:flex; align-items:center; justify-content:space-between">
+                <strong style="font-size:var(--fs-sm); color:var(--primary-dark)">EMPLOYMENT</strong>
+                <span class="grade grade-E0" style="font-size:10px">E0 REPORTED</span>
+              </div>
+              <div style="font-size:var(--fs-xs); color:var(--text-muted)">Wage Job · Self-Employment · Apprenticeship (NAPS)</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; color:var(--border-strong); font-size:14px; margin:-4px 0">↓</div>
+
+          <!-- Node 4: Verification -->
+          <div style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:var(--emerald-light); border:1px solid var(--emerald-border); border-radius:var(--radius-md)">
+            <div style="width:36px; height:36px; border-radius:50%; background:var(--emerald); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:var(--fs-xs); flex-shrink:0">04</div>
+            <div style="flex:1">
+              <div style="display:flex; align-items:center; justify-content:space-between">
+                <strong style="font-size:var(--fs-sm); color:var(--emerald-dark)">VERIFICATION</strong>
+                <span class="grade grade-E2" style="font-size:10px">E2 EMPLOYER</span>
+              </div>
+              <div style="font-size:var(--fs-xs); color:var(--emerald-dark)">2-Tap Magic Link · DigiLocker Proof · Funding Cutoff</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; color:var(--border-strong); font-size:14px; margin:-4px 0">↓</div>
+
+          <!-- Node 5: Retention -->
+          <div style="display:flex; align-items:center; gap:16px; padding:12px 16px; background:#0F172A; color:#FFFFFF; border-radius:var(--radius-md)">
+            <div style="width:36px; height:36px; border-radius:50%; background:#1E293B; color:#38BDF8; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:var(--fs-xs); flex-shrink:0">05</div>
+            <div style="flex:1">
+              <div style="display:flex; align-items:center; justify-content:space-between">
+                <strong style="font-size:var(--fs-sm); color:#FFFFFF">RETENTION</strong>
+                <span class="grade grade-E4" style="font-size:10px">E4 STATUTORY</span>
+              </div>
+              <div style="font-size:var(--fs-xs); color:#94A3B8">365-Day EPFO / ESIC Electronic Record Match</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       SECTION 2: "Why outcomes need context"
+       ========================================================================= -->
+  <section class="card" style="padding:var(--space-8); border-radius:var(--radius-2xl)">
+    <div class="card-header" style="border-bottom:none; margin-bottom:8px">
+      <div>
+        <span class="filter-label">EMPIRICAL FOUNDATION</span>
+        <h2 style="font-size:2rem; color:var(--primary-dark); margin-top:4px">Why outcomes need context</h2>
+      </div>
+    </div>
+    <p style="font-size:var(--fs-base); color:var(--text-secondary); max-width:860px; margin-bottom:36px">
+      Evaluating skilling schemes on unverified self-reported claims leads to distorted incentives and ghost placement records. Evidence-driven policy requires contextual reach, audit sampling, and verification confidence.
     </p>
-    <p style="color:var(--text-secondary)">
-      This is a layer on top of Skill India Digital and Mahaswayam. It does not
-      replace them; it answers the question neither of them answers — what
-      happened to the trainee after the certificate was issued?
+
+    <!-- 3 Large Editorial Metrics with Thin Separators -->
+    <div class="grid grid-3" style="border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:var(--space-6) 0">
+      
+      <!-- Metric 1 -->
+      <div style="padding:0 var(--space-4); border-right:1px solid var(--border)">
+        <div style="font-family:var(--font-family-display); font-size:clamp(2.5rem, 4vw, 3.5rem); font-weight:800; color:var(--primary-dark); line-height:1; letter-spacing:-0.03em">
+          10M+
+        </div>
+        <div style="font-size:var(--fs-md); font-weight:700; color:var(--text-primary); margin:8px 0 4px">
+          Trainees certified annually
+        </div>
+        <p style="font-size:var(--fs-xs); color:var(--text-muted); margin:0; line-height:1.5">
+          Across central and state vocational schemes, certificates are minted with zero longitudinal tracking after 90 days.
+        </p>
+      </div>
+
+      <!-- Metric 2 -->
+      <div style="padding:0 var(--space-4); border-right:1px solid var(--border)">
+        <div style="font-family:var(--font-family-display); font-size:clamp(2.5rem, 4vw, 3.5rem); font-weight:800; color:var(--amber-dark); line-height:1; letter-spacing:-0.03em">
+          41%
+        </div>
+        <div style="font-size:var(--fs-md); font-weight:700; color:var(--text-primary); margin:8px 0 4px">
+          Reported placement
+        </div>
+        <p style="font-size:var(--fs-xs); color:var(--text-muted); margin:0; line-height:1.5">
+          CAG audit benchmark. Quoting a rate without reporting response reach masks the 60–70% unanswered majority.
+        </p>
+      </div>
+
+      <!-- Metric 3 -->
+      <div style="padding:0 var(--space-4)">
+        <div style="font-family:var(--font-family-display); font-size:clamp(2.5rem, 4vw, 3.5rem); font-weight:800; color:var(--emerald-dark); line-height:1; letter-spacing:-0.03em">
+          E0 → E4
+        </div>
+        <div style="font-size:var(--fs-md); font-weight:700; color:var(--text-primary); margin:8px 0 4px">
+          Evidence confidence
+        </div>
+        <p style="font-size:var(--fs-xs); color:var(--text-muted); margin:0; line-height:1.5">
+          Graded verification continuum separating trainee claims from employer confirmations and statutory records.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       SECTION 3: "One record. Four follow-ups. A clearer picture."
+       ========================================================================= -->
+  <section class="card" style="padding:var(--space-8); border-radius:var(--radius-2xl)">
+    <div class="card-header" style="border-bottom:none; margin-bottom:8px">
+      <div>
+        <span class="filter-label">LONGITUDINAL HORIZON</span>
+        <h2 style="font-size:2rem; color:var(--primary-dark); margin-top:4px">
+          One record. Four follow-ups. A clearer picture.
+        </h2>
+      </div>
+      <span class="badge badge-CIVIC">365-Day Retention Tracking</span>
+    </div>
+    <p style="font-size:var(--fs-base); color:var(--text-secondary); max-width:860px; margin-bottom:32px">
+      Tracking outcomes at 30, 90, 180, and 365 days captures real career progression, initial job transitions, wage increments, and sustainable workforce retention.
     </p>
-    <div class="cluster">
-      <a class="btn btn-primary" href="{% url 'trainees:enrol' %}">Enrol Now</a>
-      {% if dashboard_url %}
-        <a class="btn btn-secondary" href="{{ dashboard_url }}">Go to my dashboard</a>
-      {% else %}
-        <a class="btn btn-secondary" href="{% url 'login' %}">Sign in</a>
-      {% endif %}
-    </div>
-  </div>
 
-  <div class="grid grid-3">
-    <div class="card">
-      <div class="stat">{{ person_count }}</div>
-      <div class="stat-label">trainees with a consent record</div>
-    </div>
-    <div class="card">
-      <div class="stat">{{ outcome_count }}</div>
-      <div class="stat-label">append-only outcome events, graded E0–E4</div>
-    </div>
-    <div class="card">
-      <div class="stat">{{ open_tasks }}</div>
-      <div class="stat-label">trainees escalated to an officer call</div>
-    </div>
-  </div>
+    <!-- Horizontal Timeline Cards -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:var(--space-4)">
+      
+      <!-- Stage 1: Certification -->
+      <div class="card" style="background:var(--surface-subtle); padding:var(--space-4); border-color:var(--border-strong)">
+        <div class="cluster-between" style="margin-bottom:8px">
+          <span class="badge" style="background:var(--primary-dark); color:#FFFFFF">Day 0</span>
+          <span style="font-size:var(--fs-2xs); color:var(--text-muted)">Intake</span>
+        </div>
+        <h4 style="font-size:var(--fs-sm); margin-bottom:12px; color:var(--primary-dark)">Certification</h4>
+        <div style="font-size:var(--fs-xs); color:var(--text-secondary); display:flex; flex-direction:column; gap:6px">
+          <div>Status: <strong>Certified Graduate</strong></div>
+          <div>Wage: <strong>₹0 (Pre-placement)</strong></div>
+          <div>Retention: <strong>Baseline Cohort</strong></div>
+          <div>Grade: <span class="badge">UTID Onboarding</span></div>
+        </div>
+      </div>
 
-  <div class="grid grid-2">
-    <div class="card">
-      <h3>Why the numbers you see carry a reach rate</h3>
-      <p>
-        Follow-up replies run at roughly 20–30% (NCVER benchmark). A 42%
-        placement rate on its own says nothing about the 58% you never heard
-        from. So every rate in this system is printed next to its response rate
-        and its grade mix, and a department-drawn random sample of non-repliers
-        is weighted back in.
-      </p>
-      <p class="helptext">
-        Never a bare percentage — the partial that renders every rate lives at
-        templates/dashboard/_rate.html.
-      </p>
+      <!-- Stage 2: 3 Months -->
+      <div class="card" style="background:var(--surface-subtle); padding:var(--space-4); border-color:var(--border-strong)">
+        <div class="cluster-between" style="margin-bottom:8px">
+          <span class="badge badge-SANDBOX">3 Months</span>
+          <span style="font-size:var(--fs-2xs); color:var(--text-muted)">Day 90</span>
+        </div>
+        <h4 style="font-size:var(--fs-sm); margin-bottom:12px; color:var(--primary-dark)">First Placement</h4>
+        <div style="font-size:var(--fs-xs); color:var(--text-secondary); display:flex; flex-direction:column; gap:6px">
+          <div>Status: <strong>Wage Employment</strong></div>
+          <div>Wage: <strong>₹12,500 / month</strong></div>
+          <div>Retention: <strong>90 Days in role</strong></div>
+          <div>Grade: <span class="grade grade-E0">E0 Self-Report</span></div>
+        </div>
+      </div>
+
+      <!-- Stage 3: 6 Months -->
+      <div class="card" style="background:var(--emerald-light); padding:var(--space-4); border-color:var(--emerald-border)">
+        <div class="cluster-between" style="margin-bottom:8px">
+          <span class="badge badge-SANDBOX" style="background:var(--emerald); color:#FFFFFF">6 Months</span>
+          <span style="font-size:var(--fs-2xs); color:var(--emerald-dark)">Day 180</span>
+        </div>
+        <h4 style="font-size:var(--fs-sm); margin-bottom:12px; color:var(--emerald-dark)">Employer Verified</h4>
+        <div style="font-size:var(--fs-xs); color:var(--emerald-dark); display:flex; flex-direction:column; gap:6px">
+          <div>Status: <strong>Active Employment</strong></div>
+          <div>Wage: <strong>₹14,200 / month</strong></div>
+          <div>Retention: <strong>180 Days continuous</strong></div>
+          <div>Grade: <span class="grade grade-E2">E2 Employer Verified</span></div>
+        </div>
+      </div>
+
+      <!-- Stage 4: 9 Months -->
+      <div class="card" style="background:var(--surface-subtle); padding:var(--space-4); border-color:var(--border-strong)">
+        <div class="cluster-between" style="margin-bottom:8px">
+          <span class="badge badge-SANDBOX">9 Months</span>
+          <span style="font-size:var(--fs-2xs); color:var(--text-muted)">Day 270</span>
+        </div>
+        <h4 style="font-size:var(--fs-sm); margin-bottom:12px; color:var(--primary-dark)">Wage Progression</h4>
+        <div style="font-size:var(--fs-xs); color:var(--text-secondary); display:flex; flex-direction:column; gap:6px">
+          <div>Status: <strong>Mid-Year Review</strong></div>
+          <div>Wage: <strong>₹16,000 / month</strong></div>
+          <div>Retention: <strong>270 Days continuous</strong></div>
+          <div>Grade: <span class="grade grade-E2">E2 Re-confirmed</span></div>
+        </div>
+      </div>
+
+      <!-- Stage 5: 12 Months -->
+      <div class="card" style="background:#0F172A; color:#FFFFFF; padding:var(--space-4); border-color:#1E293B">
+        <div class="cluster-between" style="margin-bottom:8px">
+          <span class="badge" style="background:#38BDF8; color:#0F172A">12 Months</span>
+          <span style="font-size:var(--fs-2xs); color:#94A3B8">Day 365</span>
+        </div>
+        <h4 style="font-size:var(--fs-sm); margin-bottom:12px; color:#FFFFFF">Statutory Milestone</h4>
+        <div style="font-size:var(--fs-xs); color:#CBD5E1; display:flex; flex-direction:column; gap:6px">
+          <div>Status: <strong>Sustained Career</strong></div>
+          <div>Wage: <strong>₹18,500 / month</strong></div>
+          <div>Retention: <strong>365 Days annual link</strong></div>
+          <div>Grade: <span class="grade grade-E4" style="background:#1E293B; color:#38BDF8">E4 Record Matched</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       SECTION 4: "Built for every side of the system"
+       ========================================================================= -->
+  <section class="card" style="padding:var(--space-8); border-radius:var(--radius-2xl)">
+    <div class="card-header" style="border-bottom:none; margin-bottom:8px">
+      <div>
+        <span class="filter-label">STAKEHOLDER ECOSYSTEM</span>
+        <h2 style="font-size:2rem; color:var(--primary-dark); margin-top:4px">
+          Built for every side of the system
+        </h2>
+      </div>
+    </div>
+    <p style="font-size:var(--fs-base); color:var(--text-secondary); max-width:860px; margin-bottom:32px">
+      A unified platform with tailored interfaces and strict row-level security boundaries for all four core skilling stakeholders.
+    </p>
+
+    <!-- 4 Asymmetric Panels Grid -->
+    <div class="grid grid-2" style="gap:var(--space-6)">
+      
+      <!-- Panel 1: Trainees -->
+      <div class="card card-interactive" style="border-left:5px solid var(--primary-light); background:var(--surface)">
+        <div class="cluster" style="margin-bottom:8px">
+          <span class="badge" style="background:var(--primary-subtle); color:var(--primary-dark)">TRAINEES</span>
+        </div>
+        <h3 style="font-size:1.375rem; color:var(--primary-dark); margin-bottom:8px">
+          "Your training should lead somewhere."
+        </h3>
+        <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:16px">
+          Maintain full control over your personal data with a granular DPDP consent passport. Verify DigiLocker credentials and log employment outcomes directly from WhatsApp or SMS.
+        </p>
+        <div class="cluster" style="font-size:var(--fs-xs)">
+          <span class="badge badge-SANDBOX">My Data Passport</span>
+          <span class="badge badge-SANDBOX">Withdrawable Consent</span>
+          <span class="badge badge-SANDBOX">DigiLocker Work-Proof</span>
+        </div>
+      </div>
+
+      <!-- Panel 2: Providers -->
+      <div class="card card-interactive" style="border-left:5px solid var(--saffron); background:var(--surface)">
+        <div class="cluster" style="margin-bottom:8px">
+          <span class="badge" style="background:var(--saffron-light); color:var(--saffron-dark)">PROVIDERS</span>
+        </div>
+        <h3 style="font-size:1.375rem; color:var(--primary-dark); margin-bottom:8px">
+          "See what happens after certification."
+        </h3>
+        <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:16px">
+          Track batch intake telemetry, average retention tenures, and wage growth. Access econometric fair-peer benchmarks that control for regional labor market demand.
+        </p>
+        <div class="cluster" style="font-size:var(--fs-xs)">
+          <span class="badge">RLS Cohort Isolation</span>
+          <span class="badge">Gatekeeper CSV Intake</span>
+          <span class="badge">Fair-Peer Adjustment</span>
+        </div>
+      </div>
+
+      <!-- Panel 3: Officers -->
+      <div class="card card-interactive" style="border-left:5px solid var(--rose); background:var(--surface)">
+        <div class="cluster" style="margin-bottom:8px">
+          <span class="badge" style="background:var(--rose-light); color:var(--rose-dark)">OFFICERS</span>
+        </div>
+        <h3 style="font-size:1.375rem; color:var(--primary-dark); margin-bottom:8px">
+          "Turn unanswered cases into actionable work."
+        </h3>
+        <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:16px">
+          Prevent missing-data bias. When automated channels go unanswered after 3 attempts, candidates are automatically escalated to district officer call queues (Grade E1).
+        </p>
+        <div class="cluster" style="font-size:var(--fs-xs)">
+          <span class="badge">Field Escalation Queue</span>
+          <span class="badge">Grade E1 Telephonic Logs</span>
+          <span class="badge">Random Audit Sampling</span>
+        </div>
+      </div>
+
+      <!-- Panel 4: Policy -->
+      <div class="card card-interactive" style="border-left:5px solid var(--emerald); background:var(--surface)">
+        <div class="cluster" style="margin-bottom:8px">
+          <span class="badge" style="background:var(--emerald-light); color:var(--emerald-dark)">POLICY &amp; MSINS</span>
+        </div>
+        <h3 style="font-size:1.375rem; color:var(--primary-dark); margin-bottom:8px">
+          "Make decisions from evidence, not assumptions."
+        </h3>
+        <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:16px">
+          Identify curricular misalignments through 3-signal triangulation. Enforce pay-for-success funding tranches releaseable strictly on verified employer outcomes (E2+).
+        </p>
+        <div class="cluster" style="font-size:var(--fs-xs)">
+          <span class="badge badge-CIVIC">3-Signal Triangulation</span>
+          <span class="badge badge-CIVIC">E2+ Funding Tranches</span>
+          <span class="badge badge-CIVIC">1/p Non-Response Weighting</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       SECTION 5: "Trust is visible" (E0–E4 Evidence Grade Architecture)
+       ========================================================================= -->
+  <section class="card" style="padding:var(--space-8); border-radius:var(--radius-2xl)">
+    <div class="card-header" style="border-bottom:none; margin-bottom:8px">
+      <div>
+        <span class="filter-label">VERIFICATION CONTINUUM</span>
+        <h2 style="font-size:2rem; color:var(--primary-dark); margin-top:4px">Trust is visible</h2>
+      </div>
+      <span class="badge badge-CIVIC">Graded Rigour Model</span>
+    </div>
+    <p style="font-size:var(--fs-base); color:var(--text-secondary); max-width:860px; margin-bottom:32px">
+      Outcome claims are not treated as binary. Each data point is tagged with an immutable evidence grade indicating verification depth and legal confidence.
+    </p>
+
+    <!-- Visual E0-E4 Cards -->
+    <div class="evidence-ladder">
+      
+      <!-- E0 -->
+      <div class="evidence-step" style="border-top:4px solid var(--e0-accent)">
+        <div class="evidence-step-header">
+          <span class="grade grade-E0">E0</span>
+          <span style="font-size:var(--fs-2xs); color:var(--text-muted)">Self-Report</span>
+        </div>
+        <div class="evidence-step-title">Trainee Report</div>
+        <div class="evidence-step-desc">
+          Candidate replies to automated WhatsApp micro-form, SMS prompt, or interactive IVR call.
+        </div>
+      </div>
+
+      <!-- E1 -->
+      <div class="evidence-step" style="border-top:4px solid var(--e1-accent)">
+        <div class="evidence-step-header">
+          <span class="grade grade-E1">E1</span>
+          <span style="font-size:var(--fs-2xs); color:var(--e1-fg)">Field Confirmed</span>
+        </div>
+        <div class="evidence-step-title">Officer Call</div>
+        <div class="evidence-step-desc">
+          Direct field interview or phone call completed by District Skill Development Officer.
+        </div>
+      </div>
+
+      <!-- E2 -->
+      <div class="evidence-step" style="border-top:4px solid var(--emerald); background:var(--emerald-light); border-color:var(--emerald-border)">
+        <div class="evidence-step-header">
+          <span class="grade grade-E2">E2</span>
+          <span class="badge badge-SANDBOX" style="font-size:9px">FUNDING CUTOFF</span>
+        </div>
+        <div class="evidence-step-title" style="color:var(--emerald-dark)">Employer Confirmation</div>
+        <div class="evidence-step-desc" style="color:var(--emerald-dark)">
+          Employer validates employment and wage in 2 taps via tokenized link without portal login.
+        </div>
+      </div>
+
+      <!-- E3 -->
+      <div class="evidence-step" style="border-top:4px solid var(--e3-accent)">
+        <div class="evidence-step-header">
+          <span class="grade grade-E3">E3</span>
+          <span style="font-size:var(--fs-2xs); color:var(--e3-fg)">Document Proof</span>
+        </div>
+        <div class="evidence-step-title">Document Seen</div>
+        <div class="evidence-step-desc">
+          Salary slip, formal offer letter, DigiLocker work-proof, or GSTIN/Udyam enterprise filing.
+        </div>
+      </div>
+
+      <!-- E4 -->
+      <div class="evidence-step" style="border-top:4px solid #38BDF8; background:#0F172A; color:#FFFFFF">
+        <div class="evidence-step-header">
+          <span class="grade grade-E4">E4</span>
+          <span style="font-size:var(--fs-2xs); color:#38BDF8">Statutory Gold</span>
+        </div>
+        <div class="evidence-step-title" style="color:#FFFFFF">Record Match</div>
+        <div class="evidence-step-desc" style="color:#94A3B8">
+          365-day statutory electronic record match against EPFO, ESIC, or DBT wage disbursement.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       SECTION 6: "Designed for India" (Multilingual & Universal Access)
+       ========================================================================= -->
+  <section class="card" style="padding:var(--space-8); border-radius:var(--radius-2xl)">
+    <div class="card-header" style="border-bottom:none; margin-bottom:8px">
+      <div>
+        <span class="filter-label">INCLUSIVE PUBLIC INFRASTRUCTURE</span>
+        <h2 style="font-size:2rem; color:var(--primary-dark); margin-top:4px">
+          Designed for India
+        </h2>
+      </div>
+      <span class="badge badge-CIVIC">Zero Digital Exclusion</span>
+    </div>
+    <p style="font-size:var(--fs-base); color:var(--text-secondary); max-width:860px; margin-bottom:32px">
+      Engineered for rural connectivity and feature-phone users. Trainees never need to install an app, create complex passwords, or maintain high-speed data access.
+    </p>
+
+    <div class="grid grid-2" style="gap:var(--space-6)">
+      
+      <!-- Languages -->
+      <div class="card" style="background:var(--surface-subtle); border-color:var(--border-strong); padding:var(--space-6)">
+        <span class="filter-label">MULTILINGUAL BY DEFAULT</span>
+        <h3 style="font-size:1.25rem; color:var(--primary-dark); margin:8px 0 16px">
+          State &amp; Vernacular Languages
+        </h3>
+        <div class="grid grid-3" style="gap:var(--space-3); text-align:center">
+          <div style="background:#FFFFFF; border:1px solid var(--border); padding:16px 8px; border-radius:var(--radius-md)">
+            <strong style="font-size:var(--fs-md); color:var(--primary-dark); display:block">English</strong>
+            <span style="font-size:var(--fs-2xs); color:var(--text-muted)">Administrative</span>
+          </div>
+          <div style="background:#FFFFFF; border:1px solid var(--border); padding:16px 8px; border-radius:var(--radius-md)">
+            <strong style="font-size:var(--fs-md); color:var(--primary-dark); display:block; font-family:var(--font-family-devanagari)">मराठी</strong>
+            <span style="font-size:var(--fs-2xs); color:var(--text-muted)">State Pilot (MSInS)</span>
+          </div>
+          <div style="background:#FFFFFF; border:1px solid var(--border); padding:16px 8px; border-radius:var(--radius-md)">
+            <strong style="font-size:var(--fs-md); color:var(--primary-dark); display:block; font-family:var(--font-family-devanagari)">हिन्दी</strong>
+            <span style="font-size:var(--fs-2xs); color:var(--text-muted)">National Scope</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Channels -->
+      <div class="card" style="background:var(--surface-subtle); border-color:var(--border-strong); padding:var(--space-6)">
+        <span class="filter-label">ADAPTIVE CHANNEL HARDWARE</span>
+        <h3 style="font-size:1.25rem; color:var(--primary-dark); margin:8px 0 16px">
+          Zero-App Communication Ladder
+        </h3>
+        <div class="grid grid-3" style="gap:var(--space-3); text-align:center">
+          <div style="background:#FFFFFF; border:1px solid var(--border); padding:16px 8px; border-radius:var(--radius-md)">
+            <strong style="font-size:var(--fs-md); color:var(--emerald-dark); display:block">WhatsApp</strong>
+            <span style="font-size:var(--fs-2xs); color:var(--text-muted)">Interactive Form</span>
+          </div>
+          <div style="background:#FFFFFF; border:1px solid var(--border); padding:16px 8px; border-radius:var(--radius-md)">
+            <strong style="font-size:var(--fs-md); color:var(--primary-light); display:block">SMS</strong>
+            <span style="font-size:var(--fs-2xs); color:var(--text-muted)">Text Fallback</span>
+          </div>
+          <div style="background:#FFFFFF; border:1px solid var(--border); padding:16px 8px; border-radius:var(--radius-md)">
+            <strong style="font-size:var(--fs-md); color:var(--indigo); display:block">IVR</strong>
+            <span style="font-size:var(--fs-2xs); color:var(--text-muted)">Dialect Voice Stub</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       SECTION 7: FINAL DARK CALL TO ACTION
+       ========================================================================= -->
+  <section class="card" style="background:#0F172A; color:#FFFFFF; padding:var(--space-12) var(--space-8); border-radius:var(--radius-2xl); text-align:center; position:relative; overflow:hidden">
+    <!-- Subtle civic backdrop ribbon -->
+    <div style="position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)"></div>
+
+    <div class="cluster" style="justify-content:center; margin-bottom:16px">
+      <span class="badge" style="background:#1E293B; color:#38BDF8; border-color:#334155">
+        PUBLIC EMPLOYMENT OUTCOME INTELLIGENCE
+      </span>
     </div>
 
-    <div class="card">
-      <h3>Consent first, and withdrawable</h3>
-      <p>
-        Four purposes, each toggled separately at enrolment: follow-up contact,
-        employer validation, record match, and statistics. Withdrawing one
-        purpose stops only that purpose. "My Data" lets a trainee correct their
-        details, withdraw consent, or request erasure through an OTP check.
-      </p>
-      <p class="helptext">
-        No Aadhaar number is stored anywhere in this system.
-      </p>
+    <h2 style="font-size:clamp(2rem, 4vw, 3rem); color:#FFFFFF; font-weight:800; line-height:1.2; letter-spacing:-0.03em; max-width:840px; margin:0 auto 20px">
+      "Certification is the beginning.<br>
+      <span style="color:#38BDF8">Outcomes are the measure."</span>
+    </h2>
+
+    <p style="font-size:1.125rem; color:#94A3B8; max-width:680px; margin:0 auto 32px; line-height:1.6">
+      Connect skill certifications with genuine career outcomes, verified employers, and evidence-driven policy governance.
+    </p>
+
+    <div class="cluster" style="justify-content:center; gap:16px">
+      <a class="btn btn-primary btn-lg" href="{% url 'trainees:enrol' %}" style="background:#38BDF8; color:#0F172A !important; font-weight:800">
+        Start with Kaushal Parinam
+      </a>
+      <a class="btn btn-outline btn-lg" href="{% url 'login' %}" style="color:#FFFFFF !important; border-color:#334155">
+        Sign in to Stakeholder Portal
+      </a>
     </div>
 
-    <div class="card">
-      <h3>Skill gaps need two agreeing signals</h3>
-      <p>
-        A course is flagged only where at least two of three signals agree:
-        vacancies exist for that occupation in the district, employers report
-        "skills lacking" for its graduates, or trainees themselves say so. One
-        signal is never enough to redesign a course.
-      </p>
+    <!-- Team & Hackathon Signature Block -->
+    <div style="margin-top:48px; padding-top:24px; border-top:1px solid #1E293B; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:var(--fs-xs); color:#64748B">
+      <div>
+        <strong style="color:#FFFFFF">Kaushal Parinam (कौशल परिणाम)</strong> · Built by <strong>The Pandavas</strong>
+      </div>
+      <div>
+        Smart India Hackathon 2026 · Problem Statement SIH 26135
+      </div>
     </div>
+  </section>
 
-    <div class="card">
-      <h3>Evidence grades, not self-reported numbers</h3>
-      <p>
-        E0 trainee self-report · E1 officer confirmed · E2 employer confirmed ·
-        E3 document seen · E4 matched to an EPFO/ESIC record. Any dashboard can
-        be filtered to a minimum grade, so you can see what the rate looks like
-        counting only employer-confirmed outcomes.
-      </p>
-    </div>
-  </div>
 </div>
 {% endblock %}

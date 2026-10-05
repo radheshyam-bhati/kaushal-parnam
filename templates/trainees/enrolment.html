@@ -1,150 +1,613 @@
 {% extends "base.html" %}
 {% load kp_tags %}
-{% block title %}Enrol — consent and contact passport{% endblock %}
+{% block title %}Enrol — Trainee Consent Passport{% endblock %}
 
 {% block content %}
-<div class="container-narrow">
-  <h1 style="font-size:2rem">Enrol: consent and contact passport</h1>
-  <p style="color:var(--text-secondary)">
-    Four purposes, each one separate. You can withdraw any of them later from
-    "My Data". Nothing is sent to an employer or matched to a record unless you
-    say yes here.
-  </p>
-
-  {% if form.non_field_errors %}
-    <div class="alert alert-error" role="alert">
-      <span class="alert-icon" aria-hidden="true">!</span>
-      <span>{{ form.non_field_errors|join:" " }}</span>
-    </div>
-  {% endif %}
-
-  <form method="post" novalidate class="stack" style="margin-top:24px">
-    {% csrf_token %}
-
-    <fieldset>
-      <legend>1. About you</legend>
-      {% for field in form|fields:"name dob gender category district" %}
-        <div class="form-row {% if field.errors %}field-error{% endif %}">
-          <label class="required" for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+<div class="container-narrow" style="max-width:760px; margin:0 auto">
+  
+  <!-- Multi-Step Enrolment Wizard Container -->
+  <div class="card card-hero bg-grid-texture" style="padding:clamp(20px, 4vw, 36px); border-radius:var(--radius-2xl); box-shadow:var(--shadow-card)">
+    
+    <!-- Top Brand & Header -->
+    <div class="cluster-between" style="margin-bottom:20px; border-bottom:1px solid var(--border-subtle); padding-bottom:14px">
+      <div class="cluster">
+        <div class="brand-logo-mark" style="width:34px; height:34px; font-size:1rem" aria-hidden="true">
+          <span>कP</span>
         </div>
-      {% endfor %}
-    </fieldset>
-
-    <fieldset>
-      <legend>2. How to reach you</legend>
-      <p class="helptext">
-        Phones change and are often shared. That is why we ask for a second
-        contact: it is the difference between a real follow-up rate and a
-        misleading one.
-      </p>
-      {% for field in form|fields:"language own_phone second_contact_name second_phone second_contact_relationship" %}
-        <div class="form-row {% if field.errors %}field-error{% endif %}">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        <div>
+          <strong style="font-size:var(--fs-sm); color:var(--primary-dark); display:block; line-height:1.2">Kaushal Parinam</strong>
+          <span style="font-size:var(--fs-2xs); color:var(--text-muted)">DPDP Consent &amp; Contact Passport</span>
         </div>
-      {% endfor %}
-    </fieldset>
-
-    <fieldset>
-      <legend>3. Your phone decides how we message you</legend>
-      {% for key, label in form.fields.device_type.choices %}
-        <div class="check-row">
-          <input type="radio" name="device_type" id="device_{{ key }}" value="{{ key }}"
-                 {% if form.device_type.value == key %}checked{% endif %}>
-          <label for="device_{{ key }}">
-            {{ label }}
-            <span class="helptext">{{ form.fields.device_type.help_text }}</span>
-          </label>
-        </div>
-      {% endfor %}
-    </fieldset>
-
-    <fieldset>
-      <legend>4. Consent, purpose by purpose</legend>
-      <p class="helptext">
-        DPDP Act 2023 s.6: consent is per purpose, and withdrawing it must be as
-        easy as giving it. Tick only what you agree to.
-      </p>
-      {% for field in form|fields:"consent_follow_up consent_employer_check consent_record_match consent_statistics" %}
-        <div class="check-row {% if field.errors %}field-error{% endif %}">
-          {{ field }}
-          <label for="{{ field.id_for_label }}">
-            {{ field.label }}
-            <span class="helptext">{{ field.help_text }}</span>
-            {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-          </label>
-        </div>
-      {% endfor %}
-    </fieldset>
-
-    <fieldset>
-      <legend>5. Age gate</legend>
-      {% if form.guardian_consent.value %}
-        <p style="color:var(--warning)">
-          You told us you are under {{ app.dpdp_child_age_limit }} years old.
-          DPDP requires verifiable parental consent below {{ app.dpdp_child_age_limit }}. This pilot targets
-          trainees aged 18–35; if you are 15–17, please consult your programme coordinator.
-        </p>
-      {% endif %}
-      <div class="check-row {% if form.guardian_consent.errors %}field-error{% endif %}">
-        {{ form.guardian_consent }}
-        <label for="{{ form.guardian_consent.id_for_label }}">
-          {{ form.guardian_consent.label }}
-          {% if form.guardian_consent.errors %}<ul class="errorlist">{% for e in form.guardian_consent.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-        </label>
       </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>6. Your course and centre</legend>
-      <div class="form-row {% if form.provider_id.errors %}field-error{% endif %}">
-        <label class="required" for="{{ form.provider_id.id_for_label }}">{{ form.provider_id.label }}</label>
-        <select name="provider_id" id="{{ form.provider_id.id_for_label }}">
-          <option value="">Choose your training centre</option>
-          {% for pid, pname in providers %}
-            <option value="{{ pid }}" {% if form.provider_id.value == pid %}selected{% endif %}>{{ pid }} — {{ pname }}</option>
-          {% endfor %}
-        </select>
-        {% if form.provider_id.errors %}<ul class="errorlist">{% for e in form.provider_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-      </div>
-      <div class="form-row {% if form.qualification_id.errors %}field-error{% endif %}">
-        <label class="required" for="{{ form.qualification_id.id_for_label }}">{{ form.qualification_id.label }}</label>
-        <select name="qualification_id" id="{{ form.qualification_id.id_for_label }}">
-          <option value="">Choose your course</option>
-          {% for qid, qname in qualifications %}
-            <option value="{{ qid }}" {% if form.qualification_id.value == qid %}selected{% endif %}>{{ qname }} ({{ qid }})</option>
-          {% endfor %}
-        </select>
-        {% if form.qualification_id.errors %}<ul class="errorlist">{% for e in form.qualification_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-      </div>
-      {% for field in form|fields:"course_start_date course_end_date sdms_id" %}
-        <div class="form-row {% if field.errors %}field-error{% endif %}">
-          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
-          {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-        </div>
-      {% endfor %}
-    </fieldset>
-
-    <div class="check-row {% if form.notice_accepted.errors %}field-error{% endif %}">
-      {{ form.notice_accepted }}
-      <label for="{{ form.notice_accepted.id_for_label }}">
-        {{ form.notice_accepted.label }}
-        {% if form.notice_accepted.errors %}<ul class="errorlist">{% for e in form.notice_accepted.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
-      </label>
+      <span class="badge badge-SANDBOX" style="font-size:10px">MOBILE-FIRST INTAKE</span>
     </div>
 
-    <button class="btn btn-primary" type="submit">Submit and get my ID</button>
-    <p class="helptext">
-      Submitting creates one internal ID for you, in the form
-      <code>{{ app.utid_prefix }}-YYYYMMDD-NNNN</code>. We do not store any Aadhaar number.
+    <!-- Step Progress Indicator -->
+    <div class="enrol-stepper" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:28px" role="tablist" aria-label="Enrolment Steps">
+      
+      <div id="step-tab-1" class="enrol-step-tab active" onclick="goToStep(1)" style="cursor:pointer; padding:8px 6px; border-radius:var(--radius-md); background:var(--primary-dark); color:#FFFFFF; text-align:center; transition:all var(--transition-fast)">
+        <div style="font-size:10px; font-weight:800; color:#38BDF8">01</div>
+        <div style="font-size:var(--fs-xs); font-weight:700">Consent</div>
+      </div>
+
+      <div id="step-tab-2" class="enrol-step-tab" onclick="goToStep(2)" style="cursor:pointer; padding:8px 6px; border-radius:var(--radius-md); background:var(--surface-muted); color:var(--text-secondary); text-align:center; transition:all var(--transition-fast)">
+        <div style="font-size:10px; font-weight:800; color:var(--text-muted)">02</div>
+        <div style="font-size:var(--fs-xs); font-weight:700">Contact</div>
+      </div>
+
+      <div id="step-tab-3" class="enrol-step-tab" onclick="goToStep(3)" style="cursor:pointer; padding:8px 6px; border-radius:var(--radius-md); background:var(--surface-muted); color:var(--text-secondary); text-align:center; transition:all var(--transition-fast)">
+        <div style="font-size:10px; font-weight:800; color:var(--text-muted)">03</div>
+        <div style="font-size:var(--fs-xs); font-weight:700">Age &amp; Course</div>
+      </div>
+
+      <div id="step-tab-4" class="enrol-step-tab" onclick="goToStep(4)" style="cursor:pointer; padding:8px 6px; border-radius:var(--radius-md); background:var(--surface-muted); color:var(--text-secondary); text-align:center; transition:all var(--transition-fast)">
+        <div style="font-size:10px; font-weight:800; color:var(--text-muted)">04</div>
+        <div style="font-size:var(--fs-xs); font-weight:700">Review</div>
+      </div>
+
+    </div>
+
+    <!-- Error Summary if any -->
+    {% if form.errors %}
+      <div class="alert alert-error" role="alert" style="margin-bottom:20px">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <div>
+          <strong>Please review and correct the errors below:</strong>
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <div style="font-size:var(--fs-xs); margin-top:2px">{{ error }}</div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Main Multi-Step Enrolment Form -->
+    <form id="enrolment-form" method="post" novalidate>
+      {% csrf_token %}
+
+      <!-- ===================================================================
+           STEP 1: YOUR CHOICES (Granular DPDP Consent & Language)
+           =================================================================== -->
+      <div id="step-panel-1" class="enrol-panel active">
+        <div style="margin-bottom:20px">
+          <span class="filter-label">STEP 1 OF 4</span>
+          <h2 style="font-size:1.75rem; color:var(--primary-dark); margin:4px 0 8px">
+            You're in control of your data.
+          </h2>
+          <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:0">
+            Under India's Digital Personal Data Protection (DPDP) Act, you choose exactly how your records are used. You can withdraw any purpose later from your "My Data" portal.
+          </p>
+        </div>
+
+        <!-- Language Preference Selector -->
+        <div class="form-group" style="background:var(--surface-subtle); padding:16px; border-radius:var(--radius-lg); border:1px solid var(--border); margin-bottom:20px">
+          <label for="{{ form.language.id_for_label }}" style="font-weight:700; color:var(--primary-dark)">
+            Preferred Language for Notices &amp; Messages
+          </label>
+          <div class="grid grid-3" style="gap:8px; margin-top:8px">
+            {% for code, label in form.fields.language.choices %}
+              <label class="check-row" style="margin:0; background:#FFFFFF; padding:10px 12px; cursor:pointer; justify-content:center; text-align:center">
+                <input type="radio" name="language" value="{{ code }}" id="lang_{{ code }}" {% if form.language.value == code or code == 'mr' %}checked{% endif %} onchange="updateLanguagePreview(this.value)">
+                <span style="font-weight:700; font-size:var(--fs-sm)">{{ label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- 4 Interactive Consent Cards -->
+        <div class="stack-sm" style="margin-bottom:24px">
+          
+          <!-- Consent 1: Follow-up -->
+          <div class="card" style="padding:16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF; transition:all var(--transition-fast)">
+            <label class="check-row" style="border:none; padding:0; background:transparent; margin:0; cursor:pointer">
+              <input type="checkbox" name="consent_follow_up" id="{{ form.consent_follow_up.id_for_label }}" checked required style="width:22px; height:22px">
+              <div style="flex:1">
+                <div class="cluster-between">
+                  <strong style="color:var(--primary-dark); font-size:var(--fs-base)">Follow-up contact</strong>
+                  <span class="badge badge-SANDBOX" style="font-size:9px">RECOMMENDED</span>
+                </div>
+                <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:3px">
+                  Allow us to message you periodically (WhatsApp/SMS/IVR) to check your employment status.
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Consent 2: Employer Validation -->
+          <div class="card" style="padding:16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF">
+            <label class="check-row" style="border:none; padding:0; background:transparent; margin:0; cursor:pointer">
+              <input type="checkbox" name="consent_employer_check" id="{{ form.consent_employer_check.id_for_label }}" checked required style="width:22px; height:22px">
+              <div style="flex:1">
+                <div class="cluster-between">
+                  <strong style="color:var(--primary-dark); font-size:var(--fs-base)">Employer validation</strong>
+                  <span class="badge badge-SANDBOX" style="font-size:9px">GRADE E2</span>
+                </div>
+                <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:3px">
+                  Allow employers to confirm your employment in 2 taps. No wage is shared without your consent.
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Consent 3: Record Matching -->
+          <div class="card" style="padding:16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF">
+            <label class="check-row" style="border:none; padding:0; background:transparent; margin:0; cursor:pointer">
+              <input type="checkbox" name="consent_record_match" id="{{ form.consent_record_match.id_for_label }}" style="width:22px; height:22px">
+              <div style="flex:1">
+                <div class="cluster-between">
+                  <strong style="color:var(--primary-dark); font-size:var(--fs-base)">Record matching</strong>
+                  <span class="badge" style="font-size:9px">GRADE E4</span>
+                </div>
+                <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:3px">
+                  Allow automated electronic checking against EPFO, ESIC, and DBT records to confirm months worked.
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Consent 4: Statistics -->
+          <div class="card" style="padding:16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:#FFFFFF">
+            <label class="check-row" style="border:none; padding:0; background:transparent; margin:0; cursor:pointer">
+              <input type="checkbox" name="consent_statistics" id="{{ form.consent_statistics.id_for_label }}" checked required style="width:22px; height:22px">
+              <div style="flex:1">
+                <div class="cluster-between">
+                  <strong style="color:var(--primary-dark); font-size:var(--fs-base)">Statistics &amp; Scheme Impact</strong>
+                  <span class="badge badge-CIVIC" style="font-size:9px">ANONYMIZED</span>
+                </div>
+                <div style="font-size:var(--fs-xs); color:var(--text-secondary); margin-top:3px">
+                  Allow your de-identified outcome to count toward district and provider evidence benchmarks.
+                </div>
+              </div>
+            </label>
+          </div>
+
+        </div>
+
+        <div style="display:flex; justify-content:flex-end">
+          <button type="button" class="btn btn-primary btn-lg" onclick="goToStep(2)" style="width:100%; max-width:240px">
+            Next: Contact Details →
+          </button>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           STEP 2: CONTACT & DEVICE HARDWARE
+           =================================================================== -->
+      <div id="step-panel-2" class="enrol-panel" style="display:none">
+        <div style="margin-bottom:20px">
+          <span class="filter-label">STEP 2 OF 4</span>
+          <h2 style="font-size:1.75rem; color:var(--primary-dark); margin:4px 0 8px">
+            How should we reach you?
+          </h2>
+          <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:0">
+            Phones change and are often shared. We ask for your primary number and an optional family contact so you never miss an outcome check.
+          </p>
+        </div>
+
+        <!-- Full Name -->
+        <div class="form-group">
+          <label class="required" for="{{ form.name.id_for_label }}">Full Name (as per ID)</label>
+          <input type="text" name="name" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:'' }}" required placeholder="e.g. Ramesh Shivaji Patil">
+          {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <!-- Primary Phone -->
+        <div class="form-group">
+          <label class="required" for="{{ form.own_phone.id_for_label }}">Your Mobile Number</label>
+          <div style="display:flex; align-items:center; gap:8px">
+            <span style="padding:12px 14px; background:var(--surface-muted); border:1px solid var(--border-strong); border-radius:var(--radius-md); font-weight:700; color:var(--text-secondary)">+91</span>
+            <input type="tel" name="own_phone" id="{{ form.own_phone.id_for_label }}" value="{{ form.own_phone.value|default:'' }}" required placeholder="9876543210" maxlength="13" style="font-family:var(--font-family-mono); font-size:var(--fs-md); font-weight:600">
+          </div>
+          <span class="helptext">Must be 10 digits starting with 6, 7, 8, or 9.</span>
+          {% if form.own_phone.errors %}<ul class="errorlist">{% for e in form.own_phone.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <!-- Secondary Contact Card -->
+        <div class="card" style="background:var(--surface-subtle); padding:16px; border:1px solid var(--border); border-radius:var(--radius-lg); margin-bottom:20px">
+          <strong style="color:var(--primary-dark); font-size:var(--fs-sm); display:block; margin-bottom:4px">
+            Second Contact (Family / Backup)
+          </strong>
+          <span class="helptext" style="margin-bottom:12px">Optional backup contact in case your primary SIM changes.</span>
+
+          <div class="grid grid-2" style="gap:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label for="{{ form.second_contact_name.id_for_label }}">Contact Name</label>
+              <input type="text" name="second_contact_name" id="{{ form.second_contact_name.id_for_label }}" value="{{ form.second_contact_name.value|default:'' }}" placeholder="e.g. Sunita Patil">
+            </div>
+
+            <div class="form-group" style="margin-bottom:0">
+              <label for="{{ form.second_contact_relationship.id_for_label }}">Relationship</label>
+              <input type="text" name="second_contact_relationship" id="{{ form.second_contact_relationship.id_for_label }}" value="{{ form.second_contact_relationship.value|default:'' }}" placeholder="e.g. Mother / Brother">
+            </div>
+
+            <div class="form-group" style="grid-column:span 2; margin-bottom:0">
+              <label for="{{ form.second_phone.id_for_label }}">Second Phone Number</label>
+              <input type="tel" name="second_phone" id="{{ form.second_phone.id_for_label }}" value="{{ form.second_phone.value|default:'' }}" placeholder="+919876543211">
+            </div>
+          </div>
+        </div>
+
+        <!-- Device Type Selection -->
+        <div class="form-group" style="margin-bottom:24px">
+          <label class="required">What kind of phone do you use?</label>
+          <span class="helptext" style="margin-bottom:10px">This decides whether you receive WhatsApp interactive forms, SMS nudges, or voice IVR calls.</span>
+
+          <div class="stack-sm">
+            <label class="check-row" style="background:#FFFFFF; padding:12px 14px; margin:0; cursor:pointer">
+              <input type="radio" name="device_type" value="smartphone" id="dev_smart" {% if form.device_type.value == 'smartphone' or not form.device_type.value %}checked{% endif %}>
+              <div>
+                <strong style="color:var(--primary-dark)">Smartphone</strong>
+                <span class="helptext">You'll receive a fast, 1-tap WhatsApp form.</span>
+              </div>
+            </label>
+
+            <label class="check-row" style="background:#FFFFFF; padding:12px 14px; margin:0; cursor:pointer">
+              <input type="radio" name="device_type" value="feature_phone" id="dev_feature" {% if form.device_type.value == 'feature_phone' %}checked{% endif %}>
+              <div>
+                <strong style="color:var(--primary-dark)">Feature phone</strong>
+                <span class="helptext">You'll receive an automated IVR call with numeric keypad options.</span>
+              </div>
+            </label>
+
+            <label class="check-row" style="background:#FFFFFF; padding:12px 14px; margin:0; cursor:pointer">
+              <input type="radio" name="device_type" value="shared" id="dev_shared" {% if form.device_type.value == 'shared' %}checked{% endif %}>
+              <div>
+                <strong style="color:var(--primary-dark)">Shared Phone</strong>
+                <span class="helptext">You'll receive a quiet SMS reminder you can answer whenever free.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="cluster-between">
+          <button type="button" class="btn btn-outline" onclick="goToStep(1)">← Back</button>
+          <button type="button" class="btn btn-primary btn-lg" onclick="goToStep(3)" style="width:100%; max-width:240px">
+            Next: Age &amp; Course →
+          </button>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           STEP 3: AGE GATE & TRAINING REGISTRATION
+           =================================================================== -->
+      <div id="step-panel-3" class="enrol-panel" style="display:none">
+        <div style="margin-bottom:20px">
+          <span class="filter-label">STEP 3 OF 4</span>
+          <h2 style="font-size:1.75rem; color:var(--primary-dark); margin:4px 0 8px">
+            Age, Identity &amp; Training Details
+          </h2>
+          <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:0">
+            We use date of birth to protect minor candidates and verify your training centre enrolment.
+          </p>
+        </div>
+
+        <div class="grid grid-2" style="gap:14px">
+          
+          <!-- Date of Birth -->
+          <div class="form-group">
+            <label class="required" for="{{ form.dob.id_for_label }}">Date of Birth</label>
+            <input type="date" name="dob" id="{{ form.dob.id_for_label }}" value="{{ form.dob.value|default:'' }}" required onchange="checkAgeGate(this.value)">
+            <span class="helptext">Never published or shared.</span>
+            {% if form.dob.errors %}<ul class="errorlist">{% for e in form.dob.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <!-- District -->
+          <div class="form-group">
+            <label class="required" for="{{ form.district.id_for_label }}">Residential District</label>
+            <input type="text" name="district" id="{{ form.district.id_for_label }}" value="{{ form.district.value|default:'Mumbai' }}" required placeholder="e.g. Pune, Mumbai, Nagpur">
+            {% if form.district.errors %}<ul class="errorlist">{% for e in form.district.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group">
+            <label class="required" for="{{ form.gender.id_for_label }}">Gender</label>
+            <select name="gender" id="{{ form.gender.id_for_label }}">
+              {% for code, label in form.fields.gender.choices %}
+                <option value="{{ code }}" {% if form.gender.value == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="required" for="{{ form.category.id_for_label }}">Social Category</label>
+            <select name="category" id="{{ form.category.id_for_label }}">
+              {% for code, label in form.fields.category.choices %}
+                <option value="{{ code }}" {% if form.category.value == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Dynamic Guardian Age Gate Alert (Shown if < 18) -->
+        <div id="guardian-consent-box" style="display:none; background:var(--amber-light); border:1px solid var(--amber-border); border-radius:var(--radius-lg); padding:16px; margin:16px 0">
+          <div class="cluster" style="margin-bottom:6px">
+            <span class="badge" style="background:var(--amber); color:#FFFFFF">AGE GATE (&lt;18)</span>
+            <strong style="color:var(--amber-dark); font-size:var(--fs-sm)">Verifiable Parental Consent Required</strong>
+          </div>
+          <p style="font-size:var(--fs-xs); color:var(--text-secondary); margin-bottom:12px">
+            Under section 9 of the DPDP Act 2023, data tracking for minors requires verifiable consent from a parent or legal guardian.
+          </p>
+          <label class="check-row" style="background:#FFFFFF; margin:0; cursor:pointer">
+            <input type="checkbox" name="guardian_consent" id="{{ form.guardian_consent.id_for_label }}" {% if form.guardian_consent.value %}checked{% endif %}>
+            <span style="font-size:var(--fs-xs); font-weight:700; color:var(--text-primary)">
+              A parent or legal guardian has reviewed and authorized this outcome tracking.
+            </span>
+          </label>
+        </div>
+
+        <!-- Training Centre & Qualification -->
+        <div class="card" style="background:var(--surface-subtle); padding:16px; border:1px solid var(--border); border-radius:var(--radius-lg); margin-top:16px; margin-bottom:20px">
+          <strong style="color:var(--primary-dark); font-size:var(--fs-sm); display:block; margin-bottom:10px">
+            Training Centre &amp; Qualification
+          </strong>
+
+          <div class="form-group">
+            <label class="required" for="{{ form.provider_id.id_for_label }}">Training Centre</label>
+            <select name="provider_id" id="{{ form.provider_id.id_for_label }}" required>
+              <option value="">Choose your training centre</option>
+              {% for pid, pname in providers %}
+                <option value="{{ pid }}" {% if form.provider_id.value == pid %}selected{% endif %}>{{ pid }} — {{ pname }}</option>
+              {% endfor %}
+            </select>
+            {% if form.provider_id.errors %}<ul class="errorlist">{% for e in form.provider_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="required" for="{{ form.qualification_id.id_for_label }}">Course Qualification</label>
+            <select name="qualification_id" id="{{ form.qualification_id.id_for_label }}" required>
+              <option value="">Choose your course</option>
+              {% for qid, qname in qualifications %}
+                <option value="{{ qid }}" {% if form.qualification_id.value == qid %}selected{% endif %}>{{ qname }} ({{ qid }})</option>
+              {% endfor %}
+            </select>
+            {% if form.qualification_id.errors %}<ul class="errorlist">{% for e in form.qualification_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <div class="grid grid-2" style="gap:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="required" for="{{ form.course_start_date.id_for_label }}">Course Start Date</label>
+              <input type="date" name="course_start_date" id="{{ form.course_start_date.id_for_label }}" value="{{ form.course_start_date.value|default:'2026-06-01' }}" required>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label for="{{ form.course_end_date.id_for_label }}">Course End Date</label>
+              <input type="date" name="course_end_date" id="{{ form.course_end_date.id_for_label }}" value="{{ form.course_end_date.value|default:'2026-09-30' }}">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:12px; margin-bottom:0">
+            <label for="{{ form.sdms_id.id_for_label }}">SDMS / Skill India Digital ID (Optional)</label>
+            <input type="text" name="sdms_id" id="{{ form.sdms_id.id_for_label }}" value="{{ form.sdms_id.value|default:'' }}" placeholder="SID-XXXXXXXX">
+          </div>
+        </div>
+
+        <div class="cluster-between">
+          <button type="button" class="btn btn-outline" onclick="goToStep(2)">← Back</button>
+          <button type="button" class="btn btn-primary btn-lg" onclick="populateReview(); goToStep(4)" style="width:100%; max-width:240px">
+            Next: Review Summary →
+          </button>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           STEP 4: REVIEW & CONFIRM
+           =================================================================== -->
+      <div id="step-panel-4" class="enrol-panel" style="display:none">
+        <div style="margin-bottom:20px">
+          <span class="filter-label">STEP 4 OF 4</span>
+          <h2 style="font-size:1.75rem; color:var(--primary-dark); margin:4px 0 8px">
+            Visual Consent &amp; Enrolment Summary
+          </h2>
+          <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:0">
+            Please verify your consent permissions and contact channel before generating your unique ID.
+          </p>
+        </div>
+
+        <!-- Summary Matrix Card -->
+        <div class="card" style="background:#FFFFFF; border:1px solid var(--border-strong); border-radius:var(--radius-xl); padding:20px; margin-bottom:20px">
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:12px; margin-bottom:12px">
+            <div>
+              <strong id="review-name" style="font-size:var(--fs-md); color:var(--primary-dark); display:block">—</strong>
+              <span id="review-phone" style="font-size:var(--fs-xs); color:var(--text-muted); font-family:var(--font-family-mono)">—</span>
+            </div>
+            <span class="badge badge-SANDBOX">GENERATES UNIQUE UTID</span>
+          </div>
+
+          <div class="grid grid-2" style="gap:12px; font-size:var(--fs-xs); color:var(--text-secondary)">
+            <div>
+              <span style="color:var(--text-muted); display:block">Notice Language:</span>
+              <strong id="review-lang" style="color:var(--text-primary)">Marathi (मराठी)</strong>
+            </div>
+
+            <div>
+              <span style="color:var(--text-muted); display:block">Follow-up Hardware:</span>
+              <strong id="review-device" style="color:var(--text-primary)">Smartphone (WhatsApp)</strong>
+            </div>
+
+            <div>
+              <span style="color:var(--text-muted); display:block">Training Centre:</span>
+              <strong id="review-centre" style="color:var(--text-primary)">Centre-A</strong>
+            </div>
+
+            <div>
+              <span style="color:var(--text-muted); display:block">Course Qualification:</span>
+              <strong id="review-course" style="color:var(--text-primary)">Electrician</strong>
+            </div>
+          </div>
+
+          <!-- Granted Consent Purposes Breakdown -->
+          <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--border-subtle)">
+            <span style="font-size:var(--fs-2xs); font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em">
+              AUTHORIZED PROCESSING PURPOSES:
+            </span>
+            <div id="review-consents" class="cluster" style="margin-top:6px; gap:6px">
+              <span class="badge badge-SANDBOX">✓ Follow-up Contact</span>
+              <span class="badge badge-SANDBOX">✓ Employer Validation</span>
+              <span class="badge badge-CIVIC">✓ Statistics &amp; Impact</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Final DPDP Notice Confirmation -->
+        <div class="check-row" style="background:var(--primary-subtle); border-color:var(--primary-border); margin-bottom:24px">
+          <input type="checkbox" name="notice_accepted" id="{{ form.notice_accepted.id_for_label }}" checked required style="width:22px; height:22px">
+          <label for="{{ form.notice_accepted.id_for_label }}">
+            <strong style="color:var(--primary-dark)">I have read the DPDP summary and agree to these outcome tracking purposes.</strong>
+            <span class="helptext">No raw Aadhaar number is stored. An internal unique ID (UTID) will be created for you.</span>
+          </label>
+        </div>
+
+        <div class="cluster-between">
+          <button type="button" class="btn btn-outline" onclick="goToStep(3)">← Back</button>
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%; max-width:280px; font-weight:800">
+            Confirm and Enrol
+          </button>
+        </div>
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- Help & DPDP Rights Footer Note -->
+  <div class="card" style="margin-top:20px; background:transparent; border:none; text-align:center; padding:12px">
+    <p style="font-size:var(--fs-xs); color:var(--text-muted); margin:0">
+      Need assistance? Call your District Skill Development Officer or email <code>support@kaushal.gov.in</code>.<br>
+      Consent can be withdrawn at any time through the <a href="{% url 'trainees:my_data' %}">My Data portal</a>.
     </p>
-  </form>
+  </div>
+
 </div>
+
+<!-- Multi-Step Interactive Script -->
+<script>
+var currentStep = 1;
+
+function goToStep(stepNumber) {
+  // Validate required fields if moving forward
+  if (stepNumber > currentStep) {
+    if (currentStep === 1) {
+      var followUp = document.getElementById('{{ form.consent_follow_up.id_for_label }}');
+      if (followUp && !followUp.checked) {
+        alert('Follow-up contact consent is required to enrol in longitudinal tracking.');
+        return;
+      }
+    } else if (currentStep === 2) {
+      var name = document.getElementById('{{ form.name.id_for_label }}');
+      var phone = document.getElementById('{{ form.own_phone.id_for_label }}');
+      if (name && !name.value.trim()) {
+        alert('Please enter your full name.');
+        name.focus();
+        return;
+      }
+      if (phone && !phone.value.trim()) {
+        alert('Please enter your 10-digit mobile number.');
+        phone.focus();
+        return;
+      }
+    }
+  }
+
+  // Update tabs
+  for (var i = 1; i <= 4; i++) {
+    var tab = document.getElementById('step-tab-' + i);
+    var panel = document.getElementById('step-panel-' + i);
+    if (tab) {
+      if (i === stepNumber) {
+        tab.style.background = 'var(--primary-dark)';
+        tab.style.color = '#FFFFFF';
+        tab.querySelector('div').style.color = '#38BDF8';
+      } else if (i < stepNumber) {
+        tab.style.background = 'var(--emerald-light)';
+        tab.style.color = 'var(--emerald-dark)';
+        tab.querySelector('div').style.color = 'var(--emerald)';
+      } else {
+        tab.style.background = 'var(--surface-muted)';
+        tab.style.color = 'var(--text-secondary)';
+        tab.querySelector('div').style.color = 'var(--text-muted)';
+      }
+    }
+    if (panel) {
+      panel.style.display = (i === stepNumber) ? 'block' : 'none';
+    }
+  }
+
+  currentStep = stepNumber;
+  window.scrollTo({ top: 120, behavior: 'smooth' });
+}
+
+function checkAgeGate(dobValue) {
+  if (!dobValue) return;
+  var birthDate = new Date(dobValue);
+  var today = new Date();
+  var age = today.getFullYear() - birthDate.getFullYear();
+  var m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+
+  var box = document.getElementById('guardian-consent-box');
+  if (box) {
+    if (age < 18) {
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+}
+
+function updateLanguagePreview(langCode) {
+  var langMap = { 'en': 'English', 'mr': 'Marathi (मराठी)', 'hi': 'Hindi (हिन्दी)' };
+  var el = document.getElementById('review-lang');
+  if (el) el.textContent = langMap[langCode] || langCode;
+}
+
+function populateReview() {
+  var name = document.getElementById('{{ form.name.id_for_label }}');
+  var phone = document.getElementById('{{ form.own_phone.id_for_label }}');
+  var provider = document.getElementById('{{ form.provider_id.id_for_label }}');
+  var qualification = document.getElementById('{{ form.qualification_id.id_for_label }}');
+  var devRadio = document.querySelector('input[name="device_type"]:checked');
+
+  if (name && document.getElementById('review-name')) {
+    document.getElementById('review-name').textContent = name.value || 'Trainee Candidate';
+  }
+  if (phone && document.getElementById('review-phone')) {
+    document.getElementById('review-phone').textContent = '+91 ' + (phone.value || '—');
+  }
+  if (provider && document.getElementById('review-centre')) {
+    document.getElementById('review-centre').textContent = provider.options[provider.selectedIndex]?.text || provider.value;
+  }
+  if (qualification && document.getElementById('review-course')) {
+    document.getElementById('review-course').textContent = qualification.options[qualification.selectedIndex]?.text || qualification.value;
+  }
+  if (devRadio && document.getElementById('review-device')) {
+    var devMap = { 'smartphone': 'Smartphone (WhatsApp)', 'feature_phone': 'Feature Phone (IVR)', 'shared': 'Shared Phone (SMS)' };
+    document.getElementById('review-device').textContent = devMap[devRadio.value] || devRadio.value;
+  }
+
+  // Populate consents list
+  var consentsWrap = document.getElementById('review-consents');
+  if (consentsWrap) {
+    var html = '';
+    if (document.getElementById('{{ form.consent_follow_up.id_for_label }}')?.checked) {
+      html += '<span class="badge badge-SANDBOX">✓ Follow-up Contact</span>';
+    }
+    if (document.getElementById('{{ form.consent_employer_check.id_for_label }}')?.checked) {
+      html += '<span class="badge badge-SANDBOX">✓ Employer Validation</span>';
+    }
+    if (document.getElementById('{{ form.consent_record_match.id_for_label }}')?.checked) {
+      html += '<span class="badge" style="background:#0F172A; color:#38BDF8">✓ Statutory Record Match</span>';
+    }
+    if (document.getElementById('{{ form.consent_statistics.id_for_label }}')?.checked) {
+      html += '<span class="badge badge-CIVIC">✓ Statistics & Impact</span>';
+    }
+    consentsWrap.innerHTML = html || '<span class="badge">No purposes granted</span>';
+  }
+}
+</script>
 {% endblock %}

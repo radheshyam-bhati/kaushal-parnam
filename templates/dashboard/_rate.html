@@ -1,42 +1,59 @@
-{# The ONLY place a percentage is rendered.
-
-   docs/01-PRD.md F-10: "Every rate has response rate shown beside it" and
-   "Grade mix shown beside every rate". A bare percentage is never published, so
-   any new dashboard must include this partial rather than writing the number
-   out directly.
-
-   Usage from a template:
-       include "dashboard/_rate.html" with rate=some_rate
-#}
+{# Editorial Rate Component: Never a bare percentage #}
 {% if rate %}
-  <div class="rate {% if rate.is_low_reach %}low-reach{% endif %}"
-       role="group"
-       aria-label="{{ rate.label }} with reach and grade mix">
-    <span class="rate-value">{{ rate.value|floatformat:0 }}%</span>
-    <span class="rate-context">
-      {{ rate.label }}
-      (response rate: <strong>{{ rate.response_rate|floatformat:0 }}%</strong>)
-      {% if rate.denominator %}
-        · {{ rate.numerator }}/{{ rate.denominator }} reached
-      {% else %}
-        · nobody reached yet
-      {% endif %}
-    </span>
-  </div>
+  <div class="rate-container" role="group" aria-label="{{ rate.label }} with reach and grade mix">
+    <div class="rate-header">
+      <div class="rate">
+        <span class="rate-value" style="{% if rate.is_low_reach %}color:var(--amber-dark);{% endif %}">{{ rate.value|floatformat:0 }}%</span>
+        <div style="display:flex; flex-direction:column">
+          <span style="font-weight:700; font-size:var(--fs-base); color:var(--text-primary)">{{ rate.label }}</span>
+          <span style="font-size:var(--fs-xs); color:var(--text-muted)">
+            {% if rate.denominator %}
+              {{ rate.numerator }} of {{ rate.denominator }} trainees reached
+            {% else %}
+              Awaiting follow-up replies
+            {% endif %}
+          </span>
+        </div>
+      </div>
 
-  <div class="mix" aria-label="Evidence grade mix">
-    {% for grade, share in rate.mix_percent.items %}
-      <span class="grade grade-{{ grade }}">{{ grade }}: {{ share|floatformat:0 }}%</span>
-    {% endfor %}
-  </div>
+      <div class="reach-badge {% if rate.is_low_reach %}low{% else %}high{% endif %}">
+        <span style="width:6px; height:6px; border-radius:50%; background:{% if rate.is_low_reach %}var(--amber){% else %}var(--emerald){% endif %}"></span>
+        response rate: <strong>{{ rate.response_rate|floatformat:0 }}%</strong>
+      </div>
+    </div>
 
-  {% if rate.is_low_reach %}
-    <p class="helptext" style="color:var(--warning)">
-      Reach is below 30%. Treat this rate as indicative only and read the
-      random call-back sample before drawing a conclusion.
-    </p>
-  {% endif %}
-  {% if rate.note %}<p class="helptext">{{ rate.note }}</p>{% endif %}
+    <!-- Visual Evidence Mix Bar -->
+    {% if rate.mix_percent %}
+      <div class="grade-mix-bar" title="Evidence Grade Distribution">
+        {% for grade, share in rate.mix_percent.items %}
+          {% if share > 0 %}
+            <div class="grade-mix-segment {{ grade }}" style="width:{{ share }}%" title="{{ grade }}: {{ share|floatformat:0 }}%"></div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="mix-legend">
+        {% for grade, share in rate.mix_percent.items %}
+          <span class="grade grade-{{ grade }}">{{ grade }}: {{ share|floatformat:0 }}%</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if rate.is_low_reach %}
+      <div class="alert alert-warning" style="margin-top:10px; padding:10px 14px; font-size:var(--fs-xs)">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span>
+          <strong>Low response reach (&lt;30%):</strong> Treat this rate as preliminary. Department call-back audit sample weighting is recommended.
+        </span>
+      </div>
+    {% endif %}
+
+    {% if rate.note %}
+      <p class="helptext" style="margin-top:6px">{{ rate.note }}</p>
+    {% endif %}
+  </div>
 {% else %}
-  <p class="helptext">No rate to show yet.</p>
+  <div class="empty-state" style="padding:var(--space-6)">
+    <p class="helptext">No outcome data recorded yet for this cohort filter.</p>
+  </div>
 {% endif %}
